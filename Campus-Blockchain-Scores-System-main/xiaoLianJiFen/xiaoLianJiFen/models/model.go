@@ -1,0 +1,184 @@
+package models
+
+import (
+	"time"
+
+	"github.com/astaxie/beego/orm"
+	_ "github.com/go-sql-driver/mysql"
+)
+
+// Users 用户模型
+type Users struct {
+	Id             int64  `orm:"column(id);pk;auto"`
+	Username       string `orm:"column(username);size(255);unique"`
+	Password       string `orm:"column(password);size(255)"`
+	Email          string `orm:"column(email);size(255);null"`
+	Phone          string `orm:"column(phone);size(20);null"`
+	Role_name      string `orm:"column(role_name);size(255)"`
+	IsAdminRequest int8   `orm:"column(is_admin_request);default(0)"`
+}
+
+// Activities 活动模型
+type Activities struct {
+	Id          int64     `orm:"column(id);pk;auto"`
+	Name        string    `orm:"column(name);size(255)"`          // 活动名称
+	Time        time.Time `orm:"column(time);type(datetime)"`     // 活动时间
+	Location    string    `orm:"column(location);size(255)"`      // 活动地点
+	Description string    `orm:"column(description);type(text)"`  // 活动描述
+	Points      int       `orm:"column(points)"`                  // 活动积分
+	Capacity    int       `orm:"column(capacity)"`                // 人员数量
+	CreatedAt   time.Time `orm:"column(created_at);auto_now_add"` // 创建时间
+	UpdatedAt   time.Time `orm:"column(updated_at);auto_now"`     // 更新时间
+	Status      int8      `orm:"column(status);default(0)"`       // 活动状态：0-待审核 1-已通过 2-已拒绝 3-已结束
+}
+
+// 初始化数据库
+func init() {
+	// 注册数据库驱动
+	orm.RegisterDriver("mysql", orm.DRMySQL)
+
+	// 注册数据库连接
+	orm.RegisterDataBase("default", "mysql", "root:123456@tcp(127.0.0.1:3306)/xiaolianjifen?charset=utf8")
+
+	// 注册模型
+	orm.RegisterModel(new(Users), new(Activities))
+
+	// 自动创建或更新表
+	orm.RunSyncdb("default", false, true)
+
+	// 插入初始数据
+	insertInitialActivities()
+	insertInitialUsers()
+}
+
+// 插入初始活动数据
+func insertInitialActivities() {
+	o := orm.NewOrm()
+
+	// 定义活动数据
+	activities := []Activities{
+		{
+			Name:        "篮球赛",
+			Time:        parseTime("2025-02-02 00:00:00"),
+			Location:    "篮球场",
+			Description: "5v5男生全场篮球赛",
+			Points:      7,
+			Capacity:    10,
+			Status:      3, // 已结束
+		},
+		{
+			Name:        "围棋比赛",
+			Time:        parseTime("2025-03-19 00:00:00"),
+			Location:    "创客大厦四楼",
+			Description: "擂台赛形式",
+			Points:      8,
+			Capacity:    20,
+			Status:      3, // 已结束
+		},
+		{
+			Name:        "义卖活动",
+			Time:        parseTime("2025-03-07 00:00:00"),
+			Location:    "创操场",
+			Description: "义卖不需要的物品",
+			Points:      9,
+			Capacity:    15,
+			Status:      2, // 已拒绝
+		},
+		{
+			Name:        "乒乓球赛",
+			Time:        parseTime("2025-03-12 00:00:00"),
+			Location:    "乒乓球场",
+			Description: "2v2双打",
+			Points:      8,
+			Capacity:    14,
+			Status:      3, // 已结束
+		},
+	}
+
+	// 插入数据
+	for _, activity := range activities {
+		// 检查活动是否已存在
+		exist := o.QueryTable("activities").Filter("name", activity.Name).Exist()
+		if !exist {
+			_, err := o.Insert(&activity)
+			if err != nil {
+				println("Error inserting activity:", activity.Name, err)
+			} else {
+				println("Successfully inserted activity:", activity.Name)
+			}
+		}
+	}
+}
+
+// 插入初始用户数据
+func insertInitialUsers() {
+	o := orm.NewOrm()
+
+	// 定义用户数据
+	users := []Users{
+		{
+			Username:       "202201001",
+			Password:       "Htc123456！",
+			Email:          "3331245121@email.com",
+			Phone:          "15478954211",
+			Role_name:      "学生",
+			IsAdminRequest: 0,
+		},
+		{
+			Username:       "202201002",
+			Password:       "Lr123456！",
+			Email:          "3331245122@email.com",
+			Phone:          "15478954212",
+			Role_name:      "学生",
+			IsAdminRequest: 0,
+		},
+		{
+			Username:       "202201003",
+			Password:       "Lxt123456！",
+			Email:          "3331245123@email.com",
+			Phone:          "15478954213",
+			Role_name:      "学生",
+			IsAdminRequest: 1,
+		},
+		{
+			Username:       "JX666666",
+			Password:       "Abc123456！",
+			Email:          "3331245111@email.com",
+			Phone:          "15478954221",
+			Role_name:      "教师",
+			IsAdminRequest: 0,
+		},
+		{
+			Username:       "JX777777",
+			Password:       "Bcd123456！",
+			Email:          "3331245112@email.com",
+			Phone:          "15478954222",
+			Role_name:      "教师",
+			IsAdminRequest: 0,
+		},
+	}
+
+	// 插入数据
+	for _, user := range users {
+		// 检查用户是否已存在
+		exist := o.QueryTable("users").Filter("username", user.Username).Exist()
+		if !exist {
+			_, err := o.Insert(&user)
+			if err != nil {
+				println("Error inserting user:", user.Username, err)
+			} else {
+				println("Successfully inserted user:", user.Username)
+			}
+		}
+	}
+}
+
+// 辅助函数：解析时间字符串
+func parseTime(timeStr string) time.Time {
+	t, err := time.Parse("2006-01-02 15:04:05", timeStr)
+	if err != nil {
+		println("Error parsing time:", err)
+		return time.Now()
+	}
+	return t
+}

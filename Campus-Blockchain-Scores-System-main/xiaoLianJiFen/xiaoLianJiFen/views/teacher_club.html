@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>社团管理 - 校内活动积分系统</title>
+    {{template "teacher_nav.html" .}}
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        .main-content {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .club-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin: 2rem auto;
+        }
+
+        .club-form {
+            margin-bottom: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #2c3e50;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+
+        .submit-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .submit-btn:hover {
+            background-color: #2980b9;
+        }
+
+        .club-list {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .club-list th,
+        .club-list td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .club-list th {
+            background-color: #f8f9fa;
+            color: #2c3e50;
+            font-weight: bold;
+        }
+
+        .club-list tr:hover {
+            background-color: #f5f6fa;
+        }
+
+        .action-btn {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 0.3rem 0.8rem;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .action-btn.edit {
+            background-color: #f1c40f;
+        }
+
+        .action-btn.delete {
+            background-color: #e74c3c;
+        }
+
+        .action-btn:hover {
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-content">
+        <div class="club-section">
+            <h2>创建新社团</h2>
+            <form class="club-form" id="clubForm">
+                <div class="form-group">
+                    <label for="clubName">社团名称</label>
+                    <input type="text" id="clubName" name="clubName" required>
+                </div>
+                <div class="form-group">
+                    <label for="clubDesc">社团描述</label>
+                    <textarea id="clubDesc" name="clubDesc" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="clubLeader">社团负责人</label>
+                    <input type="text" id="clubLeader" name="clubLeader" required>
+                </div>
+                <button type="submit" class="submit-btn">创建社团</button>
+            </form>
+        </div>
+
+        <div class="club-section">
+            <h2>社团列表</h2>
+            <table class="club-list">
+                <thead>
+                    <tr>
+                        <th>社团名称</th>
+                        <th>负责人</th>
+                        <th>成员数量</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody id="clubTableBody">
+                    <!-- 社团列表将通过JavaScript动态加载 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // 加载社团列表
+        function loadClubs() {
+            // 这里添加从服务器获取社团列表的逻辑
+            const clubs = [
+                {
+                    id: 1,
+                    name: '计算机协会',
+                    leader: '张三',
+                    memberCount: 50,
+                    createTime: '2024-01-01'
+                },
+                {
+                    id: 2,
+                    name: '读书社',
+                    leader: '李四',
+                    memberCount: 30,
+                    createTime: '2024-02-01'
+                }
+            ];
+
+            renderClubs(clubs);
+        }
+
+        // 渲染社团列表
+        function renderClubs(clubs) {
+            const tbody = document.getElementById('clubTableBody');
+            tbody.innerHTML = clubs.map(club => `
+                <tr>
+                    <td>${club.name}</td>
+                    <td>${club.leader}</td>
+                    <td>${club.memberCount}</td>
+                    <td>${club.createTime}</td>
+                    <td>
+                        <button class="action-btn edit" onclick="editClub(${club.id})">编辑</button>
+                        <button class="action-btn delete" onclick="deleteClub(${club.id})">删除</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 处理社团表单提交
+        document.getElementById('clubForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            const clubData = {
+                name: formData.get('clubName'),
+                description: formData.get('clubDesc'),
+                leader: formData.get('clubLeader')
+            };
+            
+            console.log('提交的社团数据：', clubData);
+            alert('社团创建功能正在开发中...');
+        });
+
+        function editClub(id) {
+            alert(`编辑社团 ${id} 功能正在开发中...`);
+        }
+
+        function deleteClub(id) {
+            if (confirm(`确定要删除社团 ${id} 吗？`)) {
+                alert('删除功能正在开发中...');
+            }
+        }
+
+        // 页面加载时加载社团列表
+        window.onload = loadClubs;
+    </script>
+</body>
+</html> 

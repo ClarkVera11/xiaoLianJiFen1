@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教师端 - 校内活动积分系统</title>
+    {{template "teacher_nav.html" .}}
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+        }
+
+        .main-content {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .welcome-message {
+            background: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            text-align: center;
+            margin: 2rem auto;
+            max-width: 800px;
+        }
+
+        .welcome-message h1 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+
+        .welcome-message p {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .dashboard-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .dashboard-card h2 {
+            color: #73C088;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .dashboard-card p {
+            color: #7f8c8d;
+            margin-bottom: 1rem;
+        }
+
+        .card-button {
+            background-color: #73C088;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .card-button:hover {
+            background-color: #5da971;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="main-content">
+        <div class="welcome-message">
+            <h1>欢迎进入校内活动积分系统</h1>
+            <p>这里是教师管理平台，您可以在这里管理学生信息、发布活动、审核申请等。</p>
+        </div>
+
+        <div class="dashboard-cards">
+            <div class="dashboard-card">
+                <h2>活动管理</h2>
+                <p>发布、编辑和管理校园活动，设置活动积分规则。</p>
+                <a href="/teacher/activity" class="card-button">管理活动</a>
+            </div>
+
+            <div class="dashboard-card">
+                <h2>学生管理</h2>
+                <p>查看和管理学生信息，审核学生参与活动情况。</p>
+                <a href="/teacher/student" class="card-button">管理学生</a>
+            </div>
+
+            <div class="dashboard-card">
+                <h2>社团管理</h2>
+                <p>管理校园社团，审核社团活动申请。</p>
+                <a href="/teacher/club" class="card-button">管理社团</a>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

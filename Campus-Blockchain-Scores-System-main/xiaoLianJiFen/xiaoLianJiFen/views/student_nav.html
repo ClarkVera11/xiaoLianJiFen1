@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学生端 - 校内活动积分系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background-color: #73C088;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-bar {
+            background-color: #73C088;
+            padding: 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            height: 50px;
+            padding-right: 0;
+            margin-right: 0;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            height: 100%;
+            margin-right: 0;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 0 20px;
+            font-size: 15px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .nav-links a:hover::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: white;
+        }
+
+        .nav-links a.active {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: white;
+        }
+
+        .logout-button {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 0 25px;
+            cursor: pointer;
+            font-size: 15px;
+            height: 100%;
+            transition: background-color 0.3s ease;
+            margin-left: 0;
+        }
+
+        .logout-button:hover {
+            background-color: #c0392b;
+        }
+
+        .main-content {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            flex-grow: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .welcome-message {
+            background: transparent;
+            padding: 2rem;
+            text-align: center;
+            margin: auto;
+            max-width: 800px;
+            color: white;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .welcome-message h1 {
+            margin-bottom: 1rem;
+            font-size: 2rem;
+        }
+
+        .welcome-message p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .admin-request-btn {
+            background-color: #4a90e2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-top: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .admin-request-btn:hover {
+            background-color: #357abd;
+        }
+
+        .admin-request-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .stat-card {
+            background: #C8EAD1;
+            padding: 1.5rem;
+            border-radius: 8px;
+            text-align: center;
+            color: #333;
+        }
+
+        .stat-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav-bar">
+        <div class="nav-container">
+            <div class="nav-links">
+                <a href="/student" class="{{if eq .ActivePage "home"}}active{{end}}">首页</a>
+                <a href="/student/activities" class="{{if eq .ActivePage "activities"}}active{{end}}">活动管理</a>
+                {{if .IsClubAdmin}}
+                <a href="/student/club" class="{{if eq .ActivePage "club"}}active{{end}}">社团活动</a>
+                {{end}}
+                <a href="/student/shop" class="{{if eq .ActivePage "shop"}}active{{end}}">积分商城</a>
+                <a href="/student/profile" class="{{if eq .ActivePage "profile"}}active{{end}}">个人中心</a>
+            </div>
+            <button class="logout-button" onclick="confirmLogout()">安全退出</button>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="welcome-message">
+            <h1>欢迎进入校内活动积分系统</h1>
+            <p>这里是学生平台，您可以在这里查看活动、参与活动、兑换积分等。</p>
+            
+            <div class="stats-container">
+                <div class="stat-card">
+                    <h3>我的积分</h3>
+                    <div class="value">100</div>
+                </div>
+                <div class="stat-card">
+                    <h3>参与活动</h3>
+                    <div class="value">5</div>
+                </div>
+                <div class="stat-card">
+                    <h3>完成活动</h3>
+                    <div class="value">3</div>
+                </div>
+            </div>
+            
+            {{if not .IsClubAdmin}}
+                {{if not .IsAdminRequest}}
+                <button class="admin-request-btn" onclick="requestAdmin()">申请成为管理员</button>
+                {{else}}
+                <button class="admin-request-btn" disabled>已申请管理员</button>
+                {{end}}
+            {{end}}
+        </div>
+    </div>
+
+    <script>
+        function confirmLogout() {
+            if (confirm("您确定要退出吗？")) {
+                window.location.href = "/logout";
+            }
+        }
+
+        function requestAdmin() {
+            if (confirm("确认申请成为管理员？")) {
+                fetch('/student/request-admin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('申请已提交！');
+                        location.reload();
+                    } else {
+                        alert('申请失败：' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('申请失败，请稍后重试');
+                });
+            }
+        }
+
+        // 根据当前页面URL设置活动状态
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            const links = document.querySelectorAll('.nav-links a');
+            
+            links.forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

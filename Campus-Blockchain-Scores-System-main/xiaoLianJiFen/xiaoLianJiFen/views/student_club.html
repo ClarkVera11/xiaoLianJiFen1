@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>社团活动 - 校内活动积分系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background-color: #C8EAD1;
+            min-height: 100vh;
+        }
+
+        .nav-bar {
+            background-color: #73C088;
+            padding: 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            height: 50px;
+            padding-right: 0;
+            margin-right: 0;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            height: 100%;
+            margin-right: 0;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 0 20px;
+            font-size: 15px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .nav-links a:hover::after, .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: white;
+        }
+
+        .logout-button {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 0 25px;
+            cursor: pointer;
+            font-size: 15px;
+            height: 100%;
+            transition: background-color 0.3s ease;
+        }
+
+        .logout-button:hover {
+            background-color: #c0392b;
+        }
+
+        .main-content {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: #73C088;
+            color: white;
+        }
+
+        .btn-secondary {
+            background-color: #4a90e2;
+            color: white;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .activities-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+        }
+
+        .pagination-btn {
+            padding: 8px 12px;
+            border: 1px solid #73C088;
+            background-color: white;
+            color: #73C088;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .pagination-btn:hover {
+            background-color: #73C088;
+            color: white;
+        }
+
+        .pagination-btn.active {
+            background-color: #73C088;
+            color: white;
+        }
+
+        .pagination-btn:disabled {
+            background-color: #e0e0e0;
+            border-color: #e0e0e0;
+            color: #999;
+            cursor: not-allowed;
+        }
+
+        .activity-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .activity-card h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+        }
+
+        .activity-info {
+            margin-bottom: 0.5rem;
+            color: #666;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 600px;
+        }
+
+        .rules-content {
+            max-height: 70vh;
+            overflow-y: auto;
+            padding: 1rem;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            font-size: 14px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            border: 1px solid #e9ecef;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .close {
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            height: 100px;
+            resize: vertical;
+        }
+
+        .rules-modal .modal-content {
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .doc-viewer-modal .modal-content {
+            width: 95%;
+            max-width: 900px;
+            height: 85vh;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .doc-viewer-modal .modal-header {
+            padding: 1rem 2rem;
+            margin-bottom: 0;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .doc-viewer-modal .modal-body {
+            flex: 1;
+            padding: 0;
+        }
+
+        .doc-viewer-modal iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav-bar">
+        <div class="nav-container">
+            <div class="nav-links">
+                <a href="/student" class="{{if eq .ActivePage "home"}}active{{end}}">首页</a>
+                <a href="/student/activities" class="{{if eq .ActivePage "activities"}}active{{end}}">活动管理</a>
+                <a href="/student/club" class="{{if eq .ActivePage "club"}}active{{end}}">社团活动</a>
+                <a href="/student/shop" class="{{if eq .ActivePage "shop"}}active{{end}}">积分商城</a>
+                <a href="/student/profile" class="{{if eq .ActivePage "profile"}}active{{end}}">个人中心</a>
+            </div>
+            <button class="logout-button" onclick="confirmLogout()">安全退出</button>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="header">
+            <h1>社团活动</h1>
+            <div class="action-buttons">
+                <button class="btn btn-primary" onclick="showApplyModal()">活动申报</button>
+                <button class="btn btn-secondary" onclick="viewRulesDoc()">积分规则</button>
+            </div>
+        </div>
+
+        <div class="activities-grid">
+            <!-- 活动列表将通过JavaScript动态加载 -->
+        </div>
+        <div class="pagination" id="pagination">
+            <!-- 分页按钮将通过JavaScript动态加载 -->
+        </div>
+    </div>
+
+    <!-- 申报活动模态框 -->
+    <div id="applyModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>活动申报</h2>
+                <span class="close" onclick="closeModal('applyModal')">&times;</span>
+            </div>
+            <form id="activityForm" onsubmit="submitActivity(event)">
+                <div class="form-group">
+                    <label for="activityName">活动名称</label>
+                    <input type="text" id="activityName" required>
+                </div>
+                <div class="form-group">
+                    <label for="activityTime">活动时间</label>
+                    <input type="datetime-local" id="activityTime" required>
+                </div>
+                <div class="form-group">
+                    <label for="activityLocation">活动地点</label>
+                    <input type="text" id="activityLocation" required>
+                </div>
+                <div class="form-group">
+                    <label for="activityDescription">活动描述</label>
+                    <textarea id="activityDescription" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="activityPoints">活动积分</label>
+                    <input type="number" id="activityPoints" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="activityCapacity">人员数量</label>
+                    <input type="number" id="activityCapacity" min="1" required>
+                </div>
+                <button type="submit" class="btn btn-primary">提交申报</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 积分规则文档查看器 -->
+    <div id="rulesModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>积分规则说明</h2>
+                <span class="close" onclick="closeModal('rulesModal')">&times;</span>
+            </div>
+            <div id="rulesContent" class="rules-content">
+                正在加载积分规则...
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        const itemsPerPage = 4;
+        let allActivities = [];
+
+        // 加载活动列表
+        function loadActivities() {
+            fetch('/student/club-activities')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        allActivities = data.data;
+                        renderPagination();
+                        renderCurrentPage();
+                    } else {
+                        console.error('获取活动列表失败：', data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('获取活动列表出错：', error);
+                });
+        }
+
+        // 渲染分页按钮
+        function renderPagination() {
+            const totalPages = Math.ceil(allActivities.length / itemsPerPage);
+            const pagination = document.getElementById('pagination');
+            
+            let html = '';
+            
+            // 上一页按钮
+            html += `<button class="pagination-btn" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>上一页</button>`;
+            
+            // 页码按钮
+            for (let i = 1; i <= totalPages; i++) {
+                html += `<button class="pagination-btn ${currentPage === i ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+            }
+            
+            // 下一页按钮
+            html += `<button class="pagination-btn" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>下一页</button>`;
+            
+            pagination.innerHTML = html;
+        }
+
+        // 切换页面
+        function changePage(page) {
+            const totalPages = Math.ceil(allActivities.length / itemsPerPage);
+            if (page < 1 || page > totalPages) return;
+            
+            currentPage = page;
+            renderPagination();
+            renderCurrentPage();
+        }
+
+        // 渲染当前页的活动
+        function renderCurrentPage() {
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const currentActivities = allActivities.slice(startIndex, endIndex);
+            
+            const grid = document.querySelector('.activities-grid');
+            grid.innerHTML = currentActivities.map(activity => `
+                <div class="activity-card">
+                    <h3>${activity.Name}</h3>
+                    <div class="activity-info">时间：${formatDateTime(activity.Time)}</div>
+                    <div class="activity-info">地点：${activity.Location}</div>
+                    <div class="activity-info">积分：${activity.Points}分</div>
+                    <div class="activity-info">剩余名额：${activity.Capacity}人</div>
+                    <div class="activity-info">描述：${activity.Description}</div>
+                    <div class="activity-info">状态：${getStatusText(activity.Status)}</div>
+                </div>
+            `).join('');
+        }
+
+        // 获取活动状态文本
+        function getStatusText(status) {
+            const statusMap = {
+                0: '待审核',
+                1: '已通过',
+                2: '已拒绝',
+                3: '已结束'
+            };
+            return statusMap[status] || '未知状态';
+        }
+
+        // 格式化日期时间
+        function formatDateTime(dateTimeStr) {
+            const date = new Date(dateTimeStr);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function showApplyModal() {
+            document.getElementById('applyModal').style.display = 'block';
+        }
+
+        function viewRulesDoc() {
+            // 显示加载提示
+            const rulesContent = document.getElementById('rulesContent');
+            rulesContent.textContent = '正在加载积分规则...';
+            document.getElementById('rulesModal').style.display = 'block';
+
+            // 获取规则文本内容
+            fetch('/static/rules.txt', {
+                method: 'GET',
+                headers: {
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache',
+                    'Accept': 'text/plain;charset=UTF-8'
+                }
+            })
+            .then(response => {
+                console.log('Response status:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(text => {
+                if (!text || text.trim() === '') {
+                    throw new Error('文件内容为空');
+                }
+                rulesContent.textContent = text;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                rulesContent.innerHTML = `暂未开发，敬请期待`;
+            });
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function submitActivity(event) {
+            event.preventDefault();
+            
+            // 获取表单数据
+            const formData = new FormData();
+            formData.append('Name', document.getElementById('activityName').value);
+            formData.append('Time', document.getElementById('activityTime').value);
+            formData.append('Location', document.getElementById('activityLocation').value);
+            formData.append('Description', document.getElementById('activityDescription').value);
+            formData.append('Points', document.getElementById('activityPoints').value);
+            formData.append('Capacity', document.getElementById('activityCapacity').value);
+
+            // 发送到服务器
+            fetch('/student/submit-activity', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    closeModal('applyModal');
+                    event.target.reset();
+                    // 重新加载活动列表并回到第一页
+                    currentPage = 1;
+                    loadActivities();
+                } else {
+                    alert(data.message || '提交失败，请稍后重试');
+                }
+            })
+            .catch(error => {
+                console.error('提交活动失败：', error);
+                alert('提交失败，请稍后重试');
+            });
+        }
+
+        function confirmLogout() {
+            if (confirm('确定要退出吗？')) {
+                window.location.href = '/logout';
+            }
+        }
+
+        // 点击模态框外部关闭模态框
+        window.onclick = function(event) {
+            if (event.target.className === 'modal') {
+                event.target.style.display = 'none';
+            }
+        }
+
+        // 页面加载时加载活动列表
+        window.onload = loadActivities;
+    </script>
+</body>
+</html> 

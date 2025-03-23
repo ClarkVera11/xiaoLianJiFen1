@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>积分商城 - 校内活动积分系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background-color: #C8EAD1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-bar {
+            background-color: #73C088;
+            padding: 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            height: 50px;
+            padding-right: 0;
+            margin-right: 0;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            height: 100%;
+            margin-right: 0;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 0 20px;
+            font-size: 15px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .nav-links a:hover::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: white;
+        }
+
+        .nav-links a.active {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: white;
+        }
+
+        .logout-button {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 0 25px;
+            cursor: pointer;
+            font-size: 15px;
+            height: 100%;
+            transition: background-color 0.3s ease;
+            margin-left: 0;
+        }
+
+        .logout-button:hover {
+            background-color: #c0392b;
+        }
+
+        .main-content {
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            flex-grow: 1;
+        }
+
+        .user-points {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .points-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .points-value {
+            font-size: 1.5rem;
+            color: #73C088;
+            font-weight: 500;
+        }
+
+        .points-label {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .shop-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            padding: 0 2rem;
+        }
+
+        .shop-card {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 8px;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            min-height: 300px;
+        }
+
+        .shop-image {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+
+        .shop-title {
+            font-size: 1.2rem;
+            color: #333;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+
+        .shop-description {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+            flex-grow: 1;
+        }
+
+        .shop-points {
+            font-size: 1.1rem;
+            color: #73C088;
+            margin-bottom: 1rem;
+        }
+
+        .exchange-button {
+            background-color: #73C088;
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+
+        .exchange-button:hover {
+            background-color: #5fa572;
+        }
+
+        .exchange-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-info {
+            margin-bottom: 2rem;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        .modal-button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .modal-confirm {
+            background-color: #73C088;
+            color: white;
+        }
+
+        .modal-cancel {
+            background-color: #e0e0e0;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav-bar">
+        <div class="nav-container">
+            <div class="nav-links">
+                <a href="/student" class="{{if eq .ActivePage "home"}}active{{end}}">首页</a>
+                <a href="/student/activities" class="{{if eq .ActivePage "activities"}}active{{end}}">活动管理</a>
+                {{if .IsClubAdmin}}
+                <a href="/student/club" class="{{if eq .ActivePage "club"}}active{{end}}">社团活动</a>
+                {{end}}
+                <a href="/student/shop" class="{{if eq .ActivePage "shop"}}active{{end}}">积分商城</a>
+                <a href="/student/profile" class="{{if eq .ActivePage "profile"}}active{{end}}">个人中心</a>
+            </div>
+            <button class="logout-button" onclick="confirmLogout()">安全退出</button>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="user-points">
+            <div class="points-info">
+                <span class="points-value">150</span>
+                <span class="points-label">可用积分</span>
+            </div>
+        </div>
+
+        <div class="shop-grid">
+            <!-- 示例商品卡片 -->
+            <div class="shop-card">
+                <img src="https://via.placeholder.com/300x180" alt="商品图片" class="shop-image">
+                <h3 class="shop-title">定制校园T恤</h3>
+                <p class="shop-description">精美定制的校园文化T恤，采用优质面料，舒适透气。</p>
+                <div class="shop-points">所需积分：50分</div>
+                <button class="exchange-button" onclick="showExchangeModal(1)">立即兑换</button>
+            </div>
+
+            <div class="shop-card">
+                <img src="https://via.placeholder.com/300x180" alt="商品图片" class="shop-image">
+                <h3 class="shop-title">图书馆借阅券</h3>
+                <p class="shop-description">延长图书借阅时间7天，可用于所有普通图书。</p>
+                <div class="shop-points">所需积分：30分</div>
+                <button class="exchange-button" onclick="showExchangeModal(2)">立即兑换</button>
+            </div>
+
+            <div class="shop-card">
+                <img src="https://via.placeholder.com/300x180" alt="商品图片" class="shop-image">
+                <h3 class="shop-title">食堂优惠券</h3>
+                <p class="shop-description">校园食堂通用优惠券，可抵扣5元消费。</p>
+                <div class="shop-points">所需积分：20分</div>
+                <button class="exchange-button" onclick="showExchangeModal(3)">立即兑换</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 兑换确认弹窗 -->
+    <div class="modal" id="exchangeModal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+            <h2 class="modal-title">确认兑换</h2>
+            <div class="modal-info">
+                <p>您确定要兑换该商品吗？</p>
+                <p id="modalItemName" style="color: #73C088; margin-top: 0.5rem;"></p>
+                <p id="modalItemPoints" style="margin-top: 0.5rem;"></p>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-button modal-cancel" onclick="closeModal()">取消</button>
+                <button class="modal-button modal-confirm" onclick="confirmExchange()">确认兑换</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function confirmLogout() {
+            if (confirm("您确定要退出吗？")) {
+                window.location.href = "/logout";
+            }
+        }
+
+        let currentItemId = null;
+
+        function showExchangeModal(itemId) {
+            const modal = document.getElementById('exchangeModal');
+            const items = {
+                1: { name: '定制校园T恤', points: 50 },
+                2: { name: '图书馆借阅券', points: 30 },
+                3: { name: '食堂优惠券', points: 20 }
+            };
+
+            const item = items[itemId];
+            currentItemId = itemId;
+            
+            document.getElementById('modalItemName').textContent = item.name;
+            document.getElementById('modalItemPoints').textContent = `所需积分：${item.points}分`;
+            
+            modal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('exchangeModal').style.display = 'none';
+            currentItemId = null;
+        }
+
+        function confirmExchange() {
+            // TODO: 实现兑换逻辑
+            alert('兑换功能开发中，敬请期待！');
+            closeModal();
+        }
+
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('exchangeModal');
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+    </script>
+</body>
+</html> 

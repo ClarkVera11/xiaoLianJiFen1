@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>活动管理 - 校内活动积分系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background-color: #73C088;
+            min-height: 100vh;
+        }
+
+        .nav-bar {
+            background-color: #73C088;
+            padding: 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            height: 50px;
+            padding-right: 0;
+            margin-right: 0;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            height: 100%;
+            margin-right: 0;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 0 20px;
+            font-size: 15px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .nav-links a:hover::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: white;
+        }
+
+        .nav-links a.active {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: white;
+        }
+
+        .logout-button {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 0 25px;
+            cursor: pointer;
+            font-size: 15px;
+            height: 100%;
+            transition: background-color 0.3s ease;
+            margin-left: 0;
+        }
+
+        .logout-button:hover {
+            background-color: #c0392b;
+        }
+
+        .main-content {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .content-header {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 2rem;
+            position: absolute;
+            right: 2rem;
+            top: 2rem;
+        }
+
+        .content-header h2 {
+            display: none;
+        }
+
+        .new-activity-btn {
+            background-color: #C8EAD1;
+            color: #333;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .new-activity-btn:hover {
+            background-color: #b5d6be;
+        }
+
+        .activity-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin-top: 4rem;
+            margin-bottom: 2rem;
+        }
+
+        .activity-card {
+            background: #C8EAD1;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .activity-card h3 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .activity-info {
+            margin-bottom: 0.5rem;
+            color: #666;
+        }
+
+        .activity-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 1rem;
+        }
+
+        .edit-btn, .delete-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-left: 0.5rem;
+            color: white;
+        }
+
+        .edit-btn {
+            background-color: #f1c40f;
+        }
+
+        .approve-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-left: 0.5rem;
+            color: white;
+            background-color: #2ecc71;
+        }
+
+        .reject-btn {
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-left: 0.5rem;
+            color: white;
+            background-color: #e74c3c;
+        }
+
+        .approve-btn:hover {
+            background-color: #27ae60;
+        }
+
+        .reject-btn:hover {
+            background-color: #c0392b;
+        }
+
+        .delete-btn {
+            background-color: #e74c3c;
+        }
+
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1001;
+        }
+
+        .modal-content {
+            position: relative;
+            background-color: white;
+            margin: 5% auto;
+            padding: 2rem;
+            width: 90%;
+            max-width: 600px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .close-btn {
+            position: absolute;
+            right: 1.5rem;
+            top: 1.5rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .form-group textarea {
+            height: 120px;
+            resize: vertical;
+        }
+
+        .submit-btn {
+            background-color: #73C088;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            width: 100%;
+        }
+
+        .submit-btn:hover {
+            background-color: #5fa572;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+        }
+
+        .pagination-btn {
+            padding: 8px 12px;
+            border: 1px solid #73C088;
+            background-color: white;
+            color: #73C088;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .pagination-btn:hover {
+            background-color: #73C088;
+            color: white;
+        }
+
+        .pagination-btn.active {
+            background-color: #73C088;
+            color: white;
+        }
+
+        .pagination-btn:disabled {
+            background-color: #e0e0e0;
+            border-color: #e0e0e0;
+            color: #999;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav-bar">
+        <div class="nav-container">
+            <div class="nav-links">
+                <a href="/teacher" class="{{if eq .ActivePage "home"}}active{{end}}">首页</a>
+                <a href="/teacher/activity" class="{{if eq .ActivePage "activity"}}active{{end}}">活动管理</a>
+                <a href="/teacher/student" class="{{if eq .ActivePage "student"}}active{{end}}">学生管理</a>
+                <a href="/teacher/club" class="{{if eq .ActivePage "club"}}active{{end}}">社团管理</a>
+                <a href="/teacher/profile" class="{{if eq .ActivePage "profile"}}active{{end}}">个人中心</a>
+            </div>
+            <button class="logout-button" onclick="confirmLogout()">安全退出</button>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="content-header">
+            <button class="new-activity-btn" onclick="showNewActivityModal()">发布新活动</button>
+        </div>
+        <div class="activity-grid" id="activityItems">
+            <!-- 活动列表将通过JavaScript动态加载 -->
+        </div>
+        <div class="pagination" id="pagination">
+            <!-- 分页按钮将通过JavaScript动态加载 -->
+        </div>
+    </div>
+
+    <!-- 发布新活动的模态框 -->
+    <div id="newActivityModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('newActivityModal')">&times;</span>
+            <h2>发布新活动</h2>
+            <form id="activityForm" onsubmit="return submitActivity(event)">
+                <div class="form-group">
+                    <label for="activityName">活动名称</label>
+                    <input type="text" id="activityName" name="activityName" required>
+                </div>
+                <div class="form-group">
+                    <label for="activityTime">活动时间</label>
+                    <input type="datetime-local" id="activityTime" name="activityTime" required>
+                </div>
+                <div class="form-group">
+                    <label for="activityLocation">活动地点</label>
+                    <input type="text" id="activityLocation" name="activityLocation" required>
+                </div>
+                <div class="form-group">
+                    <label for="activityDesc">活动描述</label>
+                    <textarea id="activityDesc" name="activityDesc" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="activityScore">活动积分</label>
+                    <input type="number" id="activityScore" name="activityScore" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="activityCapacity">人员数量</label>
+                    <input type="number" id="activityCapacity" name="activityCapacity" min="1" required>
+                </div>
+                <button type="submit" class="submit-btn">发布活动</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- 编辑活动的模态框 -->
+    <div id="editActivityModal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeModal('editActivityModal')">&times;</span>
+            <h2>编辑活动</h2>
+            <form id="editActivityForm" onsubmit="return updateActivity(event)">
+                <input type="hidden" id="editActivityId">
+                <div class="form-group">
+                    <label for="editActivityName">活动名称</label>
+                    <input type="text" id="editActivityName" name="editActivityName" required>
+                </div>
+                <div class="form-group">
+                    <label for="editActivityTime">活动时间</label>
+                    <input type="datetime-local" id="editActivityTime" name="editActivityTime" required>
+                </div>
+                <div class="form-group">
+                    <label for="editActivityLocation">活动地点</label>
+                    <input type="text" id="editActivityLocation" name="editActivityLocation" required>
+                </div>
+                <div class="form-group">
+                    <label for="editActivityDesc">活动描述</label>
+                    <textarea id="editActivityDesc" name="editActivityDesc" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editActivityScore">活动积分</label>
+                    <input type="number" id="editActivityScore" name="editActivityScore" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="editActivityCapacity">人员数量</label>
+                    <input type="number" id="editActivityCapacity" name="editActivityCapacity" min="1" required>
+                </div>
+                <button type="submit" class="submit-btn">保存修改</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        const itemsPerPage = 4;
+        let allActivities = [];
+
+        // 加载活动列表
+        function loadActivities() {
+            fetch('/teacher/get-activities')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        allActivities = data.data;
+                        renderPagination();
+                        renderCurrentPage();
+                    } else {
+                        console.error('获取活动列表失败：', data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('获取活动列表出错：', error);
+                });
+        }
+
+        // 渲染分页按钮
+        function renderPagination() {
+            const totalPages = Math.ceil(allActivities.length / itemsPerPage);
+            const pagination = document.getElementById('pagination');
+            
+            let html = '';
+            
+            // 上一页按钮
+            html += `<button class="pagination-btn" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>上一页</button>`;
+            
+            // 页码按钮
+            for (let i = 1; i <= totalPages; i++) {
+                html += `<button class="pagination-btn ${currentPage === i ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+            }
+            
+            // 下一页按钮
+            html += `<button class="pagination-btn" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>下一页</button>`;
+            
+            pagination.innerHTML = html;
+        }
+
+        // 切换页面
+        function changePage(page) {
+            const totalPages = Math.ceil(allActivities.length / itemsPerPage);
+            if (page < 1 || page > totalPages) return;
+            
+            currentPage = page;
+            renderPagination();
+            renderCurrentPage();
+        }
+
+        // 渲染当前页的活动
+        function renderCurrentPage() {
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const currentActivities = allActivities.slice(startIndex, endIndex);
+            
+            const container = document.getElementById('activityItems');
+            container.innerHTML = currentActivities.map(activity => `
+                <div class="activity-card">
+                    <h3>${activity.Name}</h3>
+                    <div class="activity-info">时间：${formatDateTime(activity.Time)}</div>
+                    <div class="activity-info">地点：${activity.Location}</div>
+                    <div class="activity-info">描述：${activity.Description}</div>
+                    <div class="activity-info">积分：${activity.Points}</div>
+                    <div class="activity-info">人数：${activity.Capacity}</div>
+                    <div class="activity-info">状态：${getStatusText(activity.Status)}</div>
+                    <div class="activity-actions">
+                        <button class="edit-btn" onclick="editActivity(${activity.Id})">编辑</button>
+                        ${activity.Status === 0 ? `
+                            <button class="approve-btn" onclick="approveActivity(${activity.Id})">审批通过</button>
+                            <button class="reject-btn" onclick="rejectActivity(${activity.Id})">审批不通过</button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // 获取活动状态文本
+        function getStatusText(status) {
+            const statusMap = {
+                0: '待审核',
+                1: '已通过',
+                2: '已拒绝',
+                3: '已结束'
+            };
+            return statusMap[status] || '未知状态';
+        }
+
+        // 格式化日期时间
+        function formatDateTime(dateTimeStr) {
+            const date = new Date(dateTimeStr);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function showNewActivityModal() {
+            document.getElementById('newActivityModal').style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function submitActivity(event) {
+            event.preventDefault();
+            
+            // 获取表单数据
+            const formData = new FormData();
+            formData.append('Name', document.getElementById('activityName').value);
+            formData.append('Time', document.getElementById('activityTime').value);
+            formData.append('Location', document.getElementById('activityLocation').value);
+            formData.append('Description', document.getElementById('activityDesc').value);
+            formData.append('Points', document.getElementById('activityScore').value);
+            formData.append('Capacity', document.getElementById('activityCapacity').value);
+
+            // 发送到服务器
+            fetch('/student/submit-activity', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message);
+                    closeModal('newActivityModal');
+                    event.target.reset();
+                    // 重新加载活动列表并回到第一页
+                    currentPage = 1;
+                    loadActivities();
+                } else {
+                    alert(data.message || '提交失败，请稍后重试');
+                }
+            })
+            .catch(error => {
+                console.error('提交活动失败：', error);
+                alert('提交失败，请稍后重试');
+            });
+        }
+
+        function editActivity(id) {
+            // 从活动列表中找到对应的活动
+            const activity = allActivities.find(a => a.Id === id);
+            if (!activity) {
+                alert('未找到活动信息');
+                return;
+            }
+
+            // 填充表单
+            document.getElementById('editActivityId').value = activity.Id;
+            document.getElementById('editActivityName').value = activity.Name;
+            document.getElementById('editActivityTime').value = formatDateTimeForInput(activity.Time);
+            document.getElementById('editActivityLocation').value = activity.Location;
+            document.getElementById('editActivityDesc').value = activity.Description;
+            document.getElementById('editActivityScore').value = activity.Points;
+            document.getElementById('editActivityCapacity').value = activity.Capacity;
+
+            // 显示模态框
+            document.getElementById('editActivityModal').style.display = 'block';
+        }
+
+        function formatDateTimeForInput(dateTimeStr) {
+            const date = new Date(dateTimeStr);
+            return date.toISOString().slice(0, 16);
+        }
+
+        function updateActivity(event) {
+            event.preventDefault();
+            
+            // 获取表单数据
+            const formData = new FormData();
+            formData.append('id', document.getElementById('editActivityId').value);
+            formData.append('name', document.getElementById('editActivityName').value);
+            formData.append('time', document.getElementById('editActivityTime').value);
+            formData.append('location', document.getElementById('editActivityLocation').value);
+            formData.append('description', document.getElementById('editActivityDesc').value);
+            formData.append('points', document.getElementById('editActivityScore').value);
+            formData.append('capacity', document.getElementById('editActivityCapacity').value);
+
+            // 发送到服务器
+            fetch('/teacher/update-activity', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('更新成功');
+                    closeModal('editActivityModal');
+                    // 重新加载活动列表
+                    loadActivities();
+                } else {
+                    alert(data.message || '更新失败，请稍后重试');
+                }
+            })
+            .catch(error => {
+                console.error('更新活动失败：', error);
+                alert('更新失败，请稍后重试');
+            });
+
+            return false;
+        }
+
+        function approveActivity(id) {
+            if (confirm('确定要审批通过这个活动吗？')) {
+                const formData = new FormData();
+                formData.append('id', id);
+
+                fetch('/teacher/approve-activity', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('审批通过成功');
+                        // 重新加载活动列表
+                        loadActivities();
+                    } else {
+                        alert(data.message || '审批失败，请稍后重试');
+                    }
+                })
+                .catch(error => {
+                    console.error('审批失败：', error);
+                    alert('审批失败，请稍后重试');
+                });
+            }
+        }
+
+        function rejectActivity(id) {
+            if (confirm('确定要拒绝这个活动吗？')) {
+                const formData = new FormData();
+                formData.append('id', id);
+
+                fetch('/teacher/reject-activity', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('已拒绝该活动');
+                        // 重新加载活动列表
+                        loadActivities();
+                    } else {
+                        alert(data.message || '操作失败，请稍后重试');
+                    }
+                })
+                .catch(error => {
+                    console.error('拒绝活动失败：', error);
+                    alert('操作失败，请稍后重试');
+                });
+            }
+        }
+
+        function confirmLogout() {
+            if (confirm('确定要退出吗？')) {
+                window.location.href = '/logout';
+            }
+        }
+
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            if (event.target.className === 'modal') {
+                event.target.style.display = 'none';
+            }
+        }
+
+        // 页面加载时加载活动列表
+        document.addEventListener('DOMContentLoaded', loadActivities);
+    </script>
+</body>
+</html> 
