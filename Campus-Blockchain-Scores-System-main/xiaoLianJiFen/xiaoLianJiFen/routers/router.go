@@ -16,7 +16,6 @@ func init() {
 	beego.Router("/teacher/activity", &controllers.TeacherController{}, "get:ShowActivity")
 	beego.Router("/teacher/student", &controllers.TeacherController{}, "get:ShowStudent")
 	beego.Router("/teacher/club", &controllers.TeacherController{}, "get:ShowClub")
-	beego.Router("/teacher/profile", &controllers.TeacherController{}, "get:ShowProfile")
 	beego.Router("/teacher/requests", &controllers.TeacherController{}, "get:GetAdminRequests")
 	beego.Router("/teacher/set-admin", &controllers.TeacherController{}, "post:SetAsAdmin")
 	beego.Router("/teacher/students", &controllers.TeacherController{}, "get:ShowStudents")
@@ -34,12 +33,12 @@ func init() {
 	beego.Router("/student", &controllers.StudentController{}, "get:ShowDashboard")
 	beego.Router("/student/activities", &controllers.StudentController{}, "get:ShowActivities")
 	beego.Router("/student/shop", &controllers.StudentController{}, "get:ShowShop")
-	beego.Router("/student/profile", &controllers.StudentController{}, "get:ShowProfile")
 	beego.Router("/student/club", &controllers.StudentController{}, "get:ShowClub")
 	beego.Router("/student/apply", &controllers.StudentController{}, "post:ApplyForAdmin")
 	beego.Router("/student/club-activities", &controllers.StudentController{}, "get:GetClubActivities")
 	beego.Router("/student/submit-activity", &controllers.StudentController{}, "post:SubmitActivity")
 	beego.Router("/student/request-admin", &controllers.StudentController{}, "post:RequestAdmin")
+	beego.Router("/student/rules", &controllers.StudentController{}, "get:ShowRules")
 
 	//注册，实现了get请求方法之后，不会再访问默认方法
 	beego.Router("/ZhuCe", &controllers.MainController{}, "get:ZhuCeGet;post:HuoQu")

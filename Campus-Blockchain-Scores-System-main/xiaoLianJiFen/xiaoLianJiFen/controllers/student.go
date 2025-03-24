@@ -70,6 +70,14 @@ func (c *StudentController) ShowClub() {
     c.TplName = "student_club.html"
 }
 
+// ShowRules 显示积分规则页面
+func (c *StudentController) ShowRules() {
+    beego.Info("进入积分规则页面")
+    c.Data["ActivePage"] = "rules"
+    c.Data["IsClubAdmin"] = c.isClubAdmin()
+    c.TplName = "student_rules.html"
+}
+
 // ApplyForAdmin 申请成为管理员
 func (c *StudentController) ApplyForAdmin() {
 	beego.Info("开始处理申请管理员请求")
