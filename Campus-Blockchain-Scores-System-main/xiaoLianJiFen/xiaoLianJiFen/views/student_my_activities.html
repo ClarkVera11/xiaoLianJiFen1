@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的活动 - 校内活动积分系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background-color: #C8EAD1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-bar {
+            background-color: #73C088;
+            padding: 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            height: 50px;
+            padding-right: 0;
+            margin-right: 0;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            height: 100%;
+            margin-right: 0;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 0 20px;
+            font-size: 15px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .nav-links a:hover::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: white;
+        }
+
+        .nav-links a.active {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: white;
+        }
+
+        .logout-button {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 0 25px;
+            cursor: pointer;
+            font-size: 15px;
+            height: 100%;
+            transition: background-color 0.3s ease;
+            margin-left: 0;
+        }
+
+        .logout-button:hover {
+            background-color: #c0392b;
+        }
+
+        .main-content {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            flex-grow: 1;
+        }
+
+        .page-title {
+            font-size: 1.8rem;
+            color: #333;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .activities-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .activity-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .activity-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .activity-name {
+            font-size: 1.2rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .activity-status {
+            padding: 0.3rem 0.8rem;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            background-color: #73C088;
+            color: white;
+        }
+
+        .activity-info {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #666;
+        }
+
+        .info-label {
+            color: #999;
+        }
+
+        .no-activities {
+            text-align: center;
+            padding: 3rem;
+            color: #666;
+            background-color: white;
+            border-radius: 8px;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav-bar">
+        <div class="nav-container">
+            <div class="nav-links">
+                <a href="/student" class="{{if eq .ActivePage "home"}}active{{end}}">首页</a>
+                <a href="/student/activities" class="{{if eq .ActivePage "activities"}}active{{end}}">活动管理</a>
+                <a href="/student/my-activities" class="{{if eq .ActivePage "myactivities"}}active{{end}}">我的活动</a>
+                {{if .IsClubAdmin}}
+                <a href="/student/club" class="{{if eq .ActivePage "club"}}active{{end}}">社团活动</a>
+                {{end}}
+                <a href="/student/shop" class="{{if eq .ActivePage "shop"}}active{{end}}">积分商城</a>
+                <a href="/student/profile" class="{{if eq .ActivePage "profile"}}active{{end}}">个人中心</a>
+            </div>
+            <button class="logout-button" onclick="confirmLogout()">安全退出</button>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <h1 class="page-title">我的活动</h1>
+        <div class="activities-list" id="activitiesList">
+            <!-- 活动列表将通过 JavaScript 动态加载 -->
+        </div>
+    </div>
+
+    <script>
+        function confirmLogout() {
+            if (confirm("您确定要退出吗？")) {
+                window.location.href = "/logout";
+            }
+        }
+
+        function loadMyActivities() {
+            fetch('/student/my-activities/list')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const activitiesList = document.getElementById('activitiesList');
+                        if (data.activities && data.activities.length > 0) {
+                            activitiesList.innerHTML = data.activities.map(activity => `
+                                <div class="activity-card">
+                                    <div class="activity-header">
+                                        <h3 class="activity-name">${activity.activity_name}</h3>
+                                        <span class="activity-status">${activity.activity_status === 1 ? '进行中' : '已结束'}</span>
+                                    </div>
+                                    <div class="activity-info">
+                                        <div class="info-item">
+                                            <span class="info-label">活动地点：</span>
+                                            <span>${activity.location}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">活动积分：</span>
+                                            <span>${activity.score} 分</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">开始时间：</span>
+                                            <span>${new Date(activity.start_time).toLocaleString()}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">结束时间：</span>
+                                            <span>${new Date(activity.end_time).toLocaleString()}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">报名时间：</span>
+                                            <span>${new Date(activity.registered_at).toLocaleString()}</span>
+                                        </div>
+                                        <div class="info-item">
+                                            <span class="info-label">报名状态：</span>
+                                            <span>${activity.registration_status === 1 ? '已报名' : '已取消'}</span>
+                                        </div>
+                                    </div>
+                                    <div class="activity-description">
+                                        <p>${activity.description}</p>
+                                    </div>
+                                </div>
+                            `).join('');
+                        } else {
+                            activitiesList.innerHTML = `
+                                <div class="no-activities">
+                                    <h3>暂无报名活动</h3>
+                                    <p>快去活动管理页面报名参加活动吧！</p>
+                                </div>
+                            `;
+                        }
+                    } else {
+                        alert(data.message || '获取活动列表失败');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('获取活动列表失败，请稍后重试');
+                });
+        }
+
+        // 页面加载时获取活动列表
+        document.addEventListener('DOMContentLoaded', loadMyActivities);
+    </script>
+</body>
+</html> 

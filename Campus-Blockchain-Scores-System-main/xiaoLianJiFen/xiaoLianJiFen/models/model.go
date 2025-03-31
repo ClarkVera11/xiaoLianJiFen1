@@ -20,17 +20,30 @@ type Users struct {
 
 // Activities 活动模型
 type Activities struct {
-	Id          int64     `orm:"column(id);pk;auto"`
-	Name        string    `orm:"column(name);size(255)"`          // 活动名称
-	Time        time.Time `orm:"column(time);type(datetime)"`     // 活动时间
-	Location    string    `orm:"column(location);size(255)"`      // 活动地点
+	Id          int64     `orm:"column(id);pk;auto"`          // 活动ID
+	Name        string    `orm:"column(name);size(255)"`      // 活动名称
+	StartTime   time.Time `orm:"column(start_time);type(datetime)"`  // 活动开始时间
+	EndTime     time.Time `orm:"column(end_time);type(datetime)"`    // 活动结束时间
+	Location    string    `orm:"column(location);size(255)"`  // 活动地点
 	Description string    `orm:"column(description);type(text)"`  // 活动描述
-	Points      int       `orm:"column(points)"`                  // 活动积分
-	Capacity    int       `orm:"column(capacity)"`                // 人员数量
+	Points      int       `orm:"column(points)"`              // 活动积分
+	Capacity    int       `orm:"column(capacity)"`            // 人员数量
 	CreatedAt   time.Time `orm:"column(created_at);auto_now_add"` // 创建时间
 	UpdatedAt   time.Time `orm:"column(updated_at);auto_now"`     // 更新时间
-	Status      int8      `orm:"column(status);default(0)"`       // 活动状态：0-待审核 1-已通过 2-已拒绝 3-已结束
+	Status      int8      `orm:"column(status);default(0)"`    // 活动状态：0-待审核 1-已通过 2-已拒绝 3-已结束
 }
+
+
+// ActivityRegistrations 活动报名模型
+type ActivityRegistrations struct {
+	Id         int64     `orm:"column(id);pk;auto"` // 报名ID
+	ActivityId int64     `orm:"column(activity_id)"` // 活动ID
+	UserId     int64     `orm:"column(user_id)"` // 用户ID
+	Status     int8      `orm:"column(status);default(1)"` // 报名状态：1-已报名 2-已取消
+	CreatedAt  time.Time `orm:"column(created_at);auto_now_add"` // 报名时间
+	UpdatedAt  time.Time `orm:"column(updated_at);auto_now"` // 更新时间
+}
+
 
 // 初始化数据库
 func init() {
@@ -41,7 +54,7 @@ func init() {
 	orm.RegisterDataBase("default", "mysql", "root:123456@tcp(127.0.0.1:3306)/xiaolianjifen?charset=utf8")
 
 	// 注册模型
-	orm.RegisterModel(new(Users), new(Activities))
+	orm.RegisterModel(new(Users), new(Activities), new(ActivityRegistrations))
 
 	// 自动创建或更新表
 	orm.RunSyncdb("default", false, true)
@@ -55,45 +68,50 @@ func init() {
 func insertInitialActivities() {
 	o := orm.NewOrm()
 
-	// 定义活动数据
-	activities := []Activities{
-		{
-			Name:        "篮球赛",
-			Time:        parseTime("2025-02-02 00:00:00"),
-			Location:    "篮球场",
-			Description: "5v5男生全场篮球赛",
-			Points:      7,
-			Capacity:    10,
-			Status:      3, // 已结束
-		},
-		{
-			Name:        "围棋比赛",
-			Time:        parseTime("2025-03-19 00:00:00"),
-			Location:    "创客大厦四楼",
-			Description: "擂台赛形式",
-			Points:      8,
-			Capacity:    20,
-			Status:      3, // 已结束
-		},
-		{
-			Name:        "义卖活动",
-			Time:        parseTime("2025-03-07 00:00:00"),
-			Location:    "创操场",
-			Description: "义卖不需要的物品",
-			Points:      9,
-			Capacity:    15,
-			Status:      2, // 已拒绝
-		},
-		{
-			Name:        "乒乓球赛",
-			Time:        parseTime("2025-03-12 00:00:00"),
-			Location:    "乒乓球场",
-			Description: "2v2双打",
-			Points:      8,
-			Capacity:    14,
-			Status:      3, // 已结束
-		},
-	}
+// 定义活动数据
+activities := []Activities{
+	{
+		Name:        "篮球赛",
+		StartTime:   parseTime("2025-02-02 00:00:00"),  // 活动开始时间
+		EndTime:     parseTime("2025-02-02 03:00:00"),  // 假设活动结束时间
+		Location:    "篮球场",
+		Description: "5v5男生全场篮球赛",
+		Points:      7,
+		Capacity:    10,
+		Status:      3, // 已结束
+	},
+	{
+		Name:        "围棋比赛",
+		StartTime:   parseTime("2025-03-19 00:00:00"),  // 活动开始时间
+		EndTime:     parseTime("2025-03-19 02:00:00"),  // 假设活动结束时间
+		Location:    "创客大厦四楼",
+		Description: "擂台赛形式",
+		Points:      8,
+		Capacity:    20,
+		Status:      3, // 已结束
+	},
+	{
+		Name:        "义卖活动",
+		StartTime:   parseTime("2025-03-07 00:00:00"),  // 活动开始时间
+		EndTime:     parseTime("2025-03-07 04:00:00"),  // 假设活动结束时间
+		Location:    "创操场",
+		Description: "义卖不需要的物品",
+		Points:      9,
+		Capacity:    15,
+		Status:      2, // 已拒绝
+	},
+	{
+		Name:        "乒乓球赛",
+		StartTime:   parseTime("2025-03-12 00:00:00"),  // 活动开始时间
+		EndTime:     parseTime("2025-03-12 03:00:00"),  // 假设活动结束时间
+		Location:    "乒乓球场",
+		Description: "2v2双打",
+		Points:      8,
+		Capacity:    14,
+		Status:      3, // 已结束
+	},
+}
+
 
 	// 插入数据
 	for _, activity := range activities {

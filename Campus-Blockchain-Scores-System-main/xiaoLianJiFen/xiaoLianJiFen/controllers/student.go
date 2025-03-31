@@ -5,7 +5,9 @@ import (
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
+
 	// "github.com/ethereum/go-ethereum/console"
+	"time"
 )
 
 type StudentController struct {
@@ -305,6 +307,341 @@ func (c *StudentController) RequestAdmin() {
 	c.Data["json"] = map[string]interface{}{
 		"success": true,
 		"message": "申请成功",
+	}
+	c.ServeJSON()
+}
+
+// RegisterActivity 处理活动报名
+func (c *StudentController) RegisterActivity() {
+	beego.Info("开始处理活动报名请求")
+
+	// 获取当前登录用户的ID
+	userID := c.GetSession("userId")
+	if userID == nil {
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "请先登录",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 获取活动ID
+	activityId, err := c.GetInt64("activityId")
+	if err != nil {
+		beego.Error("获取活动ID失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "无效的活动ID",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	o := orm.NewOrm()
+	// 开启事务
+	err = o.Begin()
+	if err != nil {
+		beego.Error("开启事务失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "系统错误，请稍后重试",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 查询活动信息（使用 FOR UPDATE 锁定记录）
+	var activity Models.Activities
+	err = o.Raw("SELECT * FROM activities WHERE id = ? FOR UPDATE", activityId).QueryRow(&activity)
+	if err != nil {
+		o.Rollback()
+		beego.Error("查询活动信息失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "活动不存在",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 检查活动状态
+	if activity.Status != 1 {
+		o.Rollback()
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "该活动不在可报名状态",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 查询用户信息
+	var user Models.Users
+	err = o.QueryTable("users").Filter("username", userID).One(&user)
+	if err != nil {
+		o.Rollback()
+		beego.Error("查询用户信息失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "用户信息获取失败",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 检查是否已报名
+	exist := o.QueryTable("activity_registrations").
+		Filter("activity_id", activityId).
+		Filter("user_id", user.Id).
+		Filter("status", 1).
+		Exist()
+
+	if exist {
+		o.Rollback()
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "您已报名该活动",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 检查活动容量
+	count, err := o.QueryTable("activity_registrations").
+		Filter("activity_id", activityId).
+		Filter("status", 1).
+		Count()
+
+	if err != nil {
+		o.Rollback()
+		beego.Error("查询报名人数失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "系统错误，请稍后重试",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	if int(count) >= activity.Capacity {
+		o.Rollback()
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "活动名额已满",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 创建报名记录
+	registration := Models.ActivityRegistrations{
+		ActivityId:   activityId,
+		UserId:       user.Id,
+		Status:       1,
+	}
+
+	_, err = o.Insert(&registration)
+	if err != nil {
+		o.Rollback()
+		beego.Error("创建报名记录失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "报名失败，请稍后重试",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 更新活动剩余名额
+	activity.Capacity = activity.Capacity - 1
+	_, err = o.Update(&activity, "Capacity")
+	if err != nil {
+		o.Rollback()
+		beego.Error("更新活动容量失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "报名失败，请稍后重试",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 提交事务
+	err = o.Commit()
+	if err != nil {
+		o.Rollback()
+		beego.Error("提交事务失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "报名失败，请稍后重试",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	c.Data["json"] = map[string]interface{}{
+		"success": true,
+		"message": "报名成功",
+	}
+	c.ServeJSON()
+}
+
+// GetRegistrationStatus 获取用户报名状态
+func (c *StudentController) GetRegistrationStatus() {
+	beego.Info("开始获取报名状态")
+
+	// 获取当前登录用户的ID
+	userID := c.GetSession("userId")
+	if userID == nil {
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "请先登录",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 获取活动ID
+	activityId, err := c.GetInt64("activityId")
+	if err != nil {
+		beego.Error("获取活动ID失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "无效的活动ID",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	o := orm.NewOrm()
+
+	// 查询用户信息
+	var user Models.Users
+	err = o.QueryTable("users").Filter("username", userID).One(&user)
+	if err != nil {
+		beego.Error("查询用户信息失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "用户信息获取失败",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 查询报名状态
+	var registration Models.ActivityRegistrations
+	err = o.QueryTable("activity_registrations").
+		Filter("activity_id", activityId).
+		Filter("user_id", user.Id).
+		One(&registration)
+
+	if err == orm.ErrNoRows {
+		c.Data["json"] = map[string]interface{}{
+			"success":      true,
+			"isRegistered": false,
+		}
+	} else if err != nil {
+		beego.Error("查询报名状态失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "获取报名状态失败",
+		}
+	} else {
+		c.Data["json"] = map[string]interface{}{
+			"success":      true,
+			"isRegistered": registration.Status == 1,
+		}
+	}
+	c.ServeJSON()
+}
+
+// ShowMyActivities 显示我的活动页面
+func (c *StudentController) ShowMyActivities() {
+	beego.Info("进入我的活动页面")
+	c.Data["ActivePage"] = "myactivities"
+	c.Data["IsClubAdmin"] = c.isClubAdmin()
+	c.TplName = "student_my_activities.html"
+}
+
+// GetMyActivities 获取我参加的活动列表
+func (c *StudentController) GetMyActivities() {
+	beego.Info("开始获取我的活动列表")
+
+	// 获取当前登录用户的ID
+	userID := c.GetSession("userId")
+	if userID == nil {
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "请先登录",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	o := orm.NewOrm()
+
+	// 查询用户信息
+	var user Models.Users
+	err := o.QueryTable("users").Filter("username", userID).One(&user)
+	if err != nil {
+		beego.Error("查询用户信息失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "用户信息获取失败",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 使用 SQL 关联查询获取活动信息
+	var activities []struct {
+		RegistrationId     int64     `json:"registration_id"`
+		ActivityId         int64     `json:"activity_id"`
+		ActivityName       string    `json:"activity_name"`
+		Description        string    `json:"description"`
+		Location           string    `json:"location"`
+		StartTime          time.Time `json:"start_time"`
+		EndTime            time.Time `json:"end_time"`
+		RegisteredAt       time.Time `json:"registered_at"`
+		RegistrationStatus int       `json:"registration_status"`
+		ActivityStatus     int       `json:"activity_status"`
+		Score              int       `json:"score"`
+	}
+
+	sql := `
+	SELECT 
+    ar.id as registration_id,
+    a.id as activity_id,
+    a.name as activity_name,
+    a.description,
+    a.location,
+    a.start_time,
+    a.end_time,
+    ar.created_at as registered_at,
+    ar.status as registration_status,
+    a.status as activity_status,
+    a.points as score  -- 修改这里，将 a.score 改为 a.points
+FROM activity_registrations ar
+JOIN activities a ON ar.activity_id = a.id
+WHERE ar.user_id = ? AND ar.status = 1
+ORDER BY ar.created_at DESC
+	`
+
+	_, err = o.Raw(sql, user.Id).QueryRows(&activities)
+	if err != nil {
+		beego.Error("查询活动列表失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "获取活动列表失败",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	c.Data["json"] = map[string]interface{}{
+		"success":    true,
+		"activities": activities,
 	}
 	c.ServeJSON()
 }

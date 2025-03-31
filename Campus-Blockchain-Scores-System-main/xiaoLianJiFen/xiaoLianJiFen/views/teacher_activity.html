@@ -327,7 +327,6 @@
                 <a href="/teacher/activity" class="{{if eq .ActivePage "activity"}}active{{end}}">活动管理</a>
                 <a href="/teacher/student" class="{{if eq .ActivePage "student"}}active{{end}}">学生管理</a>
                 <a href="/teacher/club" class="{{if eq .ActivePage "club"}}active{{end}}">社团管理</a>
-            
             </div>
             <button class="logout-button" onclick="confirmLogout()">安全退出</button>
         </div>
@@ -356,8 +355,12 @@
                     <input type="text" id="activityName" name="activityName" required>
                 </div>
                 <div class="form-group">
-                    <label for="activityTime">活动时间</label>
-                    <input type="datetime-local" id="activityTime" name="activityTime" required>
+                    <label for="activityStartTime">开始时间</label>
+                    <input type="datetime-local" id="activityStartTime" name="activityStartTime" required>
+                </div>
+                <div class="form-group">
+                    <label for="activityEndTime">结束时间</label>
+                    <input type="datetime-local" id="activityEndTime" name="activityEndTime" required>
                 </div>
                 <div class="form-group">
                     <label for="activityLocation">活动地点</label>
@@ -392,8 +395,12 @@
                     <input type="text" id="editActivityName" name="editActivityName" required>
                 </div>
                 <div class="form-group">
-                    <label for="editActivityTime">活动时间</label>
-                    <input type="datetime-local" id="editActivityTime" name="editActivityTime" required>
+                    <label for="editActivityStartTime">开始时间</label>
+                    <input type="datetime-local" id="editActivityStartTime" name="editActivityStartTime" required>
+                </div>
+                <div class="form-group">
+                    <label for="editActivityEndTime">结束时间</label>
+                    <input type="datetime-local" id="editActivityEndTime" name="editActivityEndTime" required>
                 </div>
                 <div class="form-group">
                     <label for="editActivityLocation">活动地点</label>
@@ -480,7 +487,8 @@
             container.innerHTML = currentActivities.map(activity => `
                 <div class="activity-card">
                     <h3>${activity.Name}</h3>
-                    <div class="activity-info">时间：${formatDateTime(activity.Time)}</div>
+                    <div class="activity-info">开始时间：${formatDateTime(activity.StartTime)}</div>
+                    <div class="activity-info">结束时间：${formatDateTime(activity.EndTime)}</div>
                     <div class="activity-info">地点：${activity.Location}</div>
                     <div class="activity-info">描述：${activity.Description}</div>
                     <div class="activity-info">积分：${activity.Points}</div>
@@ -534,7 +542,8 @@
             // 获取表单数据
             const formData = new FormData();
             formData.append('Name', document.getElementById('activityName').value);
-            formData.append('Time', document.getElementById('activityTime').value);
+            formData.append('StartTime', document.getElementById('activityStartTime').value);
+            formData.append('EndTime', document.getElementById('activityEndTime').value);
             formData.append('Location', document.getElementById('activityLocation').value);
             formData.append('Description', document.getElementById('activityDesc').value);
             formData.append('Points', document.getElementById('activityScore').value);
@@ -575,7 +584,8 @@
             // 填充表单
             document.getElementById('editActivityId').value = activity.Id;
             document.getElementById('editActivityName').value = activity.Name;
-            document.getElementById('editActivityTime').value = formatDateTimeForInput(activity.Time);
+            document.getElementById('editActivityStartTime').value = formatDateTimeForInput(activity.StartTime);
+            document.getElementById('editActivityEndTime').value = formatDateTimeForInput(activity.EndTime);
             document.getElementById('editActivityLocation').value = activity.Location;
             document.getElementById('editActivityDesc').value = activity.Description;
             document.getElementById('editActivityScore').value = activity.Points;
@@ -597,7 +607,8 @@
             const formData = new FormData();
             formData.append('id', document.getElementById('editActivityId').value);
             formData.append('name', document.getElementById('editActivityName').value);
-            formData.append('time', document.getElementById('editActivityTime').value);
+            formData.append('startTime', document.getElementById('editActivityStartTime').value);
+            formData.append('endTime', document.getElementById('editActivityEndTime').value);
             formData.append('location', document.getElementById('editActivityLocation').value);
             formData.append('description', document.getElementById('editActivityDesc').value);
             formData.append('points', document.getElementById('editActivityScore').value);
@@ -696,4 +707,4 @@
         document.addEventListener('DOMContentLoaded', loadActivities);
     </script>
 </body>
-</html> 
+</html>

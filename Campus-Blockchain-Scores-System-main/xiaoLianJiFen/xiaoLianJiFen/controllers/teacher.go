@@ -314,84 +314,87 @@ func (c *TeacherController) ApproveActivity() {
 
 // UpdateActivity 更新活动信息
 func (c *TeacherController) UpdateActivity() {
-	beego.Info("开始更新活动信息")
+    beego.Info("开始更新活动信息")
 
-	// 获取活动ID
-	id, err := c.GetInt64("id")
-	if err != nil {
-		beego.Error("获取活动ID失败：", err)
-		c.Data["json"] = map[string]interface{}{
-			"success": false,
-			"message": "无效的活动ID",
-		}
-		c.ServeJSON()
-		return
-	}
+    // 获取活动ID
+    id, err := c.GetInt64("id")
+    if err != nil {
+        beego.Error("获取活动ID失败：", err)
+        c.Data["json"] = map[string]interface{}{
+            "success": false,
+            "message": "无效的活动ID",
+        }
+        c.ServeJSON()
+        return
+    }
 
-	// 获取更新的活动信息
-	name := c.GetString("name")
-	time := c.GetString("time")
-	location := c.GetString("location")
-	description := c.GetString("description")
-	points, err := c.GetInt("points")
-	if err != nil {
-		beego.Error("获取积分失败：", err)
-		c.Data["json"] = map[string]interface{}{
-			"success": false,
-			"message": "无效的积分值",
-		}
-		c.ServeJSON()
-		return
-	}
-	capacity, err := c.GetInt("capacity")
-	if err != nil {
-		beego.Error("获取人数失败：", err)
-		c.Data["json"] = map[string]interface{}{
-			"success": false,
-			"message": "无效的人数值",
-		}
-		c.ServeJSON()
-		return
-	}
+    // 获取更新的活动信息
+    name := c.GetString("name")
+    startTime := c.GetString("start_time")  // 获取 StartTime
+    endTime := c.GetString("end_time")      // 获取 EndTime
+    location := c.GetString("location")
+    description := c.GetString("description")
+    points, err := c.GetInt("points")
+    if err != nil {
+        beego.Error("获取积分失败：", err)
+        c.Data["json"] = map[string]interface{}{
+            "success": false,
+            "message": "无效的积分值",
+        }
+        c.ServeJSON()
+        return
+    }
+    capacity, err := c.GetInt("capacity")
+    if err != nil {
+        beego.Error("获取人数失败：", err)
+        c.Data["json"] = map[string]interface{}{
+            "success": false,
+            "message": "无效的人数值",
+        }
+        c.ServeJSON()
+        return
+    }
 
-	// 更新数据库
-	o := orm.NewOrm()
-	num, err := o.QueryTable("activities").Filter("id", id).Update(orm.Params{
-		"name":        name,
-		"time":        time,
-		"location":    location,
-		"description": description,
-		"points":      points,
-		"capacity":    capacity,
-	})
+    // 更新数据库
+    o := orm.NewOrm()
+    num, err := o.QueryTable("activities").Filter("id", id).Update(orm.Params{
+        "name":        name,
+        "start_time":  startTime,  // 更新 StartTime
+        "end_time":    endTime,    // 更新 EndTime
+        "location":    location,
+        "description": description,
+        "points":      points,
+        "capacity":    capacity,
+    })
 
-	if err != nil {
-		beego.Error("更新活动失败：", err)
-		c.Data["json"] = map[string]interface{}{
-			"success": false,
-			"message": "更新失败",
-		}
-		c.ServeJSON()
-		return
-	}
+    if err != nil {
+        beego.Error("更新活动失败：", err)
+        c.Data["json"] = map[string]interface{}{
+            "success": false,
+            "message": "更新失败",
+        }
+        c.ServeJSON()
+        return
+    }
 
-	if num == 0 {
-		beego.Error("未找到要更新的活动记录")
-		c.Data["json"] = map[string]interface{}{
-			"success": false,
-			"message": "未找到活动记录",
-		}
-		c.ServeJSON()
-		return
-	}
+    if num == 0 {
+        beego.Error("未找到要更新的活动记录")
+        c.Data["json"] = map[string]interface{}{
+            "success": false,
+            "message": "未找到活动记录",
+        }
+        c.ServeJSON()
+        return
+    }
 
-	beego.Info("成功更新活动信息，活动ID：", id)
-	c.Data["json"] = map[string]interface{}{
-		"success": true,
-		"message": "更新成功",
-	}
-	c.ServeJSON()
+    beego.Info("成功更新活动信息，活动ID：", id)
+    c.Data["json"] = map[string]interface{}{
+        "success": true,
+        "message": "更新成功",
+    }
+    c.ServeJSON()
 }
+
 
 // RejectActivity 拒绝活动申请
 func (c *TeacherController) RejectActivity() {

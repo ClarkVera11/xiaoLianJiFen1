@@ -228,6 +228,27 @@
             background-color: #d0d0d0;
         }
 
+        .btn-register {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .btn-register:hover {
+            background-color: #45a049;
+        }
+
+        .btn-registered {
+            background-color: #808080;
+            color: white;
+            cursor: not-allowed;
+        }
+
+        .btn-full {
+            background-color: #ff4444;
+            color: white;
+            cursor: not-allowed;
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -340,7 +361,7 @@
             <div class="activity-card">
                 <h3 class="activity-title">志愿者服务活动</h3>
                 <div class="activity-info">
-                    <span>📅 2024-03-25 14:00</span>
+                    <span>📅 2024-03-25 14:00 - 2024-03-25 17:00</span>
                     <span>📍 图书馆</span>
                 </div>
                 <div class="activity-points">积分：10分</div>
@@ -353,7 +374,7 @@
             <div class="activity-card">
                 <h3 class="activity-title">校园清洁日</h3>
                 <div class="activity-info">
-                    <span>📅 2024-03-26 09:00</span>
+                    <span>📅 2024-03-26 09:00 - 2024-03-26 12:00</span>
                     <span>📍 校园广场</span>
                 </div>
                 <div class="activity-points">积分：8分</div>
@@ -434,14 +455,16 @@
             const activities = {
                 1: {
                     title: '志愿者服务活动',
-                    time: '2024-03-25 14:00',
+                    startTime: '2024-03-25 14:00',
+                    endTime: '2024-03-25 17:00',
                     location: '图书馆',
                     points: '10',
                     description: '协助图书馆整理图书、指导读者使用图书查询系统等志愿服务工作。活动时长3小时，服务期间提供志愿者服装和饮用水。'
                 },
                 2: {
                     title: '校园清洁日',
-                    time: '2024-03-26 09:00',
+                    startTime: '2024-03-26 09:00',
+                    endTime: '2024-03-26 12:00',
                     location: '校园广场',
                     points: '8',
                     description: '参与校园环境清洁活动，美化校园环境。活动时长2小时，提供清洁工具和防护用品。'
@@ -450,7 +473,7 @@
 
             const activity = activities[activityId];
             document.getElementById('modalTitle').textContent = activity.title;
-            document.getElementById('modalTime').textContent = activity.time;
+            document.getElementById('modalTime').textContent = `${activity.startTime} - ${activity.endTime}`;
             document.getElementById('modalLocation').textContent = activity.location;
             document.getElementById('modalPoints').textContent = activity.points + '分';
             document.getElementById('modalDescription').textContent = activity.description;
@@ -469,6 +492,100 @@
                 modal.style.display = 'none';
             }
         }
+
+        function loadActivities() {
+            fetch('/student/activities/list')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const activitiesGrid = document.querySelector('.activities-grid');
+                        activitiesGrid.innerHTML = '';
+                        
+                        data.activities.forEach(activity => {
+                            // 检查报名状态
+                            checkRegistrationStatus(activity.Id)
+                                .then(registrationStatus => {
+                                    const card = createActivityCard(activity, registrationStatus);
+                                    activitiesGrid.appendChild(card);
+                                });
+                        });
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        async function checkRegistrationStatus(activityId) {
+            try {
+                const response = await fetch(`/student/registration-status?activityId=${activityId}`);
+                const data = await response.json();
+                return data.success ? data.isRegistered : false;
+            } catch (error) {
+                console.error('Error:', error);
+                return false;
+            }
+        }
+
+        function createActivityCard(activity, isRegistered) {
+            const card = document.createElement('div');
+            card.className = 'activity-card';
+            
+            const status = activity.Status === 1 ? '进行中' : 
+                          activity.Status === 2 ? '已拒绝' : 
+                          activity.Status === 3 ? '已结束' : '待审核';
+
+            card.innerHTML = `
+                <h3 class="activity-title">${activity.Name}</h3>
+                <div class="activity-info">
+                    <span>时间：${new Date(activity.StartTime).toLocaleString()} - ${new Date(activity.EndTime).toLocaleString()}</span>
+                    <span>地点：${activity.Location}</span>
+                    <span>状态：${status}</span>
+                    <span>剩余名额：${activity.Capacity}</span>
+                </div>
+                <div class="activity-points">积分：${activity.Points}</div>
+                <p class="activity-description">${activity.Description}</p>
+                <div class="card-buttons">
+                    ${getRegisterButton(activity, isRegistered)}
+                </div>
+            `;
+
+            return card;
+        }
+
+        function getRegisterButton(activity, isRegistered) {
+            if (isRegistered) {
+                return '<button class="btn btn-registered" disabled>已报名</button>';
+            }
+            if (activity.Status !== 1) {
+                return '<button class="btn btn-secondary" disabled>不可报名</button>';
+            }
+            return `<button class="btn btn-register" onclick="registerActivity(${activity.Id})">立即报名</button>`;
+        }
+
+        function registerActivity(activityId) {
+            fetch('/student/register-activity', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `activityId=${activityId}`
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('报名成功！');
+                    loadActivities(); // 重新加载活动列表
+                } else {
+                    alert(data.message || '报名失败，请稍后重试');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('报名失败，请稍后重试');
+            });
+        }
+
+        // 页面加载时获取活动列表
+        document.addEventListener('DOMContentLoaded', loadActivities);
     </script>
 </body>
 </html>
