@@ -32,6 +32,7 @@ func init() {
 	beego.Router("/student/nav", &controllers.StudentController{}, "get:ShowStudentNav")
 	beego.Router("/student", &controllers.StudentController{}, "get:ShowDashboard")
 	beego.Router("/student/activities", &controllers.StudentController{}, "get:ShowActivities")
+	beego.Router("/student/activities/list", &controllers.StudentController{}, "get:GetActivities")
 	beego.Router("/student/shop", &controllers.StudentController{}, "get:ShowShop")
 	beego.Router("/student/club", &controllers.StudentController{}, "get:ShowClub")
 	beego.Router("/student/apply", &controllers.StudentController{}, "post:ApplyForAdmin")

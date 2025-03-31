@@ -115,16 +115,41 @@
         }
     </style>
     <script>
-        function validateUsername() {
-            var username = document.querySelector('input[name="用户名"]').value;
-            var pattern1 = /^2022\d{5}$/;
-            var pattern2 = /^JX\d+$/;
-            if (!pattern1.test(username) && !pattern2.test(username)) {
-                alert('用户名格式错误！请输入以2022开头的9位数字或JX+数字的组合。');
-                return false;
-            }
-            return true;
+        function validateForm() {
+        var username = document.querySelector('input[name="用户名"]').value;
+        var password = document.querySelector('input[name="密码"]').value;
+        var email = document.querySelector('input[name="邮箱"]').value;
+        var phone = document.querySelector('input[name="手机号"]').value;
+
+        var usernamePattern1 = /^2022\d{5}$/;
+        var usernamePattern2 = /^JX\d+$/;
+        var passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,12}$/;
+        var emailPattern = /@/;
+        var phonePattern = /^\d{11}$/;
+
+        if (!usernamePattern1.test(username) && !usernamePattern2.test(username)) {
+            alert('用户名格式错误！请输入以2022开头的9位数字或JX+数字的组合。');
+            return false;
         }
+
+        if (!passwordPattern.test(password)) {
+            alert('密码必须为8-12位，且包含大小写字母、数字和特殊字符。');
+            return false;
+        }
+
+        if (!emailPattern.test(email)) {
+            alert('邮箱格式错误，请包含 @ 字符。');
+            return false;
+        }
+
+        if (!phonePattern.test(phone)) {
+            alert('手机号码必须为11位数字。');
+            return false;
+        }
+
+        return true;
+    }
+
     </script>
 </head>
 <body>
@@ -134,7 +159,7 @@
 
     <div class="register-container">
         <h2>用户注册</h2>
-        <form action="/ZhuCe" method="post" onsubmit="return validateUsername()">
+        <form action="/ZhuCe" method="post" onsubmit="return validateForm()">
             <div class="form-group">
                 <input type="text" name="用户名" placeholder="学号（以2022开头的9位数字或JX+数字）" required>
             </div>

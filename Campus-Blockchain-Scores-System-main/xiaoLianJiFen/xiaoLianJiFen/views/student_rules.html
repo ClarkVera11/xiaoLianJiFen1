@@ -57,9 +57,50 @@
             transition: all 0.3s ease;
         }
 
-        .nav-links a:hover, .nav-links a.active {
+        .nav-links a:hover {
             background-color: rgba(255,255,255,0.1);
         }
+
+        .nav-links a:hover::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: white;
+        }
+
+        .nav-links a.active {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: white;
+        }
+
+        .logout-button {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 0 25px;
+            cursor: pointer;
+            font-size: 15px;
+            height: 100%;
+            transition: background-color 0.3s ease;
+            margin-left: 0;
+        }
+
+        .logout-button:hover {
+            background-color: #c0392b;
+        }
+        
 
         .rules-container {
             max-width: 1000px;
@@ -106,9 +147,10 @@
                 <a href="/student/club" class="{{if eq .ActivePage "club"}}active{{end}}">社团活动</a>
                 {{end}}
                 <a href="/student/shop" class="{{if eq .ActivePage "shop"}}active{{end}}">积分商城</a>
-                <a href="/student/rules" class="active">积分规则</a>
-                <button class="logout-button" onclick="confirmLogout()">安全退出</button>
+                <a href="/student/rules" class="{{if eq .ActivePage "rules"}}active{{end}}">积分规则</a>
+
             </div>
+            <button class="logout-button" onclick="confirmLogout()">安全退出</button>
         </div>
     </nav>
 

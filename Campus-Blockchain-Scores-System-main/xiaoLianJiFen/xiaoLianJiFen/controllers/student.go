@@ -64,18 +64,45 @@ func (c *StudentController) ShowProfile() {
 
 // ShowClub 显示社团活动页面
 func (c *StudentController) ShowClub() {
-    beego.Info("进入社团活动页面")
-    c.Data["ActivePage"] = "club"
-    c.Data["IsClubAdmin"] = c.isClubAdmin()
-    c.TplName = "student_club.html"
+	beego.Info("进入社团活动页面")
+	c.Data["ActivePage"] = "club"
+	c.Data["IsClubAdmin"] = c.isClubAdmin()
+	c.TplName = "student_club.html"
 }
 
 // ShowRules 显示积分规则页面
 func (c *StudentController) ShowRules() {
-    beego.Info("进入积分规则页面")
-    c.Data["ActivePage"] = "rules"
-    c.Data["IsClubAdmin"] = c.isClubAdmin()
-    c.TplName = "student_rules.html"
+	beego.Info("进入积分规则页面")
+	c.Data["ActivePage"] = "rules"
+	c.Data["IsClubAdmin"] = c.isClubAdmin()
+	c.TplName = "student_rules.html"
+}
+
+// GetActivities 获取活动列表
+func (c *StudentController) GetActivities() {
+	beego.Info("开始获取活动列表")
+
+	o := orm.NewOrm()
+	var activities []Models.Activities
+
+	// 查询所有活动
+	_, err := o.QueryTable("activities").All(&activities)
+	if err != nil {
+		beego.Error("查询活动列表失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "获取活动列表失败",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	beego.Info("成功获取活动列表，数量：", len(activities))
+	c.Data["json"] = map[string]interface{}{
+		"success":    true,
+		"activities": activities,
+	}
+	c.ServeJSON()
 }
 
 // ApplyForAdmin 申请成为管理员
