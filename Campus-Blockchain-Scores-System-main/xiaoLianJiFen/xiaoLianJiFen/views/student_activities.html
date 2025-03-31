@@ -338,7 +338,9 @@
             <div class="nav-links">
                 <a href="/student" class="{{if eq .ActivePage "home"}}active{{end}}">首页</a>
                 <a href="/student/activities" class="{{if eq .ActivePage "activities"}}active{{end}}">活动管理</a>
+                <a href="/student/my-activities" class="{{if eq .ActivePage "myactivities"}}active{{end}}">我的活动</a>
                 {{if .IsClubAdmin}}
+                
                 <a href="/student/club" class="{{if eq .ActivePage "club"}}active{{end}}">社团活动</a>
                 {{end}}
                 <a href="/student/shop" class="{{if eq .ActivePage "shop"}}active{{end}}">积分商城</a>
