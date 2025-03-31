@@ -316,7 +316,6 @@
         </div>
     </div>
 
-    <!-- 申报活动模态框 -->
     <div id="applyModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
@@ -329,8 +328,12 @@
                     <input type="text" id="activityName" required>
                 </div>
                 <div class="form-group">
-                    <label for="activityTime">活动时间</label>
-                    <input type="datetime-local" id="activityTime" required>
+                    <label for="activityStartTime">开始时间</label>
+                    <input type="datetime-local" id="activityStartTime" required>
+                </div>
+                <div class="form-group">
+                    <label for="activityEndTime">结束时间</label>
+                    <input type="datetime-local" id="activityEndTime" required>
                 </div>
                 <div class="form-group">
                     <label for="activityLocation">活动地点</label>
@@ -511,7 +514,8 @@
             // 获取表单数据
             const formData = new FormData();
             formData.append('Name', document.getElementById('activityName').value);
-            formData.append('Time', document.getElementById('activityTime').value);
+            formData.append('StartTime', document.getElementById('activityStartTime').value);
+            formData.append('EndTime', document.getElementById('activityEndTime').value);
             formData.append('Location', document.getElementById('activityLocation').value);
             formData.append('Description', document.getElementById('activityDescription').value);
             formData.append('Points', document.getElementById('activityPoints').value);
