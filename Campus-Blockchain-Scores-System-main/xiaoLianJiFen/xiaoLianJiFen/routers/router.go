@@ -44,6 +44,7 @@ func init() {
 	beego.Router("/student/registration-status", &controllers.StudentController{}, "get:GetRegistrationStatus")
 	beego.Router("/student/my-activities", &controllers.StudentController{}, "get:ShowMyActivities")
 	beego.Router("/student/my-activities/list", &controllers.StudentController{}, "get:GetMyActivities")
+	beego.Router("/student/cancel-registration", &controllers.StudentController{}, "post:CancelRegistration")
 
 	//注册，实现了get请求方法之后，不会再访问默认方法
 	beego.Router("/ZhuCe", &controllers.MainController{}, "get:ZhuCeGet;post:HuoQu")

@@ -219,6 +219,10 @@
                                         <h3 class="activity-name">${activity.activity_name}</h3>
                                         <span class="activity-status">${activity.activity_status === 1 ? '进行中' : '已结束'}</span>
                                     </div>
+                                    ${activity.registration_status === 1 ? 
+                                    `<div class="activity-actions">
+                                        <button class="activity-status" onclick="cancelRegistration(${activity.registration_id})">取消报名</button>
+                                    </div>` : ''}
                                     <div class="activity-info">
                                         <div class="info-item">
                                             <span class="info-label">活动地点：</span>
@@ -271,5 +275,31 @@
         // 页面加载时获取活动列表
         document.addEventListener('DOMContentLoaded', loadMyActivities);
     </script>
+<script>
+function cancelRegistration(registrationId) {
+    if(confirm('确定要取消报名吗？')) {
+        fetch('/student/cancel-registration', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: 'registrationId=' + registrationId
+        })
+        .then(response => response.json())
+        .then(data => {
+            if(data.success) {
+                alert('取消报名成功');
+                loadMyActivities();
+            } else {
+                alert('取消报名失败: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('网络错误，请稍后重试');
+        });
+    }
+}
+</script>
 </body>
-</html> 
+</html>

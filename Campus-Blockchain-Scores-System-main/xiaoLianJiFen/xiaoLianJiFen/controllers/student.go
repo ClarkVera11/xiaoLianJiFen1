@@ -436,9 +436,9 @@ func (c *StudentController) RegisterActivity() {
 
 	// 创建报名记录
 	registration := Models.ActivityRegistrations{
-		ActivityId:   activityId,
-		UserId:       user.Id,
-		Status:       1,
+		ActivityId: activityId,
+		UserId:     user.Id,
+		Status:     1,
 	}
 
 	_, err = o.Insert(&registration)
@@ -642,6 +642,81 @@ ORDER BY ar.created_at DESC
 	c.Data["json"] = map[string]interface{}{
 		"success":    true,
 		"activities": activities,
+	}
+	c.ServeJSON()
+}
+
+// CancelRegistration 取消活动报名
+func (c *StudentController) CancelRegistration() {
+	beego.Info("开始处理取消报名请求")
+
+	// 获取当前登录用户的ID
+	userID := c.GetSession("userId")
+	if userID == nil {
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "请先登录",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 获取报名ID
+	registrationId, err := c.GetInt64("registrationId")
+	if err != nil {
+		beego.Error("获取报名ID失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "无效的报名ID",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	o := orm.NewOrm()
+
+	// 查询用户信息
+	var user Models.Users
+	err = o.QueryTable("users").Filter("username", userID).One(&user)
+	if err != nil {
+		beego.Error("查询用户信息失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "用户信息获取失败",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 查询报名记录
+	var registration Models.ActivityRegistrations
+	err = o.QueryTable("activity_registrations").Filter("id", registrationId).Filter("user_id", user.Id).One(&registration)
+	if err != nil {
+		beego.Error("查询报名记录失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "报名记录不存在",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 更新报名状态为已取消(2)
+	registration.Status = 2
+	_, err = o.Update(&registration, "Status")
+	if err != nil {
+		beego.Error("更新报名状态失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "取消报名失败，请稍后重试",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	c.Data["json"] = map[string]interface{}{
+		"success": true,
+		"message": "取消报名成功",
 	}
 	c.ServeJSON()
 }

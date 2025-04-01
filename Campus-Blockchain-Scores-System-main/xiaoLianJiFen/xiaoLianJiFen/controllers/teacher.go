@@ -560,81 +560,48 @@ func (c *TeacherController) HandleAdminRequest() {
 	}
 	c.ServeJSON()
 }
+
 // RevokeAdmin 撤销社团管理员权限
 func (c *TeacherController) RevokeAdmin() {
-    beego.Info("开始处理撤销管理员请求")
+	beego.Info("开始处理撤销管理员请求")
 
-    // 获取学生 ID
-    studentID, err := c.GetInt("id")
-    if err != nil {
-        beego.Error("获取学生 ID 失败：", err)
-        c.Data["json"] = map[string]interface{}{"success": false, "message": "无效的学生 ID"}
-        c.ServeJSON()
-        return
-    }
-
-    beego.Info("获取的学生 ID：", studentID)
-
-    o := orm.NewOrm()
-    user := Models.Users{Id: int64(studentID)}
-
-    // 查询学生信息
-    err = o.Read(&user)
-    if err != nil {
-        beego.Error("查询学生信息失败：", err)
-        c.Data["json"] = map[string]interface{}{"success": false, "message": "学生不存在"}
-        c.ServeJSON()
-        return
-    }
-
-    beego.Info("查询到的学生信息：", user)
-
-    // 更新学生角色回到 "学生"
-    user.Role_name = "学生"
-    _, err = o.Update(&user, "Role_name")
-    if err != nil {
-        beego.Error("更新学生角色失败: ", err)
-        c.Data["json"] = map[string]interface{}{"success": false, "message": "撤销管理员失败"}
-        c.ServeJSON()
-        return
-    }
-
-    // 返回成功结果
-    beego.Info("成功撤销管理员权限, 学生 ID: ", studentID)
-    c.Data["json"] = map[string]interface{}{"success": true, "message": "已撤销该学生的管理员权限"}
-    c.ServeJSON()
-}
-
-
-	// 验证学生当前是否为管理员
-	if student.Role_name != "社团管理员" {
-		beego.Error("该学生不是管理员，当前角色：", student.Role_name)
-		c.Data["json"] = map[string]interface{}{
-			"success": false,
-			"message": "该学生不是管理员，无需撤销",
-		}
-		c.ServeJSON()
-		return
-	}
-
-	// 更新学生角色为学生
-	student.Role_name = "学生"
-	_, err = o.Update(&student, "role_name")
+	// 获取学生 ID
+	studentID, err := c.GetInt("id")
 	if err != nil {
-		beego.Error("更新学生角色失败：", err)
-		c.Data["json"] = map[string]interface{}{
-			"success": false,
-			"message": "撤销管理员失败：" + err.Error(),
-		}
+		beego.Error("获取学生 ID 失败：", err)
+		c.Data["json"] = map[string]interface{}{"success": false, "message": "无效的学生 ID"}
 		c.ServeJSON()
 		return
 	}
 
-	beego.Info("成功撤销学生管理员权限，学生ID：", studentId)
-	c.Data["json"] = map[string]interface{}{
-		"success": true,
-		"message": "已成功撤销管理员权限",
+	beego.Info("获取的学生 ID：", studentID)
+
+	o := orm.NewOrm()
+	user := Models.Users{Id: int64(studentID)}
+
+	// 查询学生信息
+	err = o.Read(&user)
+	if err != nil {
+		beego.Error("查询学生信息失败：", err)
+		c.Data["json"] = map[string]interface{}{"success": false, "message": "学生不存在"}
+		c.ServeJSON()
+		return
 	}
+
+	beego.Info("查询到的学生信息：", user)
+
+	// 更新学生角色回到 "学生"
+	user.Role_name = "学生"
+	_, err = o.Update(&user, "Role_name")
+	if err != nil {
+		beego.Error("更新学生角色失败: ", err)
+		c.Data["json"] = map[string]interface{}{"success": false, "message": "撤销管理员失败"}
+		c.ServeJSON()
+		return
+	}
+
+	// 返回成功结果
+	beego.Info("成功撤销管理员权限, 学生 ID: ", studentID)
+	c.Data["json"] = map[string]interface{}{"success": true, "message": "已撤销该学生的管理员权限"}
 	c.ServeJSON()
 }
-
