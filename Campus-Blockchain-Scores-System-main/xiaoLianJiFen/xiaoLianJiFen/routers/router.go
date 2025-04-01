@@ -27,7 +27,7 @@ func init() {
 	beego.Router("/teacher/update-activity", &controllers.TeacherController{}, "post:UpdateActivity")
 	beego.Router("/teacher/reject-activity", &controllers.TeacherController{}, "post:RejectActivity")
 	beego.Router("/teacher/handle-admin-request", &controllers.TeacherController{}, "*:HandleAdminRequest")
-
+	beego.Router("/teacher/revoke-admin", &controllers.TeacherController{}, "post:RevokeAdmin")
 	// 学生端路由
 	beego.Router("/student/nav", &controllers.StudentController{}, "get:ShowStudentNav")
 	beego.Router("/student", &controllers.StudentController{}, "get:ShowDashboard")

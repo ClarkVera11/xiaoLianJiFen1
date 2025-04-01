@@ -314,87 +314,86 @@ func (c *TeacherController) ApproveActivity() {
 
 // UpdateActivity 更新活动信息
 func (c *TeacherController) UpdateActivity() {
-    beego.Info("开始更新活动信息")
+	beego.Info("开始更新活动信息")
 
-    // 获取活动ID
-    id, err := c.GetInt64("id")
-    if err != nil {
-        beego.Error("获取活动ID失败：", err)
-        c.Data["json"] = map[string]interface{}{
-            "success": false,
-            "message": "无效的活动ID",
-        }
-        c.ServeJSON()
-        return
-    }
+	// 获取活动ID
+	id, err := c.GetInt64("id")
+	if err != nil {
+		beego.Error("获取活动ID失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "无效的活动ID",
+		}
+		c.ServeJSON()
+		return
+	}
 
-    // 获取更新的活动信息
-    name := c.GetString("name")
-    startTime := c.GetString("start_time")  // 获取 StartTime
-    endTime := c.GetString("end_time")      // 获取 EndTime
-    location := c.GetString("location")
-    description := c.GetString("description")
-    points, err := c.GetInt("points")
-    if err != nil {
-        beego.Error("获取积分失败：", err)
-        c.Data["json"] = map[string]interface{}{
-            "success": false,
-            "message": "无效的积分值",
-        }
-        c.ServeJSON()
-        return
-    }
-    capacity, err := c.GetInt("capacity")
-    if err != nil {
-        beego.Error("获取人数失败：", err)
-        c.Data["json"] = map[string]interface{}{
-            "success": false,
-            "message": "无效的人数值",
-        }
-        c.ServeJSON()
-        return
-    }
+	// 获取更新的活动信息
+	name := c.GetString("name")
+	startTime := c.GetString("start_time") // 获取 StartTime
+	endTime := c.GetString("end_time")     // 获取 EndTime
+	location := c.GetString("location")
+	description := c.GetString("description")
+	points, err := c.GetInt("points")
+	if err != nil {
+		beego.Error("获取积分失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "无效的积分值",
+		}
+		c.ServeJSON()
+		return
+	}
+	capacity, err := c.GetInt("capacity")
+	if err != nil {
+		beego.Error("获取人数失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "无效的人数值",
+		}
+		c.ServeJSON()
+		return
+	}
 
-    // 更新数据库
-    o := orm.NewOrm()
-    num, err := o.QueryTable("activities").Filter("id", id).Update(orm.Params{
-        "name":        name,
-        "start_time":  startTime,  // 更新 StartTime
-        "end_time":    endTime,    // 更新 EndTime
-        "location":    location,
-        "description": description,
-        "points":      points,
-        "capacity":    capacity,
-    })
+	// 更新数据库
+	o := orm.NewOrm()
+	num, err := o.QueryTable("activities").Filter("id", id).Update(orm.Params{
+		"name":        name,
+		"start_time":  startTime, // 更新 StartTime
+		"end_time":    endTime,   // 更新 EndTime
+		"location":    location,
+		"description": description,
+		"points":      points,
+		"capacity":    capacity,
+	})
 
-    if err != nil {
-        beego.Error("更新活动失败：", err)
-        c.Data["json"] = map[string]interface{}{
-            "success": false,
-            "message": "更新失败",
-        }
-        c.ServeJSON()
-        return
-    }
+	if err != nil {
+		beego.Error("更新活动失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "更新失败",
+		}
+		c.ServeJSON()
+		return
+	}
 
-    if num == 0 {
-        beego.Error("未找到要更新的活动记录")
-        c.Data["json"] = map[string]interface{}{
-            "success": false,
-            "message": "未找到活动记录",
-        }
-        c.ServeJSON()
-        return
-    }
+	if num == 0 {
+		beego.Error("未找到要更新的活动记录")
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "未找到活动记录",
+		}
+		c.ServeJSON()
+		return
+	}
 
-    beego.Info("成功更新活动信息，活动ID：", id)
-    c.Data["json"] = map[string]interface{}{
-        "success": true,
-        "message": "更新成功",
-    }
-    c.ServeJSON()
+	beego.Info("成功更新活动信息，活动ID：", id)
+	c.Data["json"] = map[string]interface{}{
+		"success": true,
+		"message": "更新成功",
+	}
+	c.ServeJSON()
 }
-
 
 // RejectActivity 拒绝活动申请
 func (c *TeacherController) RejectActivity() {
@@ -456,6 +455,7 @@ func (c *TeacherController) HandleAdminRequest() {
 	beego.Info("收到的请求数据 - 学生ID:", studentId, "操作:", action)
 
 	if studentId == "" || action == "" {
+		beego.Error("缺少必要参数 - 学生ID:", studentId, "操作:", action)
 		c.Data["json"] = map[string]interface{}{
 			"success": false,
 			"message": "缺少必要参数",
@@ -479,6 +479,7 @@ func (c *TeacherController) HandleAdminRequest() {
 
 	beego.Info("找到学生：", student)
 
+	// 根据操作类型处理
 	switch action {
 	case "approve":
 		if student.IsAdminRequest != 1 {
@@ -503,11 +504,22 @@ func (c *TeacherController) HandleAdminRequest() {
 		}
 		student.IsAdminRequest = 0
 		beego.Info("准备拒绝学生的管理员申请")
+	case "revoke":
+		if student.Role_name != "社团管理员" {
+			c.Data["json"] = map[string]interface{}{
+				"success": false,
+				"message": "该学生不是管理员，无需撤销",
+			}
+			c.ServeJSON()
+			return
+		}
+		student.Role_name = "学生"
+		beego.Info("准备撤销学生的管理员权限")
 	default:
 		beego.Error("无效的操作类型：", action)
 		c.Data["json"] = map[string]interface{}{
 			"success": false,
-			"message": "无效的操作",
+			"message": "无效的操作类型：" + action,
 		}
 		c.ServeJSON()
 		return
@@ -516,7 +528,19 @@ func (c *TeacherController) HandleAdminRequest() {
 	// 开启事务
 	o.Begin()
 	beego.Info("开始更新学生信息")
-	_, err = o.Update(&student, "role_name", "is_admin_request")
+
+	// 根据不同的操作类型更新不同的字段
+	var updateFields []string
+	switch action {
+	case "approve":
+		updateFields = []string{"role_name", "is_admin_request"}
+	case "reject":
+		updateFields = []string{"is_admin_request"}
+	case "revoke":
+		updateFields = []string{"role_name"}
+	}
+
+	_, err = o.Update(&student, updateFields...)
 	if err != nil {
 		beego.Error("更新学生信息失败：", err)
 		o.Rollback()
@@ -536,3 +560,81 @@ func (c *TeacherController) HandleAdminRequest() {
 	}
 	c.ServeJSON()
 }
+// RevokeAdmin 撤销社团管理员权限
+func (c *TeacherController) RevokeAdmin() {
+    beego.Info("开始处理撤销管理员请求")
+
+    // 获取学生 ID
+    studentID, err := c.GetInt("id")
+    if err != nil {
+        beego.Error("获取学生 ID 失败：", err)
+        c.Data["json"] = map[string]interface{}{"success": false, "message": "无效的学生 ID"}
+        c.ServeJSON()
+        return
+    }
+
+    beego.Info("获取的学生 ID：", studentID)
+
+    o := orm.NewOrm()
+    user := Models.Users{Id: int64(studentID)}
+
+    // 查询学生信息
+    err = o.Read(&user)
+    if err != nil {
+        beego.Error("查询学生信息失败：", err)
+        c.Data["json"] = map[string]interface{}{"success": false, "message": "学生不存在"}
+        c.ServeJSON()
+        return
+    }
+
+    beego.Info("查询到的学生信息：", user)
+
+    // 更新学生角色回到 "学生"
+    user.Role_name = "学生"
+    _, err = o.Update(&user, "Role_name")
+    if err != nil {
+        beego.Error("更新学生角色失败: ", err)
+        c.Data["json"] = map[string]interface{}{"success": false, "message": "撤销管理员失败"}
+        c.ServeJSON()
+        return
+    }
+
+    // 返回成功结果
+    beego.Info("成功撤销管理员权限, 学生 ID: ", studentID)
+    c.Data["json"] = map[string]interface{}{"success": true, "message": "已撤销该学生的管理员权限"}
+    c.ServeJSON()
+}
+
+
+	// 验证学生当前是否为管理员
+	if student.Role_name != "社团管理员" {
+		beego.Error("该学生不是管理员，当前角色：", student.Role_name)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "该学生不是管理员，无需撤销",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 更新学生角色为学生
+	student.Role_name = "学生"
+	_, err = o.Update(&student, "role_name")
+	if err != nil {
+		beego.Error("更新学生角色失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "撤销管理员失败：" + err.Error(),
+		}
+		c.ServeJSON()
+		return
+	}
+
+	beego.Info("成功撤销学生管理员权限，学生ID：", studentId)
+	c.Data["json"] = map[string]interface{}{
+		"success": true,
+		"message": "已成功撤销管理员权限",
+	}
+	c.ServeJSON()
+}
+

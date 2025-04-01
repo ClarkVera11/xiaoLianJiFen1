@@ -158,6 +158,10 @@
             background-color: #e74c3c;
         }
 
+        .action-btn.revoke {
+            background-color: #f39c12;
+        }
+
         .action-btn:hover {
             opacity: 0.9;
         }
@@ -263,8 +267,10 @@
                             <button class="action-btn approve" onclick="handleAdminRequest(${student.Id}, 'approve')">通过</button>
                             <button class="action-btn reject" onclick="handleAdminRequest(${student.Id}, 'reject')">拒绝</button>
                         ` : ''}
-                        <button class="action-btn delete" onclick="deleteStudent(${student.Id})">删除</button>
-                    </td>
+                        ${student.Role_name === '社团管理员' ? `
+                            <button class="action-btn revoke" onclick="revokeAdmin(${student.Id})">撤销管理员</button>
+                        ` : ''}
+                        
                 </tr>
             `).join('');
         }
@@ -321,6 +327,65 @@
                 window.location.href = "/logout";
             }
         }
+
+        function revokeAdmin(studentId) {
+            if (confirm('确定要撤销该学生的管理员权限吗？')) {
+                const formData = new FormData();
+                formData.append('id', studentId);
+
+                fetch('http://localhost:8082/teacher/revoke-admin', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (response.status === 200) {
+                        // 与handleAdminRequest类似，处理可能的空响应
+                        return response.text().then(text => {
+                            if (!text || text === 'null' || text === '') {
+                                return { success: true, message: '已成功撤销管理员身份' };
+                            }
+                            
+                            try {
+                                return JSON.parse(text);
+                            } catch (e) {
+                                console.log('JSON parse error, but treating as success:', e);
+                                return { success: true, message: '已成功撤销管理员身份' };
+                            }
+                        });
+                    } else {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                })
+                .then(data => {
+                    // 提供默认值
+                    data = data || { success: true, message: '已成功撤销管理员身份' };
+                    
+                    if (data.success) {
+                        alert('已成功撤销管理员身份');
+                        loadStudents(); // 重新加载学生列表
+                    } else {
+                        alert(data.message || '操作失败，请稍后重试');
+                    }
+                })
+                .catch(error => {
+                    console.error('撤销管理员失败：', error);
+                    
+                    // 如果是数据解析错误，仍然尝试刷新列表
+                    if (error.message.includes('null or undefined') || 
+                        error.message.includes('JSON')) {
+                        alert('操作可能已成功，正在刷新列表...');
+                        loadStudents();
+                    } else {
+                        alert('操作失败，请稍后重试');
+                    }
+                });
+            }
+        }
+
+        
 
         // 页面加载时加载学生列表
         window.onload = loadStudents;
