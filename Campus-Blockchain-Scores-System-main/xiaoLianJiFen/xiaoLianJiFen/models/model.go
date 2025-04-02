@@ -44,6 +44,17 @@ type ActivityRegistrations struct {
 	UpdatedAt  time.Time `orm:"column(updated_at);auto_now"`     // 更新时间
 }
 
+// ActivityRecords 活动记录模型
+type ActivityRecords struct {
+	Id              int64     `orm:"column(id);pk;auto"`              // 记录ID
+	ActivityId      int64     `orm:"column(activity_id)"`             // 活动ID
+	AttendanceCount int       `orm:"column(attendance_count)"`        // 实际到场人数
+	Summary         string    `orm:"column(summary);type(text)"`      // 活动总结
+	CreatedBy       int64     `orm:"column(created_by)"`              // 记录创建者ID
+	CreatedAt       time.Time `orm:"column(created_at);auto_now_add"` // 创建时间
+	UpdatedAt       time.Time `orm:"column(updated_at);auto_now"`     // 更新时间
+}
+
 // 初始化数据库
 func init() {
 	// 注册数据库驱动
@@ -53,7 +64,7 @@ func init() {
 	orm.RegisterDataBase("default", "mysql", "root:123456@tcp(127.0.0.1:3306)/xiaolianjifen?charset=utf8")
 
 	// 注册模型
-	orm.RegisterModel(new(Users), new(Activities), new(ActivityRegistrations))
+	orm.RegisterModel(new(Users), new(Activities), new(ActivityRegistrations), new(ActivityRecords))
 
 	// 自动创建或更新表
 	orm.RunSyncdb("default", false, true)

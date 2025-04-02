@@ -763,3 +763,243 @@ func (c *StudentController) CancelRegistration() {
 	}
 	c.ServeJSON()
 }
+
+// ShowActivityRecords 显示活动记录管理页面
+func (c *StudentController) ShowActivityRecords() {
+	beego.Info("进入活动记录管理页面")
+
+	// 检查用户是否是社团管理员
+	userID := c.GetSession("userId")
+	if userID == nil {
+		c.Redirect("/", 302)
+		return
+	}
+
+	o := orm.NewOrm()
+	var user Models.Users
+	err := o.QueryTable("users").Filter("username", userID).One(&user)
+	if err != nil {
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "获取用户信息失败",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	if user.Role_name != "社团管理员" {
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "您没有权限访问此页面",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	c.Data["ActivePage"] = "activity_records"
+	c.Data["IsClubAdmin"] = true
+	c.TplName = "student_activity_records.html"
+}
+
+// GetActivityRecords 获取活动记录列表
+func (c *StudentController) GetActivityRecords() {
+	beego.Info("开始获取活动记录列表")
+
+	// 检查用户是否是社团管理员
+	userID := c.GetSession("userId")
+	if userID == nil {
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "请先登录",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	o := orm.NewOrm()
+	var user Models.Users
+	err := o.QueryTable("users").Filter("username", userID).One(&user)
+	if err != nil {
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "获取用户信息失败",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	if user.Role_name != "社团管理员" {
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "您没有权限访问此页面",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	page, _ := c.GetInt("page", 1)
+	pageSize := 6
+	offset := (page - 1) * pageSize
+
+	// 定义结构体来接收查询结果
+	type RecordResult struct {
+		Id              int64     `json:"id"`
+		ActivityId      int64     `json:"activity_id"`
+		ActivityName    string    `json:"activity_name"`
+		AttendanceCount int       `json:"attendance_count"`
+		Summary         string    `json:"summary"`
+		CreatedBy       int64     `json:"created_by"`
+		CreatedAt       time.Time `json:"created_at"`
+		StartTime       time.Time `json:"start_time"`
+		EndTime         time.Time `json:"end_time"`
+		Location        string    `json:"location"`
+		Points          int       `json:"points"`
+	}
+
+	var records []RecordResult
+	var total int64
+
+	// 获取总记录数
+	total, _ = o.QueryTable("activity_records").Count()
+
+	// 构建查询
+	sql := `
+		SELECT 
+			ar.id,
+			ar.activity_id,
+			a.name as activity_name,
+			ar.attendance_count,
+			ar.summary,
+			ar.created_by,
+			ar.created_at,
+			a.start_time,
+			a.end_time,
+			a.location,
+			a.points
+		FROM activity_records ar
+		LEFT JOIN activities a ON ar.activity_id = a.id
+		ORDER BY ar.created_at DESC
+		LIMIT ? OFFSET ?
+	`
+
+	_, err = o.Raw(sql, pageSize, offset).QueryRows(&records)
+	if err != nil {
+		beego.Error("查询活动记录失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "获取活动记录失败",
+			"error":   err.Error(),
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 如果没有记录，返回空数组而不是 null
+	if records == nil {
+		records = make([]RecordResult, 0)
+	}
+
+	c.Data["json"] = map[string]interface{}{
+		"success": true,
+		"records": records,
+		"total":   total,
+	}
+	c.ServeJSON()
+}
+
+// AddActivityRecord 添加活动记录
+func (c *StudentController) AddActivityRecord() {
+	beego.Info("开始添加活动记录")
+
+	// 检查用户是否是社团管理员
+	userID := c.GetSession("userId")
+	if userID == nil {
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "请先登录",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	o := orm.NewOrm()
+	var user Models.Users
+	err := o.QueryTable("users").Filter("username", userID).One(&user)
+	if err != nil {
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "获取用户信息失败",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	if user.Role_name != "社团管理员" {
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "您没有权限执行此操作",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	activityId, _ := c.GetInt64("activityId")
+	attendanceCount, _ := c.GetInt("attendanceCount")
+	summary := c.GetString("summary")
+
+	// 检查活动是否存在且已结束
+	var activity Models.Activities
+	err = o.QueryTable("activities").Filter("id", activityId).One(&activity)
+	if err != nil {
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "活动不存在",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	if activity.Status != 3 { // 3表示活动已结束
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "只能为已结束的活动添加记录",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 检查是否已存在该活动的记录
+	exist := o.QueryTable("activity_records").Filter("activity_id", activityId).Exist()
+	if exist {
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "该活动已有记录",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	record := Models.ActivityRecords{
+		ActivityId:      activityId,
+		AttendanceCount: attendanceCount,
+		Summary:         summary,
+		CreatedBy:       user.Id,
+	}
+
+	_, err = o.Insert(&record)
+	if err != nil {
+		beego.Error("添加活动记录失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "添加活动记录失败",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	c.Data["json"] = map[string]interface{}{
+		"success": true,
+		"message": "添加活动记录成功",
+	}
+	c.ServeJSON()
+}

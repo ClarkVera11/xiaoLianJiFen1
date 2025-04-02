@@ -605,3 +605,174 @@ func (c *TeacherController) RevokeAdmin() {
 	c.Data["json"] = map[string]interface{}{"success": true, "message": "已撤销该学生的管理员权限"}
 	c.ServeJSON()
 }
+
+// ShowActivityRecords 显示活动记录页面
+func (c *TeacherController) ShowActivityRecords() {
+	// 检查用户是否登录
+	userID := c.GetSession("userId")
+	if userID == nil {
+		c.Redirect("/", 302)
+		return
+	}
+
+	// 检查用户角色
+	o := orm.NewOrm()
+	var user Models.Users
+	err := o.QueryTable("users").Filter("username", userID).One(&user)
+	if err != nil || user.Role_name != "教师" {
+		c.Redirect("/", 302)
+		return
+	}
+
+	beego.Info("进入活动记录页面")
+	c.Data["ActivePage"] = "activity_records"
+	c.TplName = "teacher_activity_records.html"
+}
+
+// GetActivityRecords 获取活动记录列表
+func (c *TeacherController) GetActivityRecords() {
+	page, _ := c.GetInt("page", 1)
+	pageSize, _ := c.GetInt("pageSize", 6)
+	search := c.GetString("search")
+
+	// 构建查询条件
+	query := orm.NewOrm().QueryTable("activity_records")
+	if search != "" {
+		var activityIds orm.ParamsList
+		orm.NewOrm().QueryTable("activities").Filter("name__icontains", search).ValuesFlat(&activityIds, "id")
+		if len(activityIds) > 0 {
+			query = query.Filter("activity_id__in", activityIds)
+		}
+	}
+
+	// 获取总记录数
+	total, _ := query.Count()
+
+	// 获取分页数据
+	var records []*Models.ActivityRecords
+	query = query.OrderBy("-created_at").
+		Limit(pageSize, (page-1)*pageSize)
+	query.All(&records)
+
+	// 获取活动名称和创建者名称
+	var result []map[string]interface{}
+	for _, record := range records {
+		// 获取活动信息
+		var activity Models.Activities
+		orm.NewOrm().QueryTable("activities").Filter("id", record.ActivityId).One(&activity)
+
+		// 获取创建者信息
+		var user Models.Users
+		orm.NewOrm().QueryTable("users").Filter("id", record.CreatedBy).One(&user)
+
+		result = append(result, map[string]interface{}{
+			"id":               record.Id,
+			"activity_name":    activity.Name,
+			"attendance_count": record.AttendanceCount,
+			"summary":          record.Summary,
+			"created_by_name":  user.Username,
+			"created_at":       record.CreatedAt.Format("2006-01-02 15:04:05"),
+		})
+	}
+
+	c.Data["json"] = map[string]interface{}{
+		"code": 0,
+		"msg":  "success",
+		"data": map[string]interface{}{
+			"records":  result,
+			"total":    total,
+			"page":     page,
+			"pageSize": pageSize,
+		},
+	}
+	c.ServeJSON()
+}
+
+// UpdateActivityRecord 更新活动记录
+func (c *TeacherController) UpdateActivityRecord() {
+	// 检查用户是否登录
+	userID := c.GetSession("userId")
+	if userID == nil {
+		c.Data["json"] = map[string]interface{}{
+			"code": 1,
+			"msg":  "未登录",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 检查用户角色
+	o := orm.NewOrm()
+	var user Models.Users
+	err := o.QueryTable("users").Filter("username", userID).One(&user)
+	if err != nil || user.Role_name != "教师" {
+		c.Data["json"] = map[string]interface{}{
+			"code": 2,
+			"msg":  "无权限",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 获取表单数据
+	recordId, err := c.GetInt64("id")
+	if err != nil {
+		beego.Error("获取记录ID失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"code": 3,
+			"msg":  "无效的记录ID",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	attendanceCount, err := c.GetInt("attendance_count")
+	if err != nil {
+		beego.Error("获取到场人数失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"code": 3,
+			"msg":  "无效的到场人数",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	summary := c.GetString("summary")
+	if summary == "" {
+		c.Data["json"] = map[string]interface{}{
+			"code": 3,
+			"msg":  "活动总结不能为空",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 更新活动记录
+	record := Models.ActivityRecords{Id: recordId}
+	if err := o.Read(&record); err != nil {
+		c.Data["json"] = map[string]interface{}{
+			"code": 4,
+			"msg":  "活动记录不存在",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	record.AttendanceCount = attendanceCount
+	record.Summary = summary
+
+	if _, err := o.Update(&record, "attendance_count", "summary"); err != nil {
+		c.Data["json"] = map[string]interface{}{
+			"code": 5,
+			"msg":  "更新失败: " + err.Error(),
+		}
+		c.ServeJSON()
+		return
+	}
+
+	c.Data["json"] = map[string]interface{}{
+		"code": 0,
+		"msg":  "更新成功",
+	}
+	c.ServeJSON()
+}

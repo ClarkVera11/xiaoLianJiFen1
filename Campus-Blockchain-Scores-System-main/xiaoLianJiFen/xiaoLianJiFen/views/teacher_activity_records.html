@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>活动记录管理 - 校内活动积分系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background-color: #C8EAD1;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .nav-bar {
+            background-color: #73C088;
+            padding: 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            height: 50px;
+            padding-right: 0;
+            margin-right: 0;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            height: 100%;
+            margin-right: 0;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 0 20px;
+            font-size: 15px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .nav-links a:hover::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: white;
+        }
+
+        .nav-links a.active {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: white;
+        }
+
+        .logout-button {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 0 25px;
+            cursor: pointer;
+            font-size: 15px;
+            height: 100%;
+            transition: background-color 0.3s ease;
+            margin-left: 0;
+        }
+
+        .logout-button:hover {
+            background-color: #c0392b;
+        }
+
+        .main-content {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            flex-grow: 1;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 1.8rem;
+            color: #333;
+        }
+
+        .records-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .record-card {
+            background-color: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .record-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .edit-button {
+            position: absolute;
+            bottom: 1rem;
+            right: 1rem;
+            background-color: #73C088;
+            color: white;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .edit-button:hover {
+            background-color: #5fa572;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .edit-button:before {
+            content: "✎";
+            font-size: 1rem;
+        }
+
+        /* 编辑模态框样式 */
+        .edit-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .edit-modal-content {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            position: relative;
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .edit-modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #666;
+            transition: color 0.3s;
+        }
+
+        .edit-modal-close:hover {
+            color: #333;
+        }
+
+        .edit-modal-title {
+            font-size: 1.5rem;
+            color: #333;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid #73C088;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input[type="number"],
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input[type="number"]:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #73C088;
+            box-shadow: 0 0 0 2px rgba(115, 192, 136, 0.1);
+        }
+
+        .form-group textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .modal-button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .modal-cancel {
+            background-color: #f5f5f5;
+            border: 1px solid #ddd;
+            color: #666;
+        }
+
+        .modal-cancel:hover {
+            background-color: #eee;
+        }
+
+        .modal-submit {
+            background-color: #73C088;
+            border: none;
+            color: white;
+        }
+
+        .modal-submit:hover {
+            background-color: #5fa572;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .record-title {
+            font-size: 1.2rem;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .record-date {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .record-info {
+            margin-bottom: 1rem;
+        }
+
+        .record-info-item {
+            display: flex;
+            margin-bottom: 0.5rem;
+            color: #666;
+        }
+
+        .record-info-label {
+            width: 100px;
+            color: #999;
+        }
+
+        .record-summary {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #eee;
+        }
+
+        .record-summary-title {
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .record-summary-content {
+            color: #666;
+            line-height: 1.5;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+        }
+
+        .pagination button {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            background-color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .pagination button:hover {
+            background-color: #f5f5f5;
+        }
+
+        .pagination button.active {
+            background-color: #73C088;
+            color: white;
+            border-color: #73C088;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .search-button {
+            background-color: #73C088;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        .search-button:hover {
+            background-color: #5fa572;
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav-bar">
+        <div class="nav-container">
+            <div class="nav-links">
+                <a href="/teacher" class="{{if eq .ActivePage "home"}}active{{end}}">首页</a>
+                <a href="/teacher/activity" class="{{if eq .ActivePage "activity"}}active{{end}}">活动管理</a>
+                <a href="/teacher/student" class="{{if eq .ActivePage "student"}}active{{end}}">学生管理</a>
+                <a href="/teacher/club" class="{{if eq .ActivePage "club"}}active{{end}}">社团管理</a>
+                <a href="/teacher/activity-records" class="{{if eq .ActivePage "activity_records"}}active{{end}}">活动记录</a>
+            </div>
+            <button class="logout-button" onclick="confirmLogout()">安全退出</button>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">活动记录管理</h1>
+        </div>
+
+        <div class="search-bar">
+            <input type="text" id="searchInput" class="search-input" placeholder="搜索活动名称...">
+            <button class="search-button" onclick="searchRecords()">搜索</button>
+        </div>
+
+        <div class="records-grid" id="recordsGrid">
+            <!-- 活动记录卡片将通过JavaScript动态加载 -->
+        </div>
+
+        <div class="pagination" id="pagination">
+            <!-- 分页按钮将通过JavaScript动态加载 -->
+        </div>
+    </div>
+
+    <!-- 编辑模态框 -->
+    <div class="edit-modal" id="editModal">
+        <div class="edit-modal-content">
+            <span class="edit-modal-close" onclick="closeEditModal()">&times;</span>
+            <h2 class="edit-modal-title">编辑活动记录</h2>
+            <form id="editForm" onsubmit="submitEdit(event)">
+                <input type="hidden" id="editRecordId">
+                <div class="form-group">
+                    <label for="editAttendanceCount">实际到场人数</label>
+                    <input type="number" id="editAttendanceCount" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="editSummary">活动总结</label>
+                    <textarea id="editSummary" required placeholder="请输入活动总结内容..."></textarea>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="modal-button modal-cancel" onclick="closeEditModal()">取消</button>
+                    <button type="submit" class="modal-button modal-submit">保存修改</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        const itemsPerPage = 6;
+        let currentSearchQuery = '';
+
+        function confirmLogout() {
+            if (confirm("您确定要退出吗？")) {
+                window.location.href = "/logout";
+            }
+        }
+
+        function searchRecords() {
+            currentSearchQuery = document.getElementById('searchInput').value;
+            currentPage = 1;
+            loadRecords();
+        }
+
+        function loadRecords() {
+            fetch(`/teacher/activity-records/list?page=${currentPage}&search=${encodeURIComponent(currentSearchQuery)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 0) {
+                        displayRecords(data.data.records);
+                        updatePagination(data.data.total, data.data.page, data.data.pageSize);
+                    } else {
+                        alert('获取活动记录失败：' + data.msg);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('获取活动记录失败，请稍后重试');
+                });
+        }
+
+        function displayRecords(records) {
+            const grid = document.getElementById('recordsGrid');
+            grid.innerHTML = '';
+
+            records.forEach(record => {
+                const card = document.createElement('div');
+                card.className = 'record-card';
+                card.innerHTML = `
+                    <button class="edit-button" onclick="showEditModal(${JSON.stringify(record).replace(/"/g, '&quot;')})">编辑</button>
+                    <div class="record-header">
+                        <h3 class="record-title">${record.activity_name}</h3>
+                        <span class="record-date">${new Date(record.created_at).toLocaleString()}</span>
+                    </div>
+                    <div class="record-info">
+                        <div class="record-info-item">
+                            <span class="record-info-label">记录人：</span>
+                            <span>${record.created_by_name}</span>
+                        </div>
+                        <div class="record-info-item">
+                            <span class="record-info-label">实际到场：</span>
+                            <span>${record.attendance_count}人</span>
+                        </div>
+                    </div>
+                    <div class="record-summary">
+                        <div class="record-summary-title">活动总结</div>
+                        <div class="record-summary-content">${record.summary}</div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function showEditModal(record) {
+            document.getElementById('editRecordId').value = record.id;
+            document.getElementById('editAttendanceCount').value = record.attendance_count;
+            document.getElementById('editSummary').value = record.summary || '';
+            
+            // 显示活动基本信息
+            const modalTitle = document.querySelector('.edit-modal-title');
+            modalTitle.innerHTML = `编辑活动记录 - ${record.activity_name}`;
+            
+            // 显示模态框
+            document.getElementById('editModal').style.display = 'flex';
+        }
+
+        function closeEditModal() {
+            document.getElementById('editModal').style.display = 'none';
+        }
+
+        function submitEdit(event) {
+            event.preventDefault();
+            const recordId = document.getElementById('editRecordId').value;
+            const attendanceCount = document.getElementById('editAttendanceCount').value;
+            const summary = document.getElementById('editSummary').value;
+
+            // 表单验证
+            if (!attendanceCount || attendanceCount < 0) {
+                alert('请输入有效的实际到场人数');
+                return;
+            }
+
+            if (!summary.trim()) {
+                alert('请输入活动总结');
+                return;
+            }
+
+            // 发送请求前显示加载状态
+            const submitButton = document.querySelector('.modal-submit');
+            const originalText = submitButton.textContent;
+            submitButton.textContent = '保存中...';
+            submitButton.disabled = true;
+
+            // 创建 FormData 对象
+            const formData = new FormData();
+            formData.append('id', recordId);
+            formData.append('attendance_count', attendanceCount);
+            formData.append('summary', summary.trim());
+
+            fetch('/teacher/activity-records/update', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('网络响应错误');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.code === 0) {
+                    alert('修改成功');
+                    closeEditModal();
+                    loadRecords();
+                } else {
+                    throw new Error(data.msg || '修改失败');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert(error.message || '修改失败，请稍后重试');
+            })
+            .finally(() => {
+                // 恢复按钮状态
+                submitButton.textContent = originalText;
+                submitButton.disabled = false;
+            });
+        }
+
+        function updatePagination(total, currentPage, pageSize) {
+            const pagination = document.getElementById('pagination');
+            pagination.innerHTML = '';
+
+            const totalPages = Math.ceil(total / pageSize);
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+            if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+
+            // 添加第一页按钮
+            if (startPage > 1) {
+                const firstPageBtn = document.createElement('button');
+                firstPageBtn.textContent = '1';
+                firstPageBtn.onclick = () => changePage(1);
+                pagination.appendChild(firstPageBtn);
+
+                if (startPage > 2) {
+                    const ellipsis = document.createElement('span');
+                    ellipsis.textContent = '...';
+                    pagination.appendChild(ellipsis);
+                }
+            }
+
+            // 添加页码按钮
+            for (let i = startPage; i <= endPage; i++) {
+                const pageBtn = document.createElement('button');
+                pageBtn.textContent = i;
+                if (i === currentPage) {
+                    pageBtn.classList.add('active');
+                }
+                pageBtn.onclick = () => changePage(i);
+                pagination.appendChild(pageBtn);
+            }
+
+            // 添加最后一页按钮
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    const ellipsis = document.createElement('span');
+                    ellipsis.textContent = '...';
+                    pagination.appendChild(ellipsis);
+                }
+
+                const lastPageBtn = document.createElement('button');
+                lastPageBtn.textContent = totalPages;
+                lastPageBtn.onclick = () => changePage(totalPages);
+                pagination.appendChild(lastPageBtn);
+            }
+        }
+
+        function changePage(page) {
+            currentPage = page;
+            loadRecords();
+        }
+
+        // 页面加载时加载活动记录
+        document.addEventListener('DOMContentLoaded', function() {
+            loadRecords();
+        });
+    </script>
+</body>
+</html> 

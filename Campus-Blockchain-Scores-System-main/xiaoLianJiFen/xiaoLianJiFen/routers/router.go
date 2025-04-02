@@ -28,6 +28,12 @@ func init() {
 	beego.Router("/teacher/reject-activity", &controllers.TeacherController{}, "post:RejectActivity")
 	beego.Router("/teacher/handle-admin-request", &controllers.TeacherController{}, "*:HandleAdminRequest")
 	beego.Router("/teacher/revoke-admin", &controllers.TeacherController{}, "post:RevokeAdmin")
+
+	// 教师端活动记录路由
+	beego.Router("/teacher/activity-records", &controllers.TeacherController{}, "get:ShowActivityRecords")
+	beego.Router("/teacher/activity-records/list", &controllers.TeacherController{}, "get:GetActivityRecords")
+	beego.Router("/teacher/activity-records/update", &controllers.TeacherController{}, "post:UpdateActivityRecord")
+
 	// 学生端路由
 	beego.Router("/student/nav", &controllers.StudentController{}, "get:ShowStudentNav")
 	beego.Router("/student", &controllers.StudentController{}, "get:ShowDashboard")
@@ -45,6 +51,11 @@ func init() {
 	beego.Router("/student/my-activities", &controllers.StudentController{}, "get:ShowMyActivities")
 	beego.Router("/student/my-activities/list", &controllers.StudentController{}, "get:GetMyActivities")
 	beego.Router("/student/cancel-registration", &controllers.StudentController{}, "post:CancelRegistration")
+
+	// 活动记录管理路由
+	beego.Router("/student/activity-records", &controllers.StudentController{}, "get:ShowActivityRecords")
+	beego.Router("/student/activity-records/list", &controllers.StudentController{}, "get:GetActivityRecords")
+	beego.Router("/student/activity-records/add", &controllers.StudentController{}, "post:AddActivityRecord")
 
 	//注册，实现了get请求方法之后，不会再访问默认方法
 	beego.Router("/ZhuCe", &controllers.MainController{}, "get:ZhuCeGet;post:HuoQu")
