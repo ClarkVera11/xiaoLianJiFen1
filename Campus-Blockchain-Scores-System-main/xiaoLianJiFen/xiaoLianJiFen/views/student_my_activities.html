@@ -277,7 +277,19 @@
     </script>
 <script>
 function cancelRegistration(registrationId) {
-    if(confirm('确定要取消报名吗？')) {
+    // 获取活动开始时间
+    const activityCard = document.querySelector(`[onclick="cancelRegistration(${registrationId})"]`).closest('.activity-card');
+    const startTimeStr = activityCard.querySelector('.activity-info div:nth-child(3) span:nth-child(2)').textContent;
+    const startTime = new Date(startTimeStr);
+    const now = new Date();
+    const hoursDiff = (startTime - now) / (1000 * 60 * 60);
+    
+    let confirmMessage = '确定要取消报名吗？';
+    if (hoursDiff < 24) {
+        confirmMessage = '距活动开始不足24小时，恶意取消报名将扣除5积分。\n\n' + confirmMessage;
+    }
+    
+    if(confirm(confirmMessage)) {
         fetch('/student/cancel-registration', {
             method: 'POST',
             headers: {

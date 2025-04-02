@@ -60,6 +60,7 @@ func (c *MainController) HuoQu() {
 	user.Email = userEmail
 	user.Phone = userPhone
 	user.Role_name = userRole
+	user.Points = 100
 
 	_, err := o.Insert(&user)
 	if err != nil {

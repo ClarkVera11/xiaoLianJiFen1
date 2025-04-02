@@ -37,6 +37,18 @@ func (c *StudentController) ShowDashboard() {
 	beego.Info("进入学生端首页")
 	c.Data["ActivePage"] = "home"
 	c.Data["IsClubAdmin"] = c.isClubAdmin()
+
+	// 获取当前用户积分
+	userID := c.GetSession("userId")
+	if userID != nil {
+		o := orm.NewOrm()
+		var user Models.Users
+		err := o.QueryTable("users").Filter("username", userID).One(&user)
+		if err == nil {
+			c.Data["UserPoints"] = user.Points
+		}
+	}
+
 	c.TplName = "student_nav.html"
 }
 
@@ -701,6 +713,36 @@ func (c *StudentController) CancelRegistration() {
 		return
 	}
 
+	// 查询活动信息
+	var activity Models.Activities
+	err = o.QueryTable("activities").Filter("id", registration.ActivityId).One(&activity)
+	if err != nil {
+		beego.Error("查询活动信息失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "活动信息获取失败",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 检查活动开始时间是否在24小时内
+	isWithin24Hours := time.Now().Add(24 * time.Hour).After(activity.StartTime)
+	if isWithin24Hours {
+		// 扣除5积分
+		user.Points -= 5
+		_, err = o.Update(&user, "Points")
+		if err != nil {
+			beego.Error("更新用户积分失败：", err)
+			c.Data["json"] = map[string]interface{}{
+				"success": false,
+				"message": "积分扣除失败",
+			}
+			c.ServeJSON()
+			return
+		}
+	}
+
 	// 更新报名状态为已取消(2)
 	registration.Status = 2
 	_, err = o.Update(&registration, "Status")
@@ -715,8 +757,9 @@ func (c *StudentController) CancelRegistration() {
 	}
 
 	c.Data["json"] = map[string]interface{}{
-		"success": true,
-		"message": "取消报名成功",
+		"success":      true,
+		"message":      "取消报名成功",
+		"deductPoints": isWithin24Hours,
 	}
 	c.ServeJSON()
 }
