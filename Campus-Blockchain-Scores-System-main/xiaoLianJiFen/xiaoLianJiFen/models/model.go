@@ -17,6 +17,7 @@ type Users struct {
 	Role_name      string `orm:"column(role_name);size(255)"`
 	IsAdminRequest int8   `orm:"column(is_admin_request);default(0)"`
 	Points         int    `orm:"column(points);default(100)"`
+	Title          string `orm:"column(title);size(50);default(倔强青铜)"` // 用户头衔
 }
 
 // Activities 活动模型
@@ -151,6 +152,7 @@ func insertInitialUsers() {
 			Role_name:      "学生",
 			IsAdminRequest: 0,
 			Points:         100,
+			Title:          "秩序白银",
 		},
 		{
 			Username:       "202201002",
@@ -160,6 +162,7 @@ func insertInitialUsers() {
 			Role_name:      "学生",
 			IsAdminRequest: 0,
 			Points:         100,
+			Title:          "秩序白银",
 		},
 		{
 			Username:       "202201003",
@@ -169,6 +172,7 @@ func insertInitialUsers() {
 			Role_name:      "学生",
 			IsAdminRequest: 1,
 			Points:         100,
+			Title:          "秩序白银",
 		},
 		{
 			Username:       "JX666666",
@@ -178,6 +182,7 @@ func insertInitialUsers() {
 			Role_name:      "教师",
 			IsAdminRequest: 0,
 			Points:         100,
+			Title:          "秩序白银",
 		},
 		{
 			Username:       "JX777777",
@@ -187,6 +192,7 @@ func insertInitialUsers() {
 			Role_name:      "教师",
 			IsAdminRequest: 0,
 			Points:         100,
+			Title:          "秩序白银",
 		},
 	}
 
@@ -213,4 +219,28 @@ func parseTime(timeStr string) time.Time {
 		return time.Now()
 	}
 	return t
+}
+
+// UpdateUserTitle 根据积分更新用户头衔
+func (u *Users) UpdateUserTitle() {
+	switch {
+	case u.Points >= 400:
+		u.Title = "荣耀王者"
+	case u.Points >= 350:
+		u.Title = "最强王者"
+	case u.Points >= 300:
+		u.Title = "至尊星耀"
+	case u.Points >= 250:
+		u.Title = "永恒钻石"
+	case u.Points >= 200:
+		u.Title = "尊贵铂金"
+	case u.Points >= 150:
+		u.Title = "荣耀黄金"
+	case u.Points >= 100:
+		u.Title = "秩序白银"
+	case u.Points >= 49:
+		u.Title = "倔强青铜"
+	default:
+		u.Title = "倔强青铜"
+	}
 }

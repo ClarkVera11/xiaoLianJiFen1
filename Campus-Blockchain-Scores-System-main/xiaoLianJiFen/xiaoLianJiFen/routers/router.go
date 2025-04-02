@@ -35,11 +35,11 @@ func init() {
 	beego.Router("/teacher/activity-records/update", &controllers.TeacherController{}, "post:UpdateActivityRecord")
 
 	// 学生端路由
-	beego.Router("/student/nav", &controllers.StudentController{}, "get:ShowStudentNav")
-	beego.Router("/student", &controllers.StudentController{}, "get:ShowDashboard")
+	beego.Router("/student", &controllers.StudentController{}, "get:ShowStudentNav")
 	beego.Router("/student/activities", &controllers.StudentController{}, "get:ShowActivities")
 	beego.Router("/student/activities/list", &controllers.StudentController{}, "get:GetActivities")
 	beego.Router("/student/shop", &controllers.StudentController{}, "get:ShowShop")
+	beego.Router("/student/ranking", &controllers.StudentController{}, "get:ShowRanking")
 	beego.Router("/student/club", &controllers.StudentController{}, "get:ShowClub")
 	beego.Router("/student/apply", &controllers.StudentController{}, "post:ApplyForAdmin")
 	beego.Router("/student/club-activities", &controllers.StudentController{}, "get:GetClubActivities")
@@ -51,8 +51,6 @@ func init() {
 	beego.Router("/student/my-activities", &controllers.StudentController{}, "get:ShowMyActivities")
 	beego.Router("/student/my-activities/list", &controllers.StudentController{}, "get:GetMyActivities")
 	beego.Router("/student/cancel-registration", &controllers.StudentController{}, "post:CancelRegistration")
-
-	// 活动记录管理路由
 	beego.Router("/student/activity-records", &controllers.StudentController{}, "get:ShowActivityRecords")
 	beego.Router("/student/activity-records/list", &controllers.StudentController{}, "get:GetActivityRecords")
 	beego.Router("/student/activity-records/add", &controllers.StudentController{}, "post:AddActivityRecord")

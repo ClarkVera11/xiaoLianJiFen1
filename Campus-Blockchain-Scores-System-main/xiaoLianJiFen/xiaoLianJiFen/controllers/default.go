@@ -78,6 +78,7 @@ func (c *MainController) ShowLogin() {
 	c.TplName = "DengRu.html"
 }
 
+// HandleLogin 处理登录请求
 func (c *MainController) HandleLogin() {
 	// 1. 获取表单数据
 	userName := c.GetString("用户名")
@@ -109,10 +110,10 @@ func (c *MainController) HandleLogin() {
 	switch user.Role_name {
 	case "学生", "社团管理员":
 		beego.Info("学生/社团管理员登录成功，跳转到学生导航页面")
-		c.Redirect("/student/nav", 302)
+		c.Redirect("/student", 302)
 	case "教师":
 		beego.Info("教师登录成功，跳转到教师导航页面")
-		c.Redirect("/teacher/nav", 302)
+		c.Redirect("/teacher", 302)
 	case "管理员":
 		beego.Info("管理员登录成功，跳转到管理员端")
 		c.Redirect("/admin", 302)

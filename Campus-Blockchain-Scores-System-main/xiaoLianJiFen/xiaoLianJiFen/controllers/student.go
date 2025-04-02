@@ -46,6 +46,7 @@ func (c *StudentController) ShowDashboard() {
 		err := o.QueryTable("users").Filter("username", userID).One(&user)
 		if err == nil {
 			c.Data["UserPoints"] = user.Points
+			c.Data["UserTitle"] = user.Title
 		}
 	}
 
@@ -73,6 +74,18 @@ func (c *StudentController) ShowProfile() {
 	beego.Info("进入个人中心页面")
 	c.Data["ActivePage"] = "profile"
 	c.Data["IsClubAdmin"] = c.isClubAdmin()
+
+	// 获取当前用户信息
+	userID := c.GetSession("userId")
+	if userID != nil {
+		o := orm.NewOrm()
+		var user Models.Users
+		err := o.QueryTable("users").Filter("username", userID).One(&user)
+		if err == nil {
+			c.Data["User"] = user
+		}
+	}
+
 	c.TplName = "student_profile.html"
 }
 
@@ -189,6 +202,10 @@ func (c *StudentController) ShowStudentNav() {
 	// 设置导航栏当前页面和管理员状态
 	c.Data["ActivePage"] = "home"
 	c.Data["IsClubAdmin"] = user.Role_name == "社团管理员"
+	c.Data["UserPoints"] = user.Points
+	c.Data["UserTitle"] = user.Title
+	c.Data["IsAdminRequest"] = user.IsAdminRequest == 1
+
 	// 渲染学生导航页面
 	c.TplName = "student_nav.html"
 }
@@ -1002,4 +1019,64 @@ func (c *StudentController) AddActivityRecord() {
 		"message": "添加活动记录成功",
 	}
 	c.ServeJSON()
+}
+
+// 在修改积分的函数中添加更新头衔的逻辑
+func (c *StudentController) UpdatePoints(points int) {
+	userID := c.GetSession("userId")
+	if userID == nil {
+		return
+	}
+
+	o := orm.NewOrm()
+	var user Models.Users
+	err := o.QueryTable("users").Filter("username", userID).One(&user)
+	if err != nil {
+		return
+	}
+
+	user.Points += points
+	user.UpdateUserTitle() // 更新用户头衔
+	_, err = o.Update(&user, "Points", "Title")
+	if err != nil {
+		beego.Error("更新用户积分失败：", err)
+	}
+}
+
+// ShowRanking 显示积分排名页面
+func (c *StudentController) ShowRanking() {
+	beego.Info("进入积分排名页面")
+
+	// 检查用户是否登录
+	userID := c.GetSession("userId")
+	if userID == nil {
+		c.Redirect("/", 302)
+		return
+	}
+
+	c.Data["ActivePage"] = "ranking"
+	c.Data["IsClubAdmin"] = c.isClubAdmin()
+
+	o := orm.NewOrm()
+	var users []Models.Users
+
+	// 获取所有用户，按积分降序排序
+	_, err := o.QueryTable("users").OrderBy("-points").All(&users)
+	if err != nil {
+		beego.Error("获取排名数据失败：", err)
+		c.Data["Error"] = "获取排名数据失败"
+		c.TplName = "student_ranking.html"
+		return
+	}
+
+	// 获取当前用户信息用于导航栏显示
+	var user Models.Users
+	err = o.QueryTable("users").Filter("username", userID).One(&user)
+	if err == nil {
+		c.Data["UserPoints"] = user.Points
+		c.Data["UserTitle"] = user.Title
+	}
+
+	c.Data["Users"] = users
+	c.TplName = "student_ranking.html"
 }
