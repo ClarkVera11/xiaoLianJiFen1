@@ -1,13 +1,17 @@
 package controllers
 
 import (
+	"xiaoLianJiFen/blockchain"
 	Models "xiaoLianJiFen/models"
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 
 	// "github.com/ethereum/go-ethereum/console"
+	"os"
 	"time"
+
+	"github.com/ethereum/go-ethereum/accounts/keystore"
 )
 
 type StudentController struct {
@@ -746,18 +750,8 @@ func (c *StudentController) CancelRegistration() {
 	// 检查活动开始时间是否在24小时内
 	isWithin24Hours := time.Now().Add(24 * time.Hour).After(activity.StartTime)
 	if isWithin24Hours {
-		// 扣除5积分
-		user.Points -= 5
-		_, err = o.Update(&user, "Points")
-		if err != nil {
-			beego.Error("更新用户积分失败：", err)
-			c.Data["json"] = map[string]interface{}{
-				"success": false,
-				"message": "积分扣除失败",
-			}
-			c.ServeJSON()
-			return
-		}
+		// 使用UpdatePoints函数扣除积分，这会自动更新区块链
+		c.UpdatePoints(-5)
 	}
 
 	// 更新报名状态为已取消(2)
@@ -1035,11 +1029,58 @@ func (c *StudentController) UpdatePoints(points int) {
 		return
 	}
 
+	// 更新积分
 	user.Points += points
 	user.UpdateUserTitle() // 更新用户头衔
+
+	// 读取私钥文件
+	files, err := os.ReadDir(`D:/geth student 1009/student/dev-chain/keystore`)
+	if err != nil {
+		beego.Error("读取keystore目录失败:", err)
+		return
+	}
+
+	keystoreFile := `D:/geth student 1009/student/dev-chain/keystore/` + files[0].Name()
+	password := "12345678" // 钱包密码
+
+	// 打开keystore文件
+	file, err := os.Open(keystoreFile)
+	if err != nil {
+		beego.Error("打开keystore文件失败:", err)
+		return
+	}
+	defer file.Close()
+
+	// 解密keystore文件
+	keyjson, err := os.ReadFile(keystoreFile)
+	if err != nil {
+		beego.Error("读取keystore文件失败:", err)
+		return
+	}
+
+	// 解密为私钥
+	key, err := keystore.DecryptKey(keyjson, password)
+	if err != nil {
+		beego.Error("解密keystore失败:", err)
+		return
+	}
+
+	// 获取私钥
+	privateKey := key.PrivateKey
+
+	// 先更新数据库
 	_, err = o.Update(&user, "Points", "Title")
 	if err != nil {
 		beego.Error("更新用户积分失败：", err)
+		return
+	}
+
+	// 重新上链用户信息
+	err = blockchain.UploadStudentPoints(privateKey, user.Username)
+	if err != nil {
+		beego.Error("用户信息重新上链失败:", err)
+	} else {
+		beego.Info("用户信息成功重新上链")
 	}
 }
 

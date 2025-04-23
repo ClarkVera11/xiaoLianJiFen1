@@ -520,8 +520,12 @@
             // 获取表单数据
             const formData = new FormData();
             formData.append('Name', document.getElementById('activityName').value);
-            formData.append('StartTime', document.getElementById('activityStartTime').value);
-            formData.append('EndTime', document.getElementById('activityEndTime').value);
+            
+            // 转换时间格式
+            const startTime = new Date(document.getElementById('activityStartTime').value);
+            const endTime = new Date(document.getElementById('activityEndTime').value);
+            formData.append('StartTime', startTime.toISOString());
+            formData.append('EndTime', endTime.toISOString());
             formData.append('Location', document.getElementById('activityLocation').value);
             formData.append('Description', document.getElementById('activityDescription').value);
             formData.append('Points', document.getElementById('activityPoints').value);
@@ -568,4 +572,4 @@
         window.onload = loadActivities;
     </script>
 </body>
-</html> 
+</html>

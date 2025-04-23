@@ -18,6 +18,8 @@ type Users struct {
 	IsAdminRequest int8   `orm:"column(is_admin_request);default(0)"`
 	Points         int    `orm:"column(points);default(100)"`
 	Title          string `orm:"column(title);size(50);default(倔强青铜)"` // 用户头衔
+	TxHash         string `orm:"column(tx_hash);size(66);null"`        // 区块链交易哈希
+	BlockTimestamp int64  `orm:"column(block_timestamp);default(0)"`   // 区块链交易时间戳
 }
 
 // Activities 活动模型
@@ -69,6 +71,18 @@ func init() {
 
 	// 自动创建或更新表
 	orm.RunSyncdb("default", false, true)
+
+	// 执行区块链字段迁移脚本
+	o := orm.NewOrm()
+	_, err := o.Raw("ALTER TABLE users ADD COLUMN IF NOT EXISTS tx_hash VARCHAR(66) NULL COMMENT '区块链交易哈希'").Exec()
+	if err != nil {
+		// println("添加tx_hash字段失败:", err)
+	}
+
+	_, err = o.Raw("ALTER TABLE users ADD COLUMN IF NOT EXISTS block_timestamp BIGINT DEFAULT 0 COMMENT '区块链交易时间戳'").Exec()
+	if err != nil {
+		// println("添加block_timestamp字段失败:", err)
+	}
 
 	// 插入初始数据
 	insertInitialActivities()

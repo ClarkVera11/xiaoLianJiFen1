@@ -60,17 +60,21 @@ func (c *MainController) HuoQu() {
 	user.Email = userEmail
 	user.Phone = userPhone
 	user.Role_name = userRole
-	user.Points = 100
+	user.Points = 0 // 初始化为0，后面通过UpdatePoints设置初始积分
 
 	_, err := o.Insert(&user)
 	if err != nil {
-		beego.Info("注册失败", err)
-		c.TplName = "ZhuCe.html"
+		beego.Info("插入失败！")
+		c.Redirect("/ZhuCe", 302)
 		return
-	} else {
-		beego.Info("注册成功")
-		c.Redirect("/", 302)
 	}
+
+	// 设置初始积分为60
+	studentController := &StudentController{}
+	studentController.SetSession("userId", userName)
+	studentController.UpdatePoints(60)
+
+	c.Redirect("/", 302)
 }
 
 // 登入
