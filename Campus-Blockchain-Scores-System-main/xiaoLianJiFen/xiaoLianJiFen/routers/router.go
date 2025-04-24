@@ -54,6 +54,8 @@ func init() {
 	beego.Router("/student/activity-records", &controllers.StudentController{}, "get:ShowActivityRecords")
 	beego.Router("/student/activity-records/list", &controllers.StudentController{}, "get:GetActivityRecords")
 	beego.Router("/student/activity-records/add", &controllers.StudentController{}, "post:AddActivityRecord")
+	beego.Router("/student/points-records", &controllers.StudentController{}, "get:ShowPointsRecords")
+	beego.Router("/student/points-records/list", &controllers.StudentController{}, "get:GetPointsRecords")
 
 	//注册，实现了get请求方法之后，不会再访问默认方法
 	beego.Router("/ZhuCe", &controllers.MainController{}, "get:ZhuCeGet;post:HuoQu")

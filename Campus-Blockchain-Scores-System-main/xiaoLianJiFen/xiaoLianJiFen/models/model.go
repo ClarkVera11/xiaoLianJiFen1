@@ -58,6 +58,16 @@ type ActivityRecords struct {
 	UpdatedAt       time.Time `orm:"column(updated_at);auto_now"`     // 更新时间
 }
 
+// PointsRecord 积分记录模型
+type PointsRecord struct {
+	Id          int64     `orm:"column(id);pk;auto"`              // 记录ID
+	UserId      int64     `orm:"column(user_id)"`                 // 用户ID
+	ActivityId  int64     `orm:"column(activity_id)"`             // 活动ID
+	Points      int       `orm:"column(points)"`                  // 积分变化
+	Description string    `orm:"column(description);size(255)"`   // 描述
+	CreatedAt   time.Time `orm:"column(created_at);auto_now_add"` // 创建时间
+}
+
 // 初始化数据库
 func init() {
 	// 注册数据库驱动
@@ -67,7 +77,7 @@ func init() {
 	orm.RegisterDataBase("default", "mysql", "root:123456@tcp(127.0.0.1:3306)/xiaolianjifen?charset=utf8")
 
 	// 注册模型
-	orm.RegisterModel(new(Users), new(Activities), new(ActivityRegistrations), new(ActivityRecords))
+	orm.RegisterModel(new(Users), new(Activities), new(ActivityRegistrations), new(ActivityRecords), new(PointsRecord))
 
 	// 自动创建或更新表
 	orm.RunSyncdb("default", false, true)

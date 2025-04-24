@@ -3,6 +3,9 @@ package controllers
 import (
 	Models "xiaoLianJiFen/models"
 
+	"fmt"
+	"time"
+
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
 )
@@ -775,4 +778,114 @@ func (c *TeacherController) UpdateActivityRecord() {
 		"msg":  "更新成功",
 	}
 	c.ServeJSON()
+}
+
+// CheckActivityEndStatus 检查活动是否已结束并更新状态
+func CheckActivityEndStatus() {
+	o := orm.NewOrm()
+	now := time.Now()
+
+	// 查找所有状态为已通过（1）且结束时间已到或已过的活动
+	var activities []Models.Activities
+	_, err := o.QueryTable("activities").Filter("status", 1).Filter("end_time__lte", now).All(&activities)
+	if err != nil {
+		beego.Error("查询活动失败：", err)
+		return
+	}
+
+	// 更新这些活动的状态为已结束（3）并为已报名学生发放积分
+	for _, activity := range activities {
+		// 开启事务
+		err = o.Begin()
+		if err != nil {
+			beego.Error("开启事务失败：", err)
+			continue
+		}
+
+		// 更新活动状态为已结束
+		activity.Status = 3
+		_, err = o.Update(&activity, "Status")
+		if err != nil {
+			o.Rollback()
+			beego.Error("更新活动状态失败：", err)
+			continue
+		}
+
+		// 查找所有已报名且未取消的学生
+		var registrations []Models.ActivityRegistrations
+		_, err = o.QueryTable("activity_registrations").
+			Filter("activity_id", activity.Id).
+			Filter("status", 1).
+			All(&registrations)
+		if err != nil {
+			o.Rollback()
+			beego.Error("查询报名记录失败：", err)
+			continue
+		}
+
+		// 为每个已报名的学生发放积分
+		for _, registration := range registrations {
+			var user Models.Users
+			err = o.QueryTable("users").Filter("id", registration.UserId).One(&user)
+			if err != nil {
+				beego.Error("查询用户信息失败：", err)
+				continue
+			}
+
+			// 检查是否已经为该用户创建过该活动的积分记录
+			exist := o.QueryTable("points_record").
+				Filter("user_id", user.Id).
+				Filter("activity_id", activity.Id).
+				Exist()
+
+			if exist {
+				beego.Info("该用户已有该活动的积分记录，跳过：", user.Id, activity.Id)
+				continue
+			}
+
+			// 更新用户积分
+			user.Points += activity.Points
+			_, err = o.Update(&user, "Points")
+			if err != nil {
+				beego.Error("更新用户积分失败：", err)
+				continue
+			}
+
+			// 创建积分记录
+			pointsRecord := Models.PointsRecord{
+				UserId:      user.Id,
+				ActivityId:  activity.Id,
+				Points:      activity.Points,
+				Description: fmt.Sprintf("参加活动《%s》获得积分", activity.Name),
+			}
+			_, err = o.Insert(&pointsRecord)
+			if err != nil {
+				beego.Error("创建积分记录失败：", err)
+				continue
+			}
+
+			beego.Info("为用户发放积分成功，用户ID：", user.Id, "，活动ID：", activity.Id, "，积分：", activity.Points)
+		}
+
+		// 提交事务
+		err = o.Commit()
+		if err != nil {
+			o.Rollback()
+			beego.Error("提交事务失败：", err)
+			continue
+		}
+
+		beego.Info("活动已结束，ID：", activity.Id, "，结束时间：", activity.EndTime)
+	}
+}
+
+// init 初始化函数
+func init() {
+	// 启动定时任务，每分钟检查一次活动状态
+	go func() {
+		for {
+			CheckActivityEndStatus()
+			time.Sleep(1 * time.Minute)
+		}
+	}()
 }

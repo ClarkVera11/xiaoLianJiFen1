@@ -243,88 +243,88 @@ func (c *StudentController) GetClubActivities() {
 
 // SubmitActivity 提交新活动申请
 func (c *StudentController) SubmitActivity() {
-    beego.Info("开始处理活动申报请求")
+	beego.Info("开始处理活动申报请求")
 
-    // 获取当前登录用户的ID
-    userID := c.GetSession("userId")
-    if userID == nil {
-        c.Data["json"] = map[string]interface{}{
-            "success": false,
-            "message": "请先登录",
-        }
-        c.ServeJSON()
-        return
-    }
+	// 获取当前登录用户的ID
+	userID := c.GetSession("userId")
+	if userID == nil {
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "请先登录",
+		}
+		c.ServeJSON()
+		return
+	}
 
-    // 解析请求数据
-    var activity Models.Activities
-    if err := c.ParseForm(&activity); err != nil {
-        beego.Error("解析表单数据失败：", err)
-        c.Data["json"] = map[string]interface{}{
-            "success": false,
-            "message": "提交数据格式错误",
-        }
-        c.ServeJSON()
-        return
-    }
+	// 解析请求数据
+	var activity Models.Activities
+	if err := c.ParseForm(&activity); err != nil {
+		beego.Error("解析表单数据失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "提交数据格式错误",
+		}
+		c.ServeJSON()
+		return
+	}
 
-    // 获取前端传入的时间字段
-    startTimeStr := c.GetString("StartTime")
-    endTimeStr := c.GetString("EndTime")
+	// 获取前端传入的时间字段
+	startTimeStr := c.GetString("StartTime")
+	endTimeStr := c.GetString("EndTime")
 
-    // 定义时间格式（匹配前端的格式）
-    layout := "2006-01-02T15:04"
+	// 定义时间格式（匹配前端的格式）
+	layout := "2006-01-02T15:04"
 
-    // 解析开始时间和结束时间
-    startTime, err := time.Parse(layout, startTimeStr)
-    if err != nil {
-        beego.Error("解析开始时间失败：", err)
-        c.Data["json"] = map[string]interface{}{
-            "success": false,
-            "message": "无效的开始时间格式",
-        }
-        c.ServeJSON()
-        return
-    }
+	// 解析开始时间和结束时间
+	startTime, err := time.Parse(layout, startTimeStr)
+	if err != nil {
+		beego.Error("解析开始时间失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "无效的开始时间格式",
+		}
+		c.ServeJSON()
+		return
+	}
 
-    endTime, err := time.Parse(layout, endTimeStr)
-    if err != nil {
-        beego.Error("解析结束时间失败：", err)
-        c.Data["json"] = map[string]interface{}{
-            "success": false,
-            "message": "无效的结束时间格式",
-        }
-        c.ServeJSON()
-        return
-    }
+	endTime, err := time.Parse(layout, endTimeStr)
+	if err != nil {
+		beego.Error("解析结束时间失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "无效的结束时间格式",
+		}
+		c.ServeJSON()
+		return
+	}
 
-    // 将解析后的时间赋值给活动对象
-    activity.StartTime = startTime
-    activity.EndTime = endTime
+	// 将解析后的时间赋值给活动对象
+	activity.StartTime = startTime
+	activity.EndTime = endTime
 
-    // 设置活动状态为待审核
-    activity.Status = 0
+	// 设置活动状态为待审核
+	activity.Status = 0
 
-    // 将活动保存到数据库
-    o := orm.NewOrm()
-    _, err = o.Insert(&activity)
-    if err != nil {
-        beego.Error("保存活动数据失败：", err)
-        c.Data["json"] = map[string]interface{}{
-            "success": false,
-            "message": "保存活动失败，请稍后重试",
-        }
-        c.ServeJSON()
-        return
-    }
+	// 将活动保存到数据库
+	o := orm.NewOrm()
+	_, err = o.Insert(&activity)
+	if err != nil {
+		beego.Error("保存活动数据失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "保存活动失败，请稍后重试",
+		}
+		c.ServeJSON()
+		return
+	}
 
-    beego.Info("活动申报成功：", activity)
-    c.Data["json"] = map[string]interface{}{
-        "success": true,
-        "message": "活动申报成功，等待审核",
-        "data":    activity,
-    }
-    c.ServeJSON()
+	beego.Info("活动申报成功：", activity)
+	c.Data["json"] = map[string]interface{}{
+		"success": true,
+		"message": "活动申报成功，等待审核",
+		"data":    activity,
+	}
+	c.ServeJSON()
 }
 
 // RequestAdmin 处理学生申请成为管理员的请求
@@ -1154,4 +1154,82 @@ func (c *StudentController) ShowRanking() {
 
 	c.Data["Users"] = users
 	c.TplName = "student_ranking.html"
+}
+
+// GetPointsRecords 获取用户的积分记录
+func (c *StudentController) GetPointsRecords() {
+	beego.Info("开始获取积分记录")
+
+	// 获取当前登录用户的ID
+	userID := c.GetSession("userId")
+	if userID == nil {
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "请先登录",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	o := orm.NewOrm()
+	var user Models.Users
+	err := o.QueryTable("users").Filter("username", userID).One(&user)
+	if err != nil {
+		beego.Error("查询用户信息失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "用户信息获取失败",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 查询用户的积分记录
+	var records []Models.PointsRecord
+	_, err = o.QueryTable("points_record").
+		Filter("user_id", user.Id).
+		OrderBy("-created_at").
+		All(&records)
+	if err != nil {
+		beego.Error("查询积分记录失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "获取积分记录失败",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 获取活动名称
+	var result []map[string]interface{}
+	for _, record := range records {
+		var activity Models.Activities
+		err = o.QueryTable("activities").Filter("id", record.ActivityId).One(&activity)
+		if err != nil {
+			beego.Error("查询活动信息失败：", err)
+			continue
+		}
+
+		result = append(result, map[string]interface{}{
+			"id":            record.Id,
+			"activity_name": activity.Name,
+			"points":        record.Points,
+			"description":   record.Description,
+			"created_at":    record.CreatedAt.Format("2006-01-02 15:04:05"),
+		})
+	}
+
+	c.Data["json"] = map[string]interface{}{
+		"success": true,
+		"records": result,
+	}
+	c.ServeJSON()
+}
+
+// ShowPointsRecords 显示积分记录页面
+func (c *StudentController) ShowPointsRecords() {
+	beego.Info("进入积分记录页面")
+	c.Data["ActivePage"] = "points_records"
+	c.Data["IsClubAdmin"] = c.isClubAdmin()
+	c.TplName = "student_points_records.html"
 }
