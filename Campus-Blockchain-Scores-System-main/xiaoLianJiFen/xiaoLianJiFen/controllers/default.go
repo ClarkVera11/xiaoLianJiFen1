@@ -70,9 +70,13 @@ func (c *MainController) HuoQu() {
 	}
 
 	// 设置初始积分为60
-	studentController := &StudentController{}
-	studentController.SetSession("userId", userName)
-	studentController.UpdatePoints(60)
+	user.Points = 60
+	_, err = o.Update(&user, "Points")
+	if err != nil {
+		beego.Info("设置初始积分失败！")
+		c.Redirect("/ZhuCe", 302)
+		return
+	}
 
 	c.Redirect("/", 302)
 }
