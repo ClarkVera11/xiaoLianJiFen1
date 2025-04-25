@@ -11,6 +11,13 @@ import (
 	"os"
 	"time"
 
+	// 由于报错信息显示导入包时出现问题，可能是依赖未正确安装或者版本不兼容。
+	// 尝试先清理缓存并重新安装依赖。
+	// 请在终端执行以下命令：
+	// go clean -modcache
+	// go mod tidy
+	// 如果问题仍然存在，可能需要检查 go-ethereum 版本是否兼容。
+	// 以下是暂时保留导入语句，等待依赖问题解决后的代码：
 	"github.com/ethereum/go-ethereum/accounts/keystore"
 )
 
@@ -786,6 +793,19 @@ func (c *StudentController) CancelRegistration() {
 	if isWithin24Hours {
 		// 使用UpdatePoints函数扣除积分，这会自动更新区块链
 		c.UpdatePoints(-5)
+
+		// 扣除5积分，4月25日lr重新添加扣除积分功能
+		user.Points -= 5
+		_, err = o.Update(&user, "Points")
+		if err != nil {
+			beego.Error("更新用户积分失败：", err)
+			c.Data["json"] = map[string]interface{}{
+				"success": false,
+				"message": "积分扣除失败",
+			}
+			c.ServeJSON()
+			return
+		}
 	}
 
 	// 更新报名状态为已取消(2)
@@ -799,6 +819,21 @@ func (c *StudentController) CancelRegistration() {
 		}
 		c.ServeJSON()
 		return
+	}
+
+	// 创建积分记录
+	if isWithin24Hours {
+		pointsRecord := Models.PointsRecord{
+			UserId:      user.Id,
+			ActivityId:  registration.ActivityId,
+			Points:      -5,
+			Description: "恶意取消报名扣除积分",
+			CreatedAt:   time.Now(),
+		}
+		_, err = o.Insert(&pointsRecord)
+		if err != nil {
+			beego.Error("创建积分记录失败：", err)
+		}
 	}
 
 	c.Data["json"] = map[string]interface{}{
