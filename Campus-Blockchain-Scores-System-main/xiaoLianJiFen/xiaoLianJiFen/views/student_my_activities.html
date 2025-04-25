@@ -224,7 +224,7 @@
                                     </div>
                                     ${activity.registration_status === 1 ? 
                                     `<div class="activity-actions">
-                                        <button class="activity-status" onclick="cancelRegistration(${activity.registration_id})">取消报名</button>
+                                        <button class="activity-status" ${activity.activity_status === 0 ? 'disabled style="opacity:0.5; cursor:not-allowed"' : ''} onclick="${activity.activity_status === 1 ? `cancelRegistration(${activity.registration_id})` : 'return false'}">取消报名</button>
                                     </div>` : ''}
                                     <div class="activity-info">
                                         <div class="info-item">
