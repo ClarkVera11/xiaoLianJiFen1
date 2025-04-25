@@ -522,10 +522,13 @@
             formData.append('Name', document.getElementById('activityName').value);
             
             // 转换时间格式
-            const startTime = new Date(document.getElementById('activityStartTime').value);
-            const endTime = new Date(document.getElementById('activityEndTime').value);
-            formData.append('StartTime', startTime.toISOString());
-            formData.append('EndTime', endTime.toISOString());
+            const startTime = document.getElementById('activityStartTime').value;
+            const endTime = document.getElementById('activityEndTime').value;
+            
+            // 直接使用输入的时间字符串，不进行额外转换
+            formData.append('StartTime', startTime);
+            formData.append('EndTime', endTime);
+            
             formData.append('Location', document.getElementById('activityLocation').value);
             formData.append('Description', document.getElementById('activityDescription').value);
             formData.append('Points', document.getElementById('activityPoints').value);
