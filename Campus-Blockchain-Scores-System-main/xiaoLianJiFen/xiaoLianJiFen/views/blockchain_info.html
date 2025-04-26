@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>积分记录 - 校园积分系统</title>
+    <title>区块链信息 - 校内活动积分系统</title>
     <style>
         * {
             margin: 0;
@@ -13,10 +13,8 @@
 
         body {
             font-family: 'Microsoft YaHei', sans-serif;
-            background-color: #73C088;
+            background-color: #C8EAD1;
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
         }
 
         .nav-bar {
@@ -55,25 +53,11 @@
             transition: all 0.3s ease;
         }
 
-        .nav-links a:hover {
+        .nav-links a:hover, .nav-links a.active {
             background-color: rgba(255,255,255,0.1);
         }
 
-        .nav-links a:hover::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background-color: white;
-        }
-
-        .nav-links a.active {
-            background-color: rgba(255,255,255,0.1);
-        }
-
-        .nav-links a.active::after {
+        .nav-links a:hover::after, .nav-links a.active::after {
             content: '';
             position: absolute;
             bottom: 0;
@@ -92,7 +76,6 @@
             font-size: 15px;
             height: 100%;
             transition: background-color 0.3s ease;
-            margin-left: 0;
         }
 
         .logout-button:hover {
@@ -103,72 +86,68 @@
             padding: 2rem;
             max-width: 1200px;
             margin: 0 auto;
-            flex-grow: 1;
         }
 
-        .points-records {
-            background: #C8EAD1;
-            border-radius: 8px;
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            color: #2c3e50;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .blockchain-info {
+            background: white;
+            border-radius: 10px;
             padding: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
             margin-top: 2rem;
         }
 
-        .points-records h2 {
-            color: #2c3e50;
-            margin-bottom: 1.5rem;
-            font-size: 1.8rem;
-        }
-
-        .record-card {
-            background: #fff;
-            border-radius: 8px;
+        .info-card {
+            background: #f8f9fa;
             padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .info-card h3 {
+            color: #2c3e50;
             margin-bottom: 1rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
-        }
-
-        .record-card:hover {
-            transform: translateY(-2px);
-        }
-
-        .record-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .record-title {
             font-size: 1.2rem;
+        }
+
+        .info-item {
+            margin-bottom: 0.8rem;
+            color: #666;
+        }
+
+        .info-label {
             font-weight: bold;
             color: #2c3e50;
+            margin-right: 0.5rem;
         }
 
-        .record-points {
-            font-size: 1.1rem;
-            color: #27ae60;
-            font-weight: bold;
-            background: #e8f5e9;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
+        .info-value {
+            word-break: break-all;
         }
 
-        .record-info {
+        .timestamp {
             color: #666;
-            font-size: 1rem;
-            margin-bottom: 0.5rem;
-        }
-
-        .record-time {
-            color: #95a5a6;
             font-size: 0.9rem;
         }
 
-        .no-records {
+        .no-data {
             text-align: center;
-            color: #7f8c8d;
-            font-size: 1.1rem;
+            color: #666;
             padding: 2rem;
         }
     </style>
@@ -184,64 +163,62 @@
                 <a href="/student/club" class="{{if eq .ActivePage "club"}}active{{end}}">社团活动</a>
                 <a href="/student/activity-records" class="{{if eq .ActivePage "activity_records"}}active{{end}}">活动记录</a>
                 {{end}}
+                
                 <a href="/student/shop" class="{{if eq .ActivePage "shop"}}active{{end}}">积分商城</a>
                 <a href="/student/ranking" class="{{if eq .ActivePage "ranking"}}active{{end}}">积分排名</a>
-                <a href="/student/points-records" class="{{if eq .ActivePage "points_records"}}active{{end}}">积分记录</a>
                 <a href="/student/rules" class="{{if eq .ActivePage "rules"}}active{{end}}">积分规则</a>
                 <a href="/blockchain/info" class="{{if eq .ActivePage "blockchain"}}active{{end}}">链上信息展示</a>
             </div>
             <button class="logout-button" onclick="confirmLogout()">安全退出</button>
+            </div>
+            <!-- <button class="logout-button" onclick="confirmLogout()">安全退出</button> -->
         </div>
     </nav>
 
     <div class="main-content">
-        <div class="points-records">
-            <h2>积分记录</h2>
-            <div id="recordsList">
-                <!-- 积分记录将通过JavaScript动态加载 -->
+        <div class="page-header">
+            <h1 class="page-title">区块链信息</h1>
+        </div>
+
+        <div class="blockchain-info">
+            {{if .Users}}
+            <div class="info-grid">
+                {{range .Users}}
+                <div class="info-card">
+                    <h3>{{.Username}}</h3>
+                    <div class="info-item">
+                        <span class="info-label">学号/工号:</span>
+                        <span class="info-value">{{.Username}}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">角色:</span>
+                        <span class="info-value">{{.Role_name}}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">交易哈希:</span>
+                        <span class="info-value">{{if .TxHash}}{{.TxHash}}{{else}}未上链{{end}}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">上链时间:</span>
+                        <span class="info-value timestamp">{{if .BlockTimestamp}}{{.BlockTimestamp | formatTimestamp}}{{else}}未上链{{end}}</span>
+                    </div>
+                </div>
+                {{end}}
             </div>
+            {{else}}
+            <div class="no-data">
+                <p>暂无区块链信息</p>
+            </div>
+            {{end}}
         </div>
     </div>
 
     <script>
         function confirmLogout() {
-            if (confirm("您确定要退出吗？")) {
-                window.location.href = "/logout";
+            if (confirm('确定要退出吗？')) {
+                window.location.href = '/logout';
             }
         }
-
-        function loadPointsRecords() {
-            fetch('/student/points-records/list')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const recordsList = document.getElementById('recordsList');
-                        if (data.records && data.records.length > 0) {
-                            recordsList.innerHTML = data.records.map(record => `
-                                <div class="record-card">
-                                    <div class="record-header">
-                                        <div class="record-title">${record.activity_name}</div>
-                                        <div class="record-points">${record.points} 积分</div>
-                                    </div>
-                                    <div class="record-info">${record.description}</div>
-                                    <div class="record-time">${record.created_at}</div>
-                                </div>
-                            `).join('');
-                        } else {
-                            recordsList.innerHTML = '<div class="no-records">暂无积分记录</div>';
-                        }
-                    } else {
-                        alert('获取积分记录失败：' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('获取积分记录失败，请稍后重试');
-                });
-        }
-
-        // 页面加载时获取积分记录
-        document.addEventListener('DOMContentLoaded', loadPointsRecords);
     </script>
 </body>
 </html> 

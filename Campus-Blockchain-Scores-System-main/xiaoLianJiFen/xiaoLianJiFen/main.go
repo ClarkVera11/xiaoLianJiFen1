@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"time"
 	"xiaoLianJiFen/blockchain"
 	_ "xiaoLianJiFen/models"
 	_ "xiaoLianJiFen/routers"
@@ -20,19 +21,27 @@ func add1(a int) int {
 	return a + 1
 }
 
+func formatTimestamp(timestamp int64) string {
+	if timestamp == 0 {
+		return "未上链"
+	}
+	t := time.Unix(timestamp, 0)
+	return t.Format("2006-01-02 15:04:05")
+}
+
 func init() {
 	orm.RegisterDriver("mysql", orm.DRMySQL)
-	//orm.RegisterDataBase("default", "mysql", "root:123456@tcp(127.0.0.1:3306)/xiaoLianJiFen?charset=utf8")
+	orm.RegisterDataBase("default", "mysql", "root:123456@tcp(127.0.0.1:3306)/xiaolianjifen?charset=utf8")
 }
 
 func main() {
 
 	// 读取 keystore 文件内容
-	files, err := os.ReadDir(`D:/geth/geth student 1009/student/dev-chain/keystore`)
+	files, err := os.ReadDir(`D:/geth student 1009/student/dev-chain/keystore`)
 	if err != nil {
 		log.Fatal("读取目录失败:", err)
 	}
-	keystoreFile := `D:/geth/geth student 1009/student/dev-chain/keystore/` + files[0].Name()
+	keystoreFile := `D:/geth student 1009/student/dev-chain/keystore/` + files[0].Name()
 	password := "12345678" // 输入你的钱包密码
 
 	// 打开 keystore 文件
@@ -68,6 +77,9 @@ func main() {
 	if err != nil {
 		return
 	}
+
+	// 添加时间戳格式化函数
+	beego.AddFuncMap("formatTimestamp", formatTimestamp)
 
 	// 上传所有用户信息到区块链
 	err = blockchain.UploadAllUsersToBlockchain(privateKey)

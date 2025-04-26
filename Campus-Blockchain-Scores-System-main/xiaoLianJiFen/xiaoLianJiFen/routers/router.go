@@ -57,6 +57,9 @@ func init() {
 	beego.Router("/student/points-records", &controllers.StudentController{}, "get:ShowPointsRecords")
 	beego.Router("/student/points-records/list", &controllers.StudentController{}, "get:GetPointsRecords")
 
+	// 区块链信息路由
+	beego.Router("/blockchain/info", &controllers.BlockchainController{}, "get:ShowBlockchainInfo")
+
 	//注册，实现了get请求方法之后，不会再访问默认方法
 	beego.Router("/ZhuCe", &controllers.MainController{}, "get:ZhuCeGet;post:HuoQu")
 
