@@ -20,7 +20,7 @@ import (
 )
 
 // 用你 Remix 部署后的地址替换
-var contractAddress = common.HexToAddress("0xF7af7E9a21Abb0413112aadFbe2A734D86F1C302")
+var contractAddress = common.HexToAddress("0x2b64359ed2dD0145A6e702Bf1A2a1656C593736C")
 
 // UploadAllUsersToBlockchain 将所有用户信息上传到区块链
 func UploadAllUsersToBlockchain(privateKey *ecdsa.PrivateKey) error {
@@ -48,7 +48,7 @@ func UploadAllUsersToBlockchain(privateKey *ecdsa.PrivateKey) error {
 			log.Printf("用户 %s 上链失败: %v", user.Username, err)
 			continue
 		}
-
+		log.Printf("用户姓名： %s \n手机号: %s \n角色:%s \n积分:%s \n头衔:%s",user.Username,user.Phone,user.Role_name,user.Points,user.Title)
 		log.Printf("用户 %s 成功上链", user.Username)
 		// 等待一段时间，避免交易拥堵
 		time.Sleep(time.Second * 2)

@@ -20,6 +20,7 @@ type Users struct {
 	Title          string `orm:"column(title);size(50);default(倔强青铜)"` // 用户头衔
 	TxHash         string `orm:"column(tx_hash);size(66);null"`        // 区块链交易哈希
 	BlockTimestamp int64  `orm:"column(block_timestamp);default(0)"`   // 区块链交易时间戳
+	Rank int `orm:"-"` // orm:"-" 表示该字段不映射到数据库，仅用于程序逻辑，若需映射到数据库则去掉此标签并调整数据库表结构
 }
 
 // Activities 活动模型
@@ -74,7 +75,7 @@ func init() {
 	orm.RegisterDriver("mysql", orm.DRMySQL)
 
 	// 注册数据库连接
-	orm.RegisterDataBase("default", "mysql", "root:123456@tcp(127.0.0.1:3306)/xiaolianjifen?charset=utf8")
+	orm.RegisterDataBase("default", "mysql", "root:123456@tcp(127.0.0.1:3306)/xiaolianjifen?charset=utf8&parseTime=True&loc=Asia%2FShanghai")
 
 	// 注册模型
 	orm.RegisterModel(new(Users), new(Activities), new(ActivityRegistrations), new(ActivityRecords), new(PointsRecord))

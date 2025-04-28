@@ -249,30 +249,31 @@ func (c *StudentController) GetClubActivities() {
 }
 
 // SubmitActivity 提交新活动申请
+// SubmitActivity 提交新活动申请
 func (c *StudentController) SubmitActivity() {
 	beego.Info("开始处理活动申报请求")
 
 	// 获取当前登录用户的ID
 	userID := c.GetSession("userId")
 	if userID == nil {
-		c.Data["json"] = map[string]interface{}{
-			"success": false,
-			"message": "请先登录",
-		}
-		c.ServeJSON()
-		return
+			c.Data["json"] = map[string]interface{}{
+					"success": false,
+					"message": "请先登录",
+			}
+			c.ServeJSON()
+			return
 	}
 
 	// 解析请求数据
 	var activity Models.Activities
 	if err := c.ParseForm(&activity); err != nil {
-		beego.Error("解析表单数据失败：", err)
-		c.Data["json"] = map[string]interface{}{
-			"success": false,
-			"message": "提交数据格式错误",
-		}
-		c.ServeJSON()
-		return
+			beego.Error("解析表单数据失败：", err)
+			c.Data["json"] = map[string]interface{}{
+					"success": false,
+					"message": "提交数据格式错误",
+			}
+			c.ServeJSON()
+			return
 	}
 
 	// 获取前端传入的时间字段
@@ -285,25 +286,30 @@ func (c *StudentController) SubmitActivity() {
 	// 解析开始时间和结束时间
 	startTime, err := time.Parse(layout, startTimeStr)
 	if err != nil {
-		beego.Error("解析开始时间失败：", err)
-		c.Data["json"] = map[string]interface{}{
-			"success": false,
-			"message": "无效的开始时间格式",
-		}
-		c.ServeJSON()
-		return
+			beego.Error("解析开始时间失败：", err)
+			c.Data["json"] = map[string]interface{}{
+					"success": false,
+					"message": "无效的开始时间格式",
+			}
+			c.ServeJSON()
+			return
 	}
 
 	endTime, err := time.Parse(layout, endTimeStr)
 	if err != nil {
-		beego.Error("解析结束时间失败：", err)
-		c.Data["json"] = map[string]interface{}{
-			"success": false,
-			"message": "无效的结束时间格式",
-		}
-		c.ServeJSON()
-		return
+			beego.Error("解析结束时间失败：", err)
+			c.Data["json"] = map[string]interface{}{
+					"success": false,
+					"message": "无效的结束时间格式",
+			}
+			c.ServeJSON()
+			return
 	}
+
+	// 增加8小时
+	eightHours := 8 * time.Hour
+	startTime = startTime.Add(-eightHours)
+	endTime = endTime.Add(-eightHours)
 
 	// 将解析后的时间赋值给活动对象
 	activity.StartTime = startTime
@@ -316,20 +322,20 @@ func (c *StudentController) SubmitActivity() {
 	o := orm.NewOrm()
 	_, err = o.Insert(&activity)
 	if err != nil {
-		beego.Error("保存活动数据失败：", err)
-		c.Data["json"] = map[string]interface{}{
-			"success": false,
-			"message": "保存活动失败，请稍后重试",
-		}
-		c.ServeJSON()
-		return
+			beego.Error("保存活动数据失败：", err)
+			c.Data["json"] = map[string]interface{}{
+					"success": false,
+					"message": "保存活动失败，请稍后重试",
+			}
+			c.ServeJSON()
+			return
 	}
 
 	beego.Info("活动申报成功：", activity)
 	c.Data["json"] = map[string]interface{}{
-		"success": true,
-		"message": "活动申报成功，等待审核",
-		"data":    activity,
+			"success": true,
+			"message": "活动申报成功，等待审核",
+			"data":    activity,
 	}
 	c.ServeJSON()
 }
@@ -1177,6 +1183,19 @@ func (c *StudentController) ShowRanking() {
 		c.Data["Error"] = "获取排名数据失败"
 		c.TplName = "student_ranking.html"
 		return
+	}
+
+	// 处理排名逻辑，实现相同积分相同排名
+	if len(users) > 0 {
+		rank := 1
+		prevPoints := users[0].Points
+		for i, user := range users {
+			if user.Points < prevPoints {
+				rank = i + 1
+				prevPoints = user.Points
+			}
+			users[i].Rank = rank
+		}
 	}
 
 	// 获取当前用户信息用于导航栏显示

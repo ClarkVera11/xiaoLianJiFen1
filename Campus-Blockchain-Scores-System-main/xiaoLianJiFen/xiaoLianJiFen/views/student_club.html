@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,7 +21,7 @@
         .nav-bar {
             background-color: #73C088;
             padding: 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             width: 100%;
             z-index: 1000;
         }
@@ -53,11 +54,13 @@
             transition: all 0.3s ease;
         }
 
-        .nav-links a:hover, .nav-links a.active {
-            background-color: rgba(255,255,255,0.1);
+        .nav-links a:hover,
+        .nav-links a.active {
+            background-color: rgba(255, 255, 255, 0.1);
         }
 
-        .nav-links a:hover::after, .nav-links a.active::after {
+        .nav-links a:hover::after,
+        .nav-links a.active::after {
             content: '';
             position: absolute;
             bottom: 0;
@@ -169,7 +172,7 @@
             background: white;
             border-radius: 10px;
             padding: 1.5rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .activity-card h3 {
@@ -189,7 +192,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0, 0, 0, 0.5);
             z-index: 1000;
         }
 
@@ -240,7 +243,8 @@
             color: #333;
         }
 
-        .form-group input, .form-group textarea {
+        .form-group input,
+        .form-group textarea {
             width: 100%;
             padding: 8px;
             border: 1px solid #ddd;
@@ -285,22 +289,24 @@
         }
     </style>
 </head>
+
 <body>
     <nav class="nav-bar">
         <div class="nav-container">
             <div class="nav-links">
-                <a href="/student" class="{{if eq .ActivePage "home"}}active{{end}}">首页</a>
-                <a href="/student/activities" class="{{if eq .ActivePage "activities"}}active{{end}}">活动管理</a>
-                <a href="/student/my-activities" class="{{if eq .ActivePage "myactivities"}}active{{end}}">我的活动</a>
+                <a href="/student" class="{{if eq .ActivePage " home"}}active{{end}}">首页</a>
+                <a href="/student/activities" class="{{if eq .ActivePage " activities"}}active{{end}}">活动管理</a>
+                <a href="/student/my-activities" class="{{if eq .ActivePage " myactivities"}}active{{end}}">我的活动</a>
                 {{if .IsClubAdmin}}
-                <a href="/student/club" class="{{if eq .ActivePage "club"}}active{{end}}">社团活动</a>
-                <a href="/student/activity-records" class="{{if eq .ActivePage "activity_records"}}active{{end}}">活动记录</a>
+                <a href="/student/club" class="{{if eq .ActivePage " club"}}active{{end}}">社团活动</a>
+                <a href="/student/activity-records" class="{{if eq .ActivePage " activity_records"}}active{{end}}">活动记录</a>
                 {{end}}
-                
-                <a href="/student/shop" class="{{if eq .ActivePage "shop"}}active{{end}}">积分商城</a>
-                <a href="/student/ranking" class="{{if eq .ActivePage "ranking"}}active{{end}}">积分排名</a>
-                <a href="/student/rules" class="{{if eq .ActivePage "rules"}}active{{end}}">积分规则</a>
-                <a href="/blockchain/info" class="{{if eq .ActivePage "blockchain"}}active{{end}}">链上信息展示</a>
+
+                <a href="/student/shop" class="{{if eq .ActivePage " shop"}}active{{end}}">积分商城</a>
+                <a href="/student/ranking" class="{{if eq .ActivePage " ranking"}}active{{end}}">积分排名</a>
+                <a href="/student/points-records" class="{{if eq .ActivePage " points_records"}}active{{end}}">积分记录</a>
+                <a href="/student/rules" class="{{if eq .ActivePage " rules"}}active{{end}}">积分规则</a>
+                <a href="/blockchain/info" class="{{if eq .ActivePage " blockchain"}}active{{end}}">区块链信息</a>
             </div>
             <button class="logout-button" onclick="confirmLogout()">安全退出</button>
         </div>
@@ -403,20 +409,20 @@
         function renderPagination() {
             const totalPages = Math.ceil(allActivities.length / itemsPerPage);
             const pagination = document.getElementById('pagination');
-            
+
             let html = '';
-            
+
             // 上一页按钮
             html += `<button class="pagination-btn" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>上一页</button>`;
-            
+
             // 页码按钮
             for (let i = 1; i <= totalPages; i++) {
                 html += `<button class="pagination-btn ${currentPage === i ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
             }
-            
+
             // 下一页按钮
             html += `<button class="pagination-btn" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>下一页</button>`;
-            
+
             pagination.innerHTML = html;
         }
 
@@ -424,7 +430,7 @@
         function changePage(page) {
             const totalPages = Math.ceil(allActivities.length / itemsPerPage);
             if (page < 1 || page > totalPages) return;
-            
+
             currentPage = page;
             renderPagination();
             renderCurrentPage();
@@ -435,20 +441,22 @@
             const startIndex = (currentPage - 1) * itemsPerPage;
             const endIndex = startIndex + itemsPerPage;
             const currentActivities = allActivities.slice(startIndex, endIndex);
-            
+
             const grid = document.querySelector('.activities-grid');
             grid.innerHTML = currentActivities.map(activity => `
-                <div class="activity-card">
-                    <h3>${activity.Name}</h3>
-                    <div class="activity-info">时间：${formatDateTime(activity.Time)}</div>
-                    <div class="activity-info">地点：${activity.Location}</div>
-                    <div class="activity-info">积分：${activity.Points}分</div>
-                    <div class="activity-info">剩余名额：${activity.Capacity}人</div>
-                    <div class="activity-info">描述：${activity.Description}</div>
-                    <div class="activity-info">状态：${getStatusText(activity.Status)}</div>
-                </div>
-            `).join('');
+        <div class="activity-card">
+            <h3>${activity.Name}</h3>
+            <div class="activity-info">开始时间：${formatDateTime(activity.StartTime)}</div>
+            <div class="activity-info">结束时间：${formatDateTime(activity.EndTime)}</div>
+            <div class="activity-info">地点：${activity.Location}</div>
+            <div class="activity-info">积分：${activity.Points}分</div>
+            <div class="activity-info">剩余名额：${activity.Capacity}人</div>
+            <div class="activity-info">描述：${activity.Description}</div>
+            <div class="activity-info">状态：${getStatusText(activity.Status)}</div>
+        </div>
+    `).join('');
         }
+
 
         // 获取活动状态文本
         function getStatusText(status) {
@@ -463,7 +471,15 @@
 
         // 格式化日期时间
         function formatDateTime(dateTimeStr) {
+            if (!dateTimeStr) {
+                return '时间未提供';
+            }
+
             const date = new Date(dateTimeStr);
+            if (isNaN(date.getTime())) {
+                return '无效时间';
+            }
+
             return date.toLocaleString('zh-CN', {
                 year: 'numeric',
                 month: '2-digit',
@@ -472,6 +488,7 @@
                 minute: '2-digit'
             });
         }
+
 
         function showApplyModal() {
             document.getElementById('applyModal').style.display = 'block';
@@ -492,23 +509,23 @@
                     'Accept': 'text/plain;charset=UTF-8'
                 }
             })
-            .then(response => {
-                console.log('Response status:', response.status);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.text();
-            })
-            .then(text => {
-                if (!text || text.trim() === '') {
-                    throw new Error('文件内容为空');
-                }
-                rulesContent.textContent = text;
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                rulesContent.innerHTML = `暂未开发，敬请期待`;
-            });
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(text => {
+                    if (!text || text.trim() === '') {
+                        throw new Error('文件内容为空');
+                    }
+                    rulesContent.textContent = text;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    rulesContent.innerHTML = `暂未开发，敬请期待`;
+                });
         }
 
         function closeModal(modalId) {
@@ -517,19 +534,19 @@
 
         function submitActivity(event) {
             event.preventDefault();
-            
+
             // 获取表单数据
             const formData = new FormData();
             formData.append('Name', document.getElementById('activityName').value);
-            
+
             // 转换时间格式
             const startTime = document.getElementById('activityStartTime').value;
             const endTime = document.getElementById('activityEndTime').value;
-            
+
             // 直接使用输入的时间字符串，不进行额外转换
             formData.append('StartTime', startTime);
             formData.append('EndTime', endTime);
-            
+
             formData.append('Location', document.getElementById('activityLocation').value);
             formData.append('Description', document.getElementById('activityDescription').value);
             formData.append('Points', document.getElementById('activityPoints').value);
@@ -540,23 +557,23 @@
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert(data.message);
-                    closeModal('applyModal');
-                    event.target.reset();
-                    // 重新加载活动列表并回到第一页
-                    currentPage = 1;
-                    loadActivities();
-                } else {
-                    alert(data.message || '提交失败，请稍后重试');
-                }
-            })
-            .catch(error => {
-                console.error('提交活动失败：', error);
-                alert('提交失败，请稍后重试');
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message);
+                        closeModal('applyModal');
+                        event.target.reset();
+                        // 重新加载活动列表并回到第一页
+                        currentPage = 1;
+                        loadActivities();
+                    } else {
+                        alert(data.message || '提交失败，请稍后重试');
+                    }
+                })
+                .catch(error => {
+                    console.error('提交活动失败：', error);
+                    alert('提交失败，请稍后重试');
+                });
         }
 
         function confirmLogout() {
@@ -566,7 +583,7 @@
         }
 
         // 点击模态框外部关闭模态框
-        window.onclick = function(event) {
+        window.onclick = function (event) {
             if (event.target.className === 'modal') {
                 event.target.style.display = 'none';
             }
@@ -576,4 +593,5 @@
         window.onload = loadActivities;
     </script>
 </body>
+
 </html>

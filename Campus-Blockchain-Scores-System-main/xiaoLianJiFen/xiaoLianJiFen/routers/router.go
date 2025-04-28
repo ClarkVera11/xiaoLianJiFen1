@@ -2,7 +2,6 @@ package routers
 
 import (
 	"xiaoLianJiFen/controllers"
-
 	"github.com/astaxie/beego"
 )
 
