@@ -56,13 +56,20 @@ func (c *MainController) HuoQu() {
 
 	// 插入
 	user.Username = userName
-	user.Password = userPwd
+	// 对密码进行加密
+	hashedPwd, err := Models.HashPassword(userPwd)
+	if err != nil {
+		beego.Info("密码加密失败！")
+		c.Redirect("/ZhuCe", 302)
+		return
+	}
+	user.Password = hashedPwd
 	user.Email = userEmail
 	user.Phone = userPhone
 	user.Role_name = userRole
 	user.Points = 0 // 初始化为0，后面通过UpdatePoints设置初始积分
 
-	_, err := o.Insert(&user)
+	_,err = o.Insert(&user)
 	if err != nil {
 		beego.Info("插入失败！")
 		c.Redirect("/ZhuCe", 302)
@@ -99,38 +106,41 @@ func (c *MainController) HandleLogin() {
 		return
 	}
 
-	// 3. 查询数据库
+	// 3. 查询数据库（只查用户名）
 	o := orm.NewOrm()
 	var user Models.Users
-	err := o.QueryTable("users").Filter("username", userName).Filter("password", pwd).One(&user)
+	err := o.QueryTable("users").Filter("username", userName).One(&user)
 	if err != nil {
-		beego.Info("用户名或密码错误！！！")
+		beego.Info("用户名不存在")
 		c.TplName = "DengRu.html"
 		return
 	}
 
-	// 4. 登录成功，设置 Cookie 和 Session
+	// 4. 比较加密密码
+	if !Models.CheckPasswordHash(user.Password, pwd) {
+		beego.Info("密码错误")
+		c.TplName = "DengRu.html"
+		return
+	}
+
+	// 5. 登录成功，设置 Cookie 和 Session
 	c.Ctx.SetCookie("Username", userName, time.Second*3600)
 	c.SetSession("userId", userName)
 
-	// 5. 根据角色跳转到不同页面
+	// 6. 跳转页面
 	beego.Info("当前用户角色：", user.Role_name)
 	switch user.Role_name {
 	case "学生", "社团管理员":
-		beego.Info("学生/社团管理员登录成功，跳转到学生导航页面")
 		c.Redirect("/student", 302)
 	case "教师":
-		beego.Info("教师登录成功，跳转到教师导航页面")
 		c.Redirect("/teacher", 302)
 	case "管理员":
-		beego.Info("管理员登录成功，跳转到管理员端")
 		c.Redirect("/admin", 302)
 	default:
-		beego.Info("未知角色，跳转到首页")
-		beego.Info("用户角色：", user.Role_name)
 		c.Redirect("/", 302)
 	}
 }
+
 
 // 重置密码
 func (c *MainController) ShowChongZhiMiMa() {
@@ -138,57 +148,53 @@ func (c *MainController) ShowChongZhiMiMa() {
 }
 
 func (c *MainController) HandleChongZhiMiMa() {
-	// 初始化ORM
 	o := orm.NewOrm()
 	user := Models.Users{}
 
-	// 获取表单数据
 	userName := c.GetString("学号")
 	userEmail := c.GetString("邮箱")
 	userPhone := c.GetString("手机号")
 
-	// 记录日志
-	beego.Info(userName, userEmail, userPhone)
-
-	// 数据验证：检查必填项是否为空
 	if userName == "" || userEmail == "" || userPhone == "" {
 		beego.Info("数据不能为空！！！")
 		c.Redirect("/ChongZhiMiMa", 302)
 		return
 	}
-	user.Username = userName
-	user.Email = userEmail
-	user.Phone = userPhone
 
-	// 先通过用户名查询用户数据
+	user.Username = userName
 	err := o.Read(&user, "Username")
 	if err != nil {
 		beego.Info("用户名不存在！")
 		c.Redirect("/ChongZhiMiMa", 302)
 		return
 	}
-	// 验证邮箱和手机号是否匹配
+
 	if user.Email != userEmail || user.Phone != userPhone {
 		beego.Info("邮箱或手机号不匹配！！！")
 		c.Redirect("/ChongZhiMiMa", 302)
 		return
 	}
 
-	// 将密码重置为默认值
-	user.Password = "123456"
+	// 对默认密码进行加密
+	hashedPwd, err := Models.HashPassword("123456")
+	if err != nil {
+		beego.Info("密码加密失败", err)
+		c.Redirect("/ChongZhiMiMa", 302)
+		return
+	}
 
-	// 更新数据库中的用户信息
+	user.Password = hashedPwd
 	_, err = o.Update(&user)
 	if err != nil {
 		beego.Info("密码重置失败", err)
 		c.TplName = "ChongZhiMiMa.html"
 		return
-	} else {
-		// 重置成功，跳转到首页
-		beego.Info("密码重置成功！")
-		c.Redirect("/", 302)
 	}
+
+	beego.Info("密码重置成功！")
+	c.Redirect("/", 302)
 }
+
 
 // Logout 处理退出请求
 func (c *MainController) Logout() {

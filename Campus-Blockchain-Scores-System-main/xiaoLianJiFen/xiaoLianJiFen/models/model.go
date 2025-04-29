@@ -5,6 +5,7 @@ import (
 
 	"github.com/astaxie/beego/orm"
 	_ "github.com/go-sql-driver/mysql"
+
 )
 
 // Users 用户模型
@@ -108,8 +109,8 @@ func insertInitialActivities() {
 	activities := []Activities{
 		{
 			Name:        "篮球赛",
-			StartTime:   parseTime("2025-02-02 00:00:00"), // 活动开始时间
-			EndTime:     parseTime("2025-02-02 03:00:00"), // 假设活动结束时间
+			StartTime:   parseTime("2025-02-02 08:00:00"), // 活动开始时间
+			EndTime:     parseTime("2025-02-02 09:00:00"), // 假设活动结束时间
 			Location:    "篮球场",
 			Description: "5v5男生全场篮球赛",
 			Points:      7,
@@ -118,8 +119,8 @@ func insertInitialActivities() {
 		},
 		{
 			Name:        "围棋比赛",
-			StartTime:   parseTime("2025-03-19 00:00:00"), // 活动开始时间
-			EndTime:     parseTime("2025-03-19 02:00:00"), // 假设活动结束时间
+			StartTime:   parseTime("2025-03-19 08:00:00"), // 活动开始时间
+			EndTime:     parseTime("2025-03-19 09:00:00"), // 假设活动结束时间
 			Location:    "创客大厦四楼",
 			Description: "擂台赛形式",
 			Points:      8,
@@ -128,8 +129,8 @@ func insertInitialActivities() {
 		},
 		{
 			Name:        "义卖活动",
-			StartTime:   parseTime("2025-03-07 00:00:00"), // 活动开始时间
-			EndTime:     parseTime("2025-03-07 04:00:00"), // 假设活动结束时间
+			StartTime:   parseTime("2025-03-07 08:00:00"), // 活动开始时间
+			EndTime:     parseTime("2025-03-07 09:00:00"), // 假设活动结束时间
 			Location:    "创操场",
 			Description: "义卖不需要的物品",
 			Points:      9,
@@ -138,8 +139,8 @@ func insertInitialActivities() {
 		},
 		{
 			Name:        "乒乓球赛",
-			StartTime:   parseTime("2025-03-12 00:00:00"), // 活动开始时间
-			EndTime:     parseTime("2025-03-12 03:00:00"), // 假设活动结束时间
+			StartTime:   parseTime("2025-03-12 08:00:00"), // 活动开始时间
+			EndTime:     parseTime("2025-03-12 09:00:00"), // 假设活动结束时间
 			Location:    "乒乓球场",
 			Description: "2v2双打",
 			Points:      8,
@@ -163,6 +164,7 @@ func insertInitialActivities() {
 	}
 }
 
+// 插入初始用户数据
 // 插入初始用户数据
 func insertInitialUsers() {
 	o := orm.NewOrm()
@@ -226,7 +228,15 @@ func insertInitialUsers() {
 		// 检查用户是否已存在
 		exist := o.QueryTable("users").Filter("username", user.Username).Exist()
 		if !exist {
-			_, err := o.Insert(&user)
+			// 对密码进行加密
+			hashedPwd, err := HashPassword(user.Password)
+			if err != nil {
+				println("Error hashing password:", user.Username, err)
+				continue
+			}
+			user.Password = hashedPwd
+
+			_, err = o.Insert(&user)
 			if err != nil {
 				println("Error inserting user:", user.Username, err)
 			} else {
@@ -235,6 +245,7 @@ func insertInitialUsers() {
 		}
 	}
 }
+
 
 // 辅助函数：解析时间字符串
 func parseTime(timeStr string) time.Time {
@@ -245,6 +256,7 @@ func parseTime(timeStr string) time.Time {
 	}
 	return t
 }
+
 
 // UpdateUserTitle 根据积分更新用户头衔
 func (u *Users) UpdateUserTitle() {
