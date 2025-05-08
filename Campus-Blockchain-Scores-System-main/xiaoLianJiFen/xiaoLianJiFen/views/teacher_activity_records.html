@@ -126,17 +126,85 @@
         }
 
         .record-card {
-            background-color: white;
-            border-radius: 12px;
+            background: white;
+            border-radius: 8px;
             padding: 1.5rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             position: relative;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: transform 0.2s, box-shadow 0.2s;
         }
 
         .record-card:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid #eee;
+        }
+
+        .record-header h3 {
+            margin: 0;
+            color: #333;
+            font-size: 1.2rem;
+        }
+
+        .record-date {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .record-info {
+            margin-bottom: 1.5rem;
+        }
+
+        .info-item {
+            margin-bottom: 0.75rem;
+        }
+
+        .info-label {
+            color: #666;
+            font-weight: 500;
+            margin-right: 0.5rem;
+        }
+
+        .info-value {
+            color: #333;
+        }
+
+        .record-actions {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+        }
+
+        .action-button {
+            padding: 0.5rem 1rem;
+            border: 1px solid #ddd;
+            background-color: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .action-button:hover {
+            background-color: #f0f0f0;
+        }
+
+        .action-button.delete {
+            color: #dc3545;
+            border-color: #dc3545;
+        }
+
+        .action-button.delete:hover {
+            background-color: #dc3545;
+            color: white;
         }
 
         .edit-button {
@@ -175,173 +243,68 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            z-index: 1000;
+            background-color: rgba(0, 0, 0, 0.5);
             justify-content: center;
             align-items: center;
+            z-index: 1000;
         }
 
         .edit-modal-content {
-            background-color: white;
+            background: white;
             padding: 2rem;
-            border-radius: 12px;
+            border-radius: 8px;
             width: 90%;
             max-width: 600px;
             position: relative;
-            animation: modalFadeIn 0.3s ease;
-        }
-
-        @keyframes modalFadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(-20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
         }
 
         .edit-modal-close {
             position: absolute;
-            top: 1rem;
             right: 1rem;
+            top: 1rem;
             font-size: 1.5rem;
             cursor: pointer;
             color: #666;
-            transition: color 0.3s;
-        }
-
-        .edit-modal-close:hover {
-            color: #333;
         }
 
         .edit-modal-title {
+            margin: 0 0 1.5rem 0;
+            color: #333;
             font-size: 1.5rem;
-            color: #333;
-            margin-bottom: 1.5rem;
-            padding-bottom: 0.5rem;
-            border-bottom: 2px solid #73C088;
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 0.5rem;
-            color: #333;
-            font-weight: 500;
-        }
-
-        .form-group input[type="number"],
-        .form-group textarea {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 1rem;
-            transition: border-color 0.3s;
-        }
-
-        .form-group input[type="number"]:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: #73C088;
-            box-shadow: 0 0 0 2px rgba(115, 192, 136, 0.1);
-        }
-
-        .form-group textarea {
-            min-height: 120px;
-            resize: vertical;
         }
 
         .modal-buttons {
             display: flex;
             justify-content: flex-end;
             gap: 1rem;
-            margin-top: 2rem;
+            margin-top: 1.5rem;
         }
 
         .modal-button {
             padding: 0.75rem 1.5rem;
-            border-radius: 20px;
-            font-size: 1rem;
+            border: none;
+            border-radius: 4px;
             cursor: pointer;
+            font-size: 1rem;
             transition: all 0.3s;
         }
 
         .modal-cancel {
-            background-color: #f5f5f5;
-            border: 1px solid #ddd;
-            color: #666;
+            background-color: #f0f0f0;
+            color: #333;
         }
 
         .modal-cancel:hover {
-            background-color: #eee;
+            background-color: #e0e0e0;
         }
 
         .modal-submit {
-            background-color: #73C088;
-            border: none;
+            background-color: #007bff;
             color: white;
         }
 
         .modal-submit:hover {
-            background-color: #5fa572;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .record-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
-
-        .record-title {
-            font-size: 1.2rem;
-            color: #333;
-            font-weight: 500;
-        }
-
-        .record-date {
-            color: #666;
-            font-size: 0.9rem;
-        }
-
-        .record-info {
-            margin-bottom: 1rem;
-        }
-
-        .record-info-item {
-            display: flex;
-            margin-bottom: 0.5rem;
-            color: #666;
-        }
-
-        .record-info-label {
-            width: 100px;
-            color: #999;
-        }
-
-        .record-summary {
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid #eee;
-        }
-
-        .record-summary-title {
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-            color: #333;
-        }
-
-        .record-summary-content {
-            color: #666;
-            line-height: 1.5;
+            background-color: #0056b3;
         }
 
         .pagination {
@@ -397,6 +360,130 @@
         .search-button:hover {
             background-color: #5fa572;
         }
+
+        /* 新增活动记录表单样式 */
+        .add-record-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group textarea {
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            border-color: #73C088;
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(115, 192, 136, 0.2);
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .submit-button {
+            background-color: #73C088;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .submit-button:hover {
+            background-color: #5fa572;
+            transform: translateY(-1px);
+        }
+
+        .cancel-button {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .cancel-button:hover {
+            background-color: #c0392b;
+            transform: translateY(-1px);
+        }
+
+        .participants-info {
+            margin-bottom: 1rem;
+            padding: 1rem;
+            background-color: #f5f5f5;
+            border-radius: 8px;
+        }
+
+        .participants-actions {
+            margin-bottom: 1rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .participants-list {
+            margin-bottom: 1rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .participants-list table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .participants-list th,
+        .participants-list td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .participants-list th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+        }
+
+        .participants-list tr:hover {
+            background-color: #f9f9f9;
+        }
+
+        .attendance-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -417,6 +504,7 @@
     <div class="main-content">
         <div class="page-header">
             <h1 class="page-title">活动记录管理</h1>
+            <button class="edit-button" onclick="showAddRecordModal()">新增活动记录</button>
         </div>
 
         <div class="search-bar">
@@ -456,10 +544,119 @@
         </div>
     </div>
 
+    <!-- 新增活动记录模态框 -->
+    <div id="addRecordModal" class="edit-modal">
+        <div class="edit-modal-content">
+            <h2 style="margin-bottom: 1.5rem;">新增活动记录</h2>
+            <form id="addRecordForm" class="add-record-form">
+                <div class="form-group">
+                    <label for="activityId">活动ID</label>
+                    <input type="number" id="activityId" name="activityId" required>
+                </div>
+                <div class="form-group">
+                    <label for="attendanceCount">实际到场人数</label>
+                    <input type="number" 
+                           id="attendanceCount" 
+                           name="attendanceCount" 
+                           min="0" 
+                           step="1" 
+                           required 
+                           placeholder="请输入到场人数"
+                           oninput="console.log('输入值变化:', this.value)"
+                           onchange="console.log('值变化:', this.value)">
+                </div>
+                <div class="form-group">
+                    <label for="summary">活动总结</label>
+                    <textarea id="summary" name="summary" required></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="cancel-button" onclick="hideAddRecordModal()">取消</button>
+                    <button type="submit" class="submit-button">提交</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 管理参加人模态框 -->
+    <div id="participantsModal" class="edit-modal">
+        <div class="edit-modal-content" style="max-width: 800px;">
+            <span class="edit-modal-close" onclick="hideParticipantsModal()">&times;</span>
+            <h2 class="edit-modal-title">管理活动参加人</h2>
+            <div class="participants-info">
+                <div class="info-item">
+                    <span class="info-label">活动名称：</span>
+                    <span id="participantsActivityName"></span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">活动积分：</span>
+                    <span id="participantsActivityPoints"></span>
+                </div>
+            </div>
+            <div class="participants-actions">
+                <button class="action-button" onclick="selectAllParticipants()">全选</button>
+                <button class="action-button" onclick="deselectAllParticipants()">取消全选</button>
+                <button class="action-button" onclick="markAllAttended()">全部签到</button>
+                <button class="action-button" onclick="markAllAbsent()">全部取消</button>
+            </div>
+            <div class="participants-list">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>姓名</th>
+                            <th>报名时间</th>
+                            <th>签到状态</th>
+                        </tr>
+                    </thead>
+                    <tbody id="participantsTableBody">
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-buttons">
+                <button class="modal-button modal-cancel" onclick="hideParticipantsModal()">取消</button>
+                <button class="modal-button modal-submit" onclick="saveAttendanceStatus()">保存更改</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 记录表单模态框 -->
+    <div id="recordModal" class="edit-modal">
+        <div class="edit-modal-content">
+            <span class="edit-modal-close" onclick="closeRecordModal()">&times;</span>
+            <h2 class="edit-modal-title">活动记录</h2>
+            <form id="recordForm" class="add-record-form">
+                <input type="hidden" id="recordId" name="id">
+                <input type="hidden" id="activityId" name="activityId" value="">
+                <div class="form-group">
+                    <label for="attendanceCount">实际到场人数</label>
+                    <input type="number" 
+                           id="attendanceCount" 
+                           name="attendanceCount" 
+                           min="0" 
+                           step="1" 
+                           required 
+                           placeholder="请输入到场人数">
+                </div>
+                <div class="form-group">
+                    <label for="summary">活动总结</label>
+                    <textarea id="summary" 
+                              name="summary" 
+                              required 
+                              placeholder="请输入活动总结内容..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="cancel-button" onclick="closeRecordModal()">取消</button>
+                    <button type="submit" class="submit-button">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         let currentPage = 1;
         const itemsPerPage = 6;
         let currentSearchQuery = '';
+        let currentActivityId = null;
+        let currentParticipants = [];
 
         function confirmLogout() {
             if (confirm("您确定要退出吗？")) {
@@ -474,52 +671,118 @@
         }
 
         function loadRecords() {
-            fetch(`/teacher/activity-records/list?page=${currentPage}&search=${encodeURIComponent(currentSearchQuery)}`)
+            console.log('开始加载记录...');
+            fetch(`/teacher/activity-records/list?page=${currentPage}&pageSize=${itemsPerPage}&searchQuery=${encodeURIComponent(currentSearchQuery)}`)
                 .then(response => response.json())
                 .then(data => {
+                    console.log('获取到的记录数据:', data);
                     if (data.code === 0) {
+                        if (!data.data || !data.data.records) {
+                            console.error('返回数据格式错误:', data);
+                            showToast('数据格式错误');
+                            return;
+                        }
                         displayRecords(data.data.records);
-                        updatePagination(data.data.total, data.data.page, data.data.pageSize);
+                        updatePagination(data.data.total, currentPage, itemsPerPage);
                     } else {
-                        alert('获取活动记录失败：' + data.msg);
+                        showToast(data.msg || '获取活动记录失败');
                     }
                 })
                 .catch(error => {
-                    console.error('Error:', error);
-                    alert('获取活动记录失败，请稍后重试');
+                    console.error('加载记录失败:', error);
+                    showToast('获取活动记录失败，请稍后重试');
                 });
         }
 
         function displayRecords(records) {
+            console.log('开始显示记录:', records);
             const grid = document.getElementById('recordsGrid');
             grid.innerHTML = '';
 
+            if (!records || !Array.isArray(records) || records.length === 0) {
+                grid.innerHTML = '<div class="no-records">暂无活动记录</div>';
+                return;
+            }
+
             records.forEach(record => {
-                const card = document.createElement('div');
-                card.className = 'record-card';
-                card.innerHTML = `
-                    <button class="edit-button" onclick="showEditModal(${JSON.stringify(record).replace(/"/g, '&quot;')})">编辑</button>
-                    <div class="record-header">
-                        <h3 class="record-title">${record.activity_name}</h3>
-                        <span class="record-date">${new Date(record.created_at).toLocaleString()}</span>
-                    </div>
-                    <div class="record-info">
-                        <div class="record-info-item">
-                            <span class="record-info-label">记录人：</span>
-                            <span>${record.created_by_name}</span>
-                        </div>
-                        <div class="record-info-item">
-                            <span class="record-info-label">实际到场：</span>
-                            <span>${record.attendance_count}人</span>
-                        </div>
-                    </div>
-                    <div class="record-summary">
-                        <div class="record-summary-title">活动总结</div>
-                        <div class="record-summary-content">${record.summary}</div>
-                    </div>
-                `;
+                console.log('处理记录:', record);
+                if (!record.activity_id) {
+                    console.error('记录缺少活动ID:', record);
+                    return;
+                }
+                const card = createRecordCard(record);
                 grid.appendChild(card);
             });
+        }
+
+        function createRecordCard(record) {
+            console.log('创建卡片，记录数据:', record);
+            if (!record.activity_id) {
+                console.error('创建卡片时缺少活动ID:', record);
+                return null;
+            }
+            
+            const card = document.createElement('div');
+            card.className = 'record-card';
+            card.innerHTML = `
+                <div class="record-header">
+                    <h3>${record.activity_name || '未命名活动'}</h3>
+                    <div class="record-actions">
+                        ${record.has_record ? 
+                            `<button class="edit-btn" onclick="editRecord(${record.id})">
+                                <i class="fas fa-edit"></i> 编辑记录
+                            </button>` :
+                            `<button class="add-btn" onclick="addRecord(${record.activity_id})">
+                                <i class="fas fa-plus"></i> 添加记录
+                            </button>`
+                        }
+                    </div>
+                </div>
+                <div class="record-info">
+                    <div class="info-item">
+                        <span class="info-label">活动ID：</span>
+                        <span class="info-value">${record.activity_id}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">活动积分：</span>
+                        <span class="info-value">${record.activity_points || 0}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">结束时间：</span>
+                        <span class="info-value">${formatDate(record.end_time)}</span>
+                    </div>
+                    ${record.has_record ? `
+                        <div class="info-item">
+                            <span class="info-label">实际到场：</span>
+                            <span class="info-value">${record.attendance_count || 0}人</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">活动总结：</span>
+                            <span class="info-value">${record.summary || '暂无'}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">记录时间：</span>
+                            <span class="info-value">${formatDate(record.created_at)}</span>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
+            return card;
+        }
+
+        // 格式化日期
+        function formatDate(dateString) {
+            if (!dateString) return '暂无';
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return '无效日期';
+            
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            
+            return `${year}-${month}-${day} ${hours}:${minutes}`;
         }
 
         function showEditModal(record) {
@@ -570,11 +833,19 @@
 
             fetch('/teacher/activity-records/update', {
                 method: 'POST',
-                body: formData
+                body: formData,
+                credentials: 'same-origin'
             })
             .then(response => {
                 if (!response.ok) {
-                    throw new Error('网络响应错误');
+                    if (response.status === 401) {
+                        showToast('登录已过期，请重新登录');
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 1500);
+                        return;
+                    }
+                    throw new Error('请求失败');
                 }
                 return response.json();
             })
@@ -659,6 +930,360 @@
         // 页面加载时加载活动记录
         document.addEventListener('DOMContentLoaded', function() {
             loadRecords();
+            const attendanceCountInput = document.getElementById('attendanceCount');
+            attendanceCountInput.addEventListener('input', function(e) {
+                console.log('输入框值变化:', this.value);
+            });
+        });
+
+        // 显示新增活动记录模态框
+        function showAddRecordModal() {
+            document.getElementById('addRecordModal').style.display = 'flex';
+        }
+
+        // 隐藏新增活动记录模态框
+        function hideAddRecordModal() {
+            document.getElementById('addRecordModal').style.display = 'none';
+        }
+
+        // 处理新增活动记录表单提交
+        document.getElementById('addRecordForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const recordId = formData.get('recordId');
+            const url = recordId ? '/teacher/activity-records/update' : '/teacher/activity-records/add';
+
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'same-origin'
+                });
+
+                const data = await response.json();
+                if (data.code === 0) {
+                    alert('活动记录添加成功！');
+                    hideAddRecordModal();
+                    loadRecords(); // 重新加载记录列表
+                } else {
+                    alert('添加失败：' + (data.msg || '未知错误'));
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('提交失败，请稍后重试');
+            }
+        });
+
+        // 显示管理参加人模态框
+        function showParticipantsModal(activityId) {
+            currentActivityId = activityId;
+            document.getElementById('participantsModal').style.display = 'flex';
+            loadParticipants(activityId);
+        }
+
+        // 隐藏管理参加人模态框
+        function hideParticipantsModal() {
+            document.getElementById('participantsModal').style.display = 'none';
+            currentActivityId = null;
+            currentParticipants = [];
+        }
+
+        // 加载参加人列表
+        async function loadParticipants(activityId) {
+            try {
+                const response = await fetch(`/teacher/activity-records/participants?activityId=${activityId}`);
+                const data = await response.json();
+                
+                if (data.code === 0) {
+                    // 更新活动信息
+                    document.getElementById('participantsActivityName').textContent = data.data.activity_name;
+                    document.getElementById('participantsActivityPoints').textContent = data.data.activity_points;
+
+                    // 保存参加人数据
+                    currentParticipants = data.data.participants;
+
+                    // 更新表格
+                    const tbody = document.getElementById('participantsTableBody');
+                    tbody.innerHTML = '';
+
+                    currentParticipants.forEach(participant => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${participant.username}</td>
+                            <td>${new Date(participant.registration_time).toLocaleString()}</td>
+                            <td>
+                                <input type="checkbox" 
+                                       class="attendance-checkbox" 
+                                       ${participant.is_attended ? 'checked' : ''}
+                                       onchange="updateAttendanceStatus(${participant.id}, this.checked)">
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    alert('获取参加人列表失败：' + data.msg);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('获取参加人列表失败，请稍后重试');
+            }
+        }
+
+        // 更新单个参加人的签到状态
+        function updateAttendanceStatus(participantId, isAttended) {
+            const participant = currentParticipants.find(p => p.id === participantId);
+            if (participant) {
+                participant.is_attended = isAttended;
+            }
+        }
+
+        // 全选
+        function selectAllParticipants() {
+            const checkboxes = document.querySelectorAll('.attendance-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = true;
+                const participantId = parseInt(checkbox.getAttribute('onchange').match(/\d+/)[0]);
+                updateAttendanceStatus(participantId, true);
+            });
+        }
+
+        // 取消全选
+        function deselectAllParticipants() {
+            const checkboxes = document.querySelectorAll('.attendance-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+                const participantId = parseInt(checkbox.getAttribute('onchange').match(/\d+/)[0]);
+                updateAttendanceStatus(participantId, false);
+            });
+        }
+
+        // 全部签到
+        function markAllAttended() {
+            selectAllParticipants();
+        }
+
+        // 全部取消
+        function markAllAbsent() {
+            deselectAllParticipants();
+        }
+
+        // 保存签到状态
+        async function saveAttendanceStatus() {
+            if (!currentActivityId) {
+                alert('活动ID无效');
+                return;
+            }
+
+            const attendedCount = currentParticipants.filter(p => p.is_attended).length;
+            const totalCount = currentParticipants.length;
+
+            if (!confirm(`确认保存签到状态？\n总人数：${totalCount}\n到场人数：${attendedCount}\n未到场人数：${totalCount - attendedCount}`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/teacher/activity-records/update-attendance', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        activityId: currentActivityId,
+                        participants: currentParticipants
+                    })
+                });
+
+                const data = await response.json();
+                if (data.code === 0) {
+                    alert('保存成功！');
+                    hideParticipantsModal();
+                    loadRecords(); // 重新加载活动记录列表
+                } else {
+                    alert('保存失败：' + data.msg);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('保存失败，请稍后重试');
+            }
+        }
+
+        // 添加记录
+        function addRecord(activityId) {
+            console.log('添加记录，活动ID:', activityId);
+            if (!activityId) {
+                console.error('添加记录时未提供活动ID');
+                showToast('未获取到活动ID，请刷新页面重试');
+                return;
+            }
+            
+            // 重置表单
+            const form = document.getElementById('recordForm');
+            form.reset();
+            
+            // 设置活动ID
+            const activityIdInput = document.getElementById('activityId');
+            activityIdInput.value = activityId;
+            
+            // 验证活动ID是否设置成功
+            const setActivityId = activityIdInput.value;
+            console.log('设置后的活动ID:', setActivityId);
+            
+            if (!setActivityId) {
+                console.error('活动ID设置失败');
+                showToast('活动ID设置失败，请刷新页面重试');
+                return;
+            }
+            
+            // 显示模态框
+            document.getElementById('recordModal').style.display = 'flex';
+        }
+
+        // 编辑记录
+        function editRecord(recordId) {
+            // 获取记录信息
+            fetch(`/teacher/activity-records/list?recordId=${recordId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.code === 0) {
+                        const record = data.data.records.find(r => r.id === recordId);
+                        if (record) {
+                            document.getElementById('recordId').value = record.id;
+                            document.getElementById('activityId').value = record.activity_id;
+                            document.getElementById('attendanceCount').value = record.attendance_count;
+                            document.getElementById('summary').value = record.summary;
+                            
+                            // 显示模态框
+                            document.getElementById('recordModal').style.display = 'flex';
+                        } else {
+                            showToast('未找到记录信息');
+                        }
+                    } else {
+                        showToast('获取记录信息失败');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showToast('获取记录信息失败');
+                });
+        }
+
+        // 修改表单提交处理
+        document.getElementById('recordForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            // 使用FormData直接获取表单数据
+            const formData = new FormData(this);
+            
+            // 获取表单数据
+            const activityId = formData.get('activityId');
+            const attendanceCount = formData.get('attendanceCount');
+            const summary = formData.get('summary');
+            
+            console.log('表单原始数据:', {
+                activityId,
+                attendanceCount,
+                summary
+            });
+            
+            // 验证活动ID
+            if (!activityId) {
+                showToast('未获取到活动ID，请刷新页面重试');
+                return;
+            }
+            
+            // 验证到场人数
+            if (!attendanceCount) {
+                showToast('请输入到场人数');
+                return;
+            }
+            
+            const numAttendanceCount = Number(attendanceCount);
+            if (isNaN(numAttendanceCount)) {
+                showToast('请输入有效的数字');
+                return;
+            }
+            
+            if (numAttendanceCount < 0) {
+                showToast('到场人数不能为负数');
+                return;
+            }
+            
+            if (!Number.isInteger(numAttendanceCount)) {
+                showToast('到场人数必须是整数');
+                return;
+            }
+            
+            // 验证活动总结
+            if (!summary || !summary.trim()) {
+                showToast('请输入活动总结');
+                return;
+            }
+            
+            // 重新设置处理后的数据
+            formData.set('activityId', activityId);
+            formData.set('attendanceCount', attendanceCount);
+            formData.set('summary', summary.trim());
+            
+            console.log('提交的表单数据:', {
+                activityId,
+                attendanceCount,
+                summary: summary.trim()
+            });
+            
+            const url = '/teacher/activity-records/add';
+            
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 0) {
+                    showToast('创建成功');
+                    closeRecordModal();
+                    loadRecords();
+                } else {
+                    showToast(data.msg || '操作失败');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast('操作失败，请稍后重试');
+            });
+        });
+
+        // 关闭记录模态框
+        function closeRecordModal() {
+            document.getElementById('recordModal').style.display = 'none';
+            // 清空表单字段
+            const form = document.getElementById('recordForm');
+            const attendanceCountInput = document.getElementById('attendanceCount');
+            const summaryInput = document.getElementById('summary');
+            attendanceCountInput.value = '';
+            summaryInput.value = '';
+        }
+
+        // 显示提示信息
+        function showToast(message) {
+            alert(message); // 暂时使用alert，后续可以改为更友好的提示方式
+        }
+
+        // 添加表单输入监听
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('recordForm');
+            const attendanceCountInput = form.querySelector('input[name="attendanceCount"]');
+            const summaryInput = form.querySelector('textarea[name="summary"]');
+            
+            // 监听输入变化
+            attendanceCountInput.addEventListener('input', function(e) {
+                console.log('到场人数输入:', this.value);
+            });
+            
+            summaryInput.addEventListener('input', function(e) {
+                console.log('活动总结输入:', this.value);
+            });
         });
     </script>
 </body>

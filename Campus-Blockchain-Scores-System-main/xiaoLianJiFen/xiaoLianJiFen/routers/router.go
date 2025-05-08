@@ -2,6 +2,7 @@ package routers
 
 import (
 	"xiaoLianJiFen/controllers"
+
 	"github.com/astaxie/beego"
 )
 
@@ -32,6 +33,9 @@ func init() {
 	beego.Router("/teacher/activity-records", &controllers.TeacherController{}, "get:ShowActivityRecords")
 	beego.Router("/teacher/activity-records/list", &controllers.TeacherController{}, "get:GetActivityRecords")
 	beego.Router("/teacher/activity-records/update", &controllers.TeacherController{}, "post:UpdateActivityRecord")
+	beego.Router("/teacher/activity-records/add", &controllers.TeacherController{}, "post:CreateActivityRecord")
+	beego.Router("/teacher/activity-records/participants", &controllers.TeacherController{}, "get:GetActivityParticipants")
+	beego.Router("/teacher/activity-records/update-attendance", &controllers.TeacherController{}, "post:UpdateAttendanceStatus")
 
 	// 学生端路由
 	beego.Router("/student", &controllers.StudentController{}, "get:ShowStudentNav")

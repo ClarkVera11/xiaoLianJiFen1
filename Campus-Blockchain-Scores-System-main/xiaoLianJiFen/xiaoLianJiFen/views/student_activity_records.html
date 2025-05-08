@@ -429,91 +429,115 @@
                 });
         }
 
-        function loadRecords() {
-            fetch('/student/activity-records/list')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        if (Array.isArray(data.records)) {
-                            renderRecords(data.records);
-                            renderPagination(data.total);
-                        } else {
-                            console.error('Records data is not an array:', data.records);
-                            alert('获取活动记录失败：数据格式错误');
+        function loadActivityRecords(page = 1) {
+            $.ajax({
+                url: '/student/activity-records',
+                method: 'GET',
+                data: { page: page },
+                success: function(response) {
+                    if (response.success) {
+                        const records = response.records || [];
+                        const total = response.total || 0;
+                        const pageSize = 6;
+                        const totalPages = Math.ceil(total / pageSize);
+                        
+                        // 渲染记录列表
+                        const recordsGrid = $('.records-grid');
+                        recordsGrid.empty();
+                        
+                        if (!Array.isArray(records) || records.length === 0) {
+                            recordsGrid.html('<div class="no-records">暂无活动记录</div>');
+                            return;
                         }
+                        
+                        records.forEach(record => {
+                            const recordCard = `
+                                <div class="record-card">
+                                    <div class="record-header">
+                                        <h3 class="record-title">${record.activity_name || '未知活动'}</h3>
+                                        <span class="record-date">${record.created_at ? new Date(record.created_at).toLocaleString() : '未知时间'}</span>
+                                    </div>
+                                    <div class="record-info">
+                                        <div class="record-info-item">
+                                            <span class="record-info-label">活动时间：</span>
+                                            <span>${record.start_time ? new Date(record.start_time).toLocaleString() : '未知'} - ${record.end_time ? new Date(record.end_time).toLocaleString() : '未知'}</span>
+                                        </div>
+                                        <div class="record-info-item">
+                                            <span class="record-info-label">活动地点：</span>
+                                            <span>${record.location || '未知地点'}</span>
+                                        </div>
+                                        <div class="record-info-item">
+                                            <span class="record-info-label">到场人数：</span>
+                                            <span>${record.attendance_count || 0}人</span>
+                                        </div>
+                                        <div class="record-info-item">
+                                            <span class="record-info-label">活动积分：</span>
+                                            <span>${record.points || 0}分</span>
+                                        </div>
+                                        <div class="record-info-item">
+                                            <span class="record-info-label">记录人：</span>
+                                            <span>${record.creator_name || '未知'}</span>
+                                        </div>
+                                    </div>
+                                    <div class="record-summary">
+                                        <div class="record-summary-title">活动总结</div>
+                                        <div class="record-summary-content">${record.summary || '暂无总结'}</div>
+                                    </div>
+                                </div>
+                            `;
+                            recordsGrid.append(recordCard);
+                        });
+                        
+                        // 渲染分页
+                        renderPagination(page, totalPages);
                     } else {
-                        alert(data.message || '获取活动记录失败');
+                        alert(response.message || '获取活动记录失败');
                     }
-                })
-                .catch(error => {
+                },
+                error: function(xhr, status, error) {
                     console.error('Error:', error);
                     alert('获取活动记录失败，请稍后重试');
-                });
+                }
+            });
         }
-
-        function renderRecords(records) {
-            const grid = document.getElementById('recordsGrid');
-            if (!records || records.length === 0) {
-                grid.innerHTML = '<div class="no-records">暂无活动记录</div>';
+        
+        // 渲染分页
+        function renderPagination(currentPage, totalPages) {
+            const pagination = $('.pagination');
+            pagination.empty();
+            
+            if (totalPages <= 1) {
                 return;
             }
             
-            grid.innerHTML = records.map(record => `
-                <div class="record-card">
-                    <div class="record-header">
-                        <h3 class="record-title">${record.activity_name || '未知活动'}</h3>
-                        <span class="record-date">${formatDate(record.CreatedAt || record.created_at)}</span>
-                    </div>
-                    <div class="record-info">
-                        <div class="record-info-item">
-                            <span class="record-info-label">活动时间：</span>
-                            <span>${formatDateTime(record.start_time)} - ${formatDateTime(record.end_time)}</span>
-                        </div>
-                        <div class="record-info-item">
-                            <span class="record-info-label">活动地点：</span>
-                            <span>${record.location || '未指定'}</span>
-                        </div>
-                        <div class="record-info-item">
-                            <span class="record-info-label">活动积分：</span>
-                            <span>${record.points || 0}分</span>
-                        </div>
-                        <div class="record-info-item">
-                            <span class="record-info-label">到场人数：</span>
-                            <span>${record.AttendanceCount || record.attendance_count || 0}人</span>
-                        </div>
-                    </div>
-                    <div class="record-summary">
-                        <h4 class="record-summary-title">活动总结</h4>
-                        <p class="record-summary-content">${record.Summary || record.summary || '暂无总结'}</p>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function renderPagination(total) {
-            const totalPages = Math.ceil(total / itemsPerPage);
-            const pagination = document.getElementById('pagination');
-            
-            let html = '';
+            let paginationHtml = '';
             
             // 上一页按钮
-            html += `<button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>上一页</button>`;
+            if (currentPage > 1) {
+                paginationHtml += `<button onclick="loadActivityRecords(${currentPage - 1})">上一页</button>`;
+            }
             
             // 页码按钮
             for (let i = 1; i <= totalPages; i++) {
-                html += `<button onclick="changePage(${i})" class="${currentPage === i ? 'active' : ''}">${i}</button>`;
+                if (i === currentPage) {
+                    paginationHtml += `<button class="active">${i}</button>`;
+                } else {
+                    paginationHtml += `<button onclick="loadActivityRecords(${i})">${i}</button>`;
+                }
             }
             
             // 下一页按钮
-            html += `<button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>下一页</button>`;
+            if (currentPage < totalPages) {
+                paginationHtml += `<button onclick="loadActivityRecords(${currentPage + 1})">下一页</button>`;
+            }
             
-            pagination.innerHTML = html;
+            pagination.html(paginationHtml);
         }
-
-        function changePage(page) {
-            currentPage = page;
-            loadRecords();
-        }
+        
+        // 页面加载完成后加载活动记录
+        $(document).ready(function() {
+            loadActivityRecords();
+        });
 
         function submitRecord(event) {
             event.preventDefault();
@@ -533,7 +557,7 @@
                     alert('活动记录添加成功');
                     closeModal();
                     document.getElementById('recordForm').reset();
-                    loadRecords();
+                    loadActivityRecords();
                 } else {
                     alert(data.message || '添加活动记录失败');
                 }
@@ -544,22 +568,6 @@
             });
         }
 
-        function formatDate(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('zh-CN');
-        }
-
-        function formatDateTime(dateString) {
-            const date = new Date(dateString);
-            return date.toLocaleString('zh-CN', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        }
-
         // 点击模态框外部关闭
         window.onclick = function(event) {
             const modal = document.getElementById('addRecordModal');
@@ -567,9 +575,6 @@
                 closeModal();
             }
         }
-
-        // 页面加载时获取活动记录列表
-        document.addEventListener('DOMContentLoaded', loadRecords);
     </script>
 </body>
 </html> 

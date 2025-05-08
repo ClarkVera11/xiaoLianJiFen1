@@ -5,7 +5,6 @@ import (
 
 	"github.com/astaxie/beego/orm"
 	_ "github.com/go-sql-driver/mysql"
-
 )
 
 // Users 用户模型
@@ -21,7 +20,7 @@ type Users struct {
 	Title          string `orm:"column(title);size(50);default(倔强青铜)"` // 用户头衔
 	TxHash         string `orm:"column(tx_hash);size(66);null"`        // 区块链交易哈希
 	BlockTimestamp int64  `orm:"column(block_timestamp);default(0)"`   // 区块链交易时间戳
-	Rank int `orm:"-"` // orm:"-" 表示该字段不映射到数据库，仅用于程序逻辑，若需映射到数据库则去掉此标签并调整数据库表结构
+	Rank           int    `orm:"-"`                                    // orm:"-" 表示该字段不映射到数据库，仅用于程序逻辑，若需映射到数据库则去掉此标签并调整数据库表结构
 }
 
 // Activities 活动模型
@@ -52,12 +51,14 @@ type ActivityRegistrations struct {
 // ActivityRecords 活动记录模型
 type ActivityRecords struct {
 	Id              int64     `orm:"column(id);pk;auto"`              // 记录ID
-	ActivityId      int64     `orm:"column(activity_id)"`             // 活动ID
 	AttendanceCount int       `orm:"column(attendance_count)"`        // 实际到场人数
 	Summary         string    `orm:"column(summary);type(text)"`      // 活动总结
-	CreatedBy       int64     `orm:"column(created_by)"`              // 记录创建者ID
 	CreatedAt       time.Time `orm:"column(created_at);auto_now_add"` // 创建时间
 	UpdatedAt       time.Time `orm:"column(updated_at);auto_now"`     // 更新时间
+
+	// 关联关系
+	Activity *Activities `orm:"rel(fk);column(activity_id)"` // 关联活动
+	Creator  *Users      `orm:"rel(fk);column(created_by)"`  // 关联创建者
 }
 
 // PointsRecord 积分记录模型
@@ -246,7 +247,6 @@ func insertInitialUsers() {
 	}
 }
 
-
 // 辅助函数：解析时间字符串
 func parseTime(timeStr string) time.Time {
 	t, err := time.Parse("2006-01-02 15:04:05", timeStr)
@@ -256,7 +256,6 @@ func parseTime(timeStr string) time.Time {
 	}
 	return t
 }
-
 
 // UpdateUserTitle 根据积分更新用户头衔
 func (u *Users) UpdateUserTitle() {

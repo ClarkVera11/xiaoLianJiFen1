@@ -256,24 +256,24 @@ func (c *StudentController) SubmitActivity() {
 	// 获取当前登录用户的ID
 	userID := c.GetSession("userId")
 	if userID == nil {
-			c.Data["json"] = map[string]interface{}{
-					"success": false,
-					"message": "请先登录",
-			}
-			c.ServeJSON()
-			return
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "请先登录",
+		}
+		c.ServeJSON()
+		return
 	}
 
 	// 解析请求数据
 	var activity Models.Activities
 	if err := c.ParseForm(&activity); err != nil {
-			beego.Error("解析表单数据失败：", err)
-			c.Data["json"] = map[string]interface{}{
-					"success": false,
-					"message": "提交数据格式错误",
-			}
-			c.ServeJSON()
-			return
+		beego.Error("解析表单数据失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "提交数据格式错误",
+		}
+		c.ServeJSON()
+		return
 	}
 
 	// 获取前端传入的时间字段
@@ -286,24 +286,24 @@ func (c *StudentController) SubmitActivity() {
 	// 解析开始时间和结束时间
 	startTime, err := time.Parse(layout, startTimeStr)
 	if err != nil {
-			beego.Error("解析开始时间失败：", err)
-			c.Data["json"] = map[string]interface{}{
-					"success": false,
-					"message": "无效的开始时间格式",
-			}
-			c.ServeJSON()
-			return
+		beego.Error("解析开始时间失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "无效的开始时间格式",
+		}
+		c.ServeJSON()
+		return
 	}
 
 	endTime, err := time.Parse(layout, endTimeStr)
 	if err != nil {
-			beego.Error("解析结束时间失败：", err)
-			c.Data["json"] = map[string]interface{}{
-					"success": false,
-					"message": "无效的结束时间格式",
-			}
-			c.ServeJSON()
-			return
+		beego.Error("解析结束时间失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "无效的结束时间格式",
+		}
+		c.ServeJSON()
+		return
 	}
 
 	// 增加8小时
@@ -322,20 +322,20 @@ func (c *StudentController) SubmitActivity() {
 	o := orm.NewOrm()
 	_, err = o.Insert(&activity)
 	if err != nil {
-			beego.Error("保存活动数据失败：", err)
-			c.Data["json"] = map[string]interface{}{
-					"success": false,
-					"message": "保存活动失败，请稍后重试",
-			}
-			c.ServeJSON()
-			return
+		beego.Error("保存活动数据失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "保存活动失败，请稍后重试",
+		}
+		c.ServeJSON()
+		return
 	}
 
 	beego.Info("活动申报成功：", activity)
 	c.Data["json"] = map[string]interface{}{
-			"success": true,
-			"message": "活动申报成功，等待审核",
-			"data":    activity,
+		"success": true,
+		"message": "活动申报成功，等待审核",
+		"data":    activity,
 	}
 	c.ServeJSON()
 }
@@ -940,6 +940,7 @@ func (c *StudentController) GetActivityRecords() {
 		EndTime         time.Time `json:"end_time"`
 		Location        string    `json:"location"`
 		Points          int       `json:"points"`
+		CreatorName     string    `json:"creator_name"`
 	}
 
 	var records []RecordResult
@@ -961,9 +962,11 @@ func (c *StudentController) GetActivityRecords() {
 			a.start_time,
 			a.end_time,
 			a.location,
-			a.points
+			a.points,
+			u.username as creator_name
 		FROM activity_records ar
 		LEFT JOIN activities a ON ar.activity_id = a.id
+		LEFT JOIN users u ON ar.created_by = u.id
 		ORDER BY ar.created_at DESC
 		LIMIT ? OFFSET ?
 	`
@@ -1066,10 +1069,10 @@ func (c *StudentController) AddActivityRecord() {
 	}
 
 	record := Models.ActivityRecords{
-		ActivityId:      activityId,
+		Activity:        &Models.Activities{Id: activityId},
 		AttendanceCount: attendanceCount,
 		Summary:         summary,
-		CreatedBy:       user.Id,
+		Creator:         &Models.Users{Id: user.Id},
 	}
 
 	_, err = o.Insert(&record)

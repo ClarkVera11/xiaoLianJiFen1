@@ -1,9 +1,11 @@
 package controllers
 
 import (
+	"encoding/json"
 	Models "xiaoLianJiFen/models"
 
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/astaxie/beego"
@@ -258,6 +260,9 @@ func (c *TeacherController) GetActivities() {
 	}
 
 	beego.Info("成功获取活动列表，数量：", len(activities))
+	for _, activity := range activities {
+		beego.Info("活动信息：", activity.Name, "状态：", activity.Status)
+	}
 	c.Data["json"] = map[string]interface{}{
 		"success": true,
 		"data":    activities,
@@ -634,58 +639,108 @@ func (c *TeacherController) ShowActivityRecords() {
 
 // GetActivityRecords 获取活动记录列表
 func (c *TeacherController) GetActivityRecords() {
+	// 检查用户是否登录
+	userID := c.GetSession("userId")
+	if userID == nil {
+		c.Data["json"] = map[string]interface{}{
+			"code": 401,
+			"msg":  "请先登录",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 获取分页参数
 	page, _ := c.GetInt("page", 1)
 	pageSize, _ := c.GetInt("pageSize", 6)
-	search := c.GetString("search")
+	searchQuery := c.GetString("searchQuery", "")
+	recordId, _ := c.GetInt64("recordId", 0)
 
-	// 构建查询条件
-	query := orm.NewOrm().QueryTable("activity_records")
-	if search != "" {
-		var activityIds orm.ParamsList
-		orm.NewOrm().QueryTable("activities").Filter("name__icontains", search).ValuesFlat(&activityIds, "id")
-		if len(activityIds) > 0 {
-			query = query.Filter("activity_id__in", activityIds)
+	// 构建查询
+	o := orm.NewOrm()
+
+	// 首先获取所有已结束的活动
+	var activities []Models.Activities
+	qs := o.QueryTable("activities").Filter("status", 3)
+
+	// 添加搜索条件
+	if searchQuery != "" {
+		qs = qs.Filter("name__icontains", searchQuery)
+	}
+
+	// 如果指定了recordId，只获取该记录对应的活动
+	if recordId > 0 {
+		var record Models.ActivityRecords
+		err := o.QueryTable("activity_records").Filter("id", recordId).One(&record)
+		if err == nil {
+			qs = qs.Filter("id", record.Activity.Id)
 		}
 	}
 
 	// 获取总记录数
-	total, _ := query.Count()
+	total, err := qs.Count()
+	if err != nil {
+		beego.Error("获取活动总数失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"code": 500,
+			"msg":  "获取活动总数失败",
+		}
+		c.ServeJSON()
+		return
+	}
 
 	// 获取分页数据
-	var records []*Models.ActivityRecords
-	query = query.OrderBy("-created_at").
-		Limit(pageSize, (page-1)*pageSize)
-	query.All(&records)
+	_, err = qs.OrderBy("-end_time").
+		Limit(pageSize, (page-1)*pageSize).
+		All(&activities)
+	if err != nil {
+		beego.Error("获取活动列表失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"code": 500,
+			"msg":  "获取活动列表失败",
+		}
+		c.ServeJSON()
+		return
+	}
 
-	// 获取活动名称和创建者名称
-	var result []map[string]interface{}
-	for _, record := range records {
-		// 获取活动信息
-		var activity Models.Activities
-		orm.NewOrm().QueryTable("activities").Filter("id", record.ActivityId).One(&activity)
+	// 构造返回数据
+	var recordsData []map[string]interface{}
+	for _, activity := range activities {
+		// 查找该活动的记录
+		var record Models.ActivityRecords
+		err := o.QueryTable("activity_records").
+			Filter("activity_id", activity.Id).
+			One(&record)
 
-		// 获取创建者信息
-		var user Models.Users
-		orm.NewOrm().QueryTable("users").Filter("id", record.CreatedBy).One(&user)
+		// 构造活动数据
+		activityData := map[string]interface{}{
+			"activity_id":     activity.Id,
+			"activity_name":   activity.Name,
+			"activity_points": activity.Points,
+			"end_time":        activity.EndTime,
+			"has_record":      err == nil, // 是否已有记录
+		}
 
-		result = append(result, map[string]interface{}{
-			"id":               record.Id,
-			"activity_name":    activity.Name,
-			"attendance_count": record.AttendanceCount,
-			"summary":          record.Summary,
-			"created_by_name":  user.Username,
-			"created_at":       record.CreatedAt.Format("2006-01-02 15:04:05"),
-		})
+		// 如果已有记录，添加记录信息
+		if err == nil {
+			activityData["id"] = record.Id
+			activityData["attendance_count"] = record.AttendanceCount
+			activityData["summary"] = record.Summary
+			activityData["created_at"] = record.CreatedAt
+		} else {
+			// 如果没有记录，设置默认值
+			activityData["attendance_count"] = 0
+			activityData["summary"] = ""
+		}
+
+		recordsData = append(recordsData, activityData)
 	}
 
 	c.Data["json"] = map[string]interface{}{
 		"code": 0,
-		"msg":  "success",
 		"data": map[string]interface{}{
-			"records":  result,
-			"total":    total,
-			"page":     page,
-			"pageSize": pageSize,
+			"total":   total,
+			"records": recordsData,
 		},
 	}
 	c.ServeJSON()
@@ -888,4 +943,415 @@ func init() {
 			time.Sleep(1 * time.Minute)
 		}
 	}()
+}
+
+// CreateActivityRecord 创建新的活动记录
+func (c *TeacherController) CreateActivityRecord() {
+	// 检查用户是否登录
+	userID := c.GetSession("userId")
+	if userID == nil {
+		c.Data["json"] = map[string]interface{}{
+			"code": 401,
+			"msg":  "请先登录",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 检查用户角色
+	o := orm.NewOrm()
+	var user Models.Users
+	err := o.QueryTable("users").Filter("username", userID).One(&user)
+	if err != nil || user.Role_name != "教师" {
+		c.Data["json"] = map[string]interface{}{
+			"code": 403,
+			"msg":  "无权限执行此操作",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 获取表单数据
+	activityId, err := c.GetInt64("activityId")
+	if err != nil {
+		beego.Error("获取活动ID失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"code": 400,
+			"msg":  "无效的活动ID",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 获取到场人数
+	attendanceCountStr := c.GetString("attendanceCount")
+	if attendanceCountStr == "" {
+		c.Data["json"] = map[string]interface{}{
+			"code": 400,
+			"msg":  "请输入到场人数",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	attendanceCount, err := strconv.Atoi(attendanceCountStr)
+	if err != nil {
+		beego.Error("到场人数转换失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"code": 400,
+			"msg":  "到场人数必须是整数",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	if attendanceCount < 0 {
+		c.Data["json"] = map[string]interface{}{
+			"code": 400,
+			"msg":  "到场人数不能为负数",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	summary := c.GetString("summary")
+	if summary == "" {
+		c.Data["json"] = map[string]interface{}{
+			"code": 400,
+			"msg":  "活动总结不能为空",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 检查活动是否存在且已结束
+	var activity Models.Activities
+	err = o.QueryTable("activities").Filter("id", activityId).One(&activity)
+	if err != nil {
+		c.Data["json"] = map[string]interface{}{
+			"code": 404,
+			"msg":  "活动不存在",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 检查活动状态是否为已结束（3）
+	if activity.Status != 3 {
+		c.Data["json"] = map[string]interface{}{
+			"code": 400,
+			"msg":  "只能为已结束的活动创建记录",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 检查是否已存在该活动的记录
+	exist := o.QueryTable("activity_records").Filter("activity_id", activityId).Exist()
+	if exist {
+		c.Data["json"] = map[string]interface{}{
+			"code": 400,
+			"msg":  "该活动已有记录",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 创建活动记录
+	record := Models.ActivityRecords{
+		Activity:        &Models.Activities{Id: activityId},
+		AttendanceCount: attendanceCount,
+		Summary:         summary,
+		Creator:         &Models.Users{Id: user.Id},
+		CreatedAt:       time.Now(),
+		UpdatedAt:       time.Now(),
+	}
+
+	// 保存记录
+	_, err = o.Insert(&record)
+	if err != nil {
+		beego.Error("创建活动记录失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"code": 500,
+			"msg":  "创建记录失败",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 构建返回数据
+	result := map[string]interface{}{
+		"id":               record.Id,
+		"activity_id":      activityId,
+		"activity_name":    activity.Name,
+		"activity_points":  activity.Points,
+		"attendance_count": attendanceCount,
+		"summary":          summary,
+		"created_at":       record.CreatedAt,
+	}
+
+	c.Data["json"] = map[string]interface{}{
+		"code": 0,
+		"msg":  "创建成功",
+		"data": result,
+	}
+	c.ServeJSON()
+}
+
+// GetActivityParticipants 获取活动参加人列表
+func (c *TeacherController) GetActivityParticipants() {
+	// 检查用户是否登录
+	user := c.GetSession("user")
+	if user == nil {
+		c.Data["json"] = map[string]interface{}{
+			"code": 401,
+			"msg":  "请先登录",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 获取活动ID
+	activityId, err := c.GetInt("activity_id")
+	if err != nil {
+		c.Data["json"] = map[string]interface{}{
+			"code": 400,
+			"msg":  "无效的活动ID",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 获取活动信息
+	var activity Models.Activities
+	if err := orm.NewOrm().QueryTable("activities").Filter("id", activityId).One(&activity); err != nil {
+		c.Data["json"] = map[string]interface{}{
+			"code": 500,
+			"msg":  "获取活动信息失败",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 获取所有报名记录
+	var registrations []Models.ActivityRegistrations
+	_, err = orm.NewOrm().QueryTable("activity_registrations").
+		Filter("activity_id", activityId).
+		Filter("status", 1). // 已报名状态
+		All(&registrations)
+	if err != nil {
+		c.Data["json"] = map[string]interface{}{
+			"code": 500,
+			"msg":  "获取报名记录失败",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 构造参加人列表
+	var participants []map[string]interface{}
+	for _, reg := range registrations {
+		var student Models.Users
+		if err := orm.NewOrm().QueryTable("users").Filter("id", reg.UserId).One(&student); err != nil {
+			continue
+		}
+
+		participants = append(participants, map[string]interface{}{
+			"id":                student.Id,
+			"username":          student.Username,
+			"registration_time": reg.CreatedAt,
+			"is_attended":       false, // 默认未签到
+		})
+	}
+
+	c.Data["json"] = map[string]interface{}{
+		"code": 200,
+		"data": map[string]interface{}{
+			"activity_name": activity.Name,
+			"points":        activity.Points,
+			"participants":  participants,
+		},
+	}
+	c.ServeJSON()
+}
+
+// UpdateAttendanceStatus 更新活动参加人的签到状态
+func (c *TeacherController) UpdateAttendanceStatus() {
+	// 检查用户是否登录
+	user := c.GetSession("user")
+	if user == nil {
+		c.Data["json"] = map[string]interface{}{
+			"code": 1,
+			"msg":  "请先登录",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 获取请求数据
+	var requestData struct {
+		ActivityId   int64 `json:"activityId"`
+		Participants []struct {
+			Id         int64 `json:"id"`
+			IsAttended bool  `json:"is_attended"`
+		} `json:"participants"`
+	}
+
+	if err := json.Unmarshal(c.Ctx.Input.RequestBody, &requestData); err != nil {
+		c.Data["json"] = map[string]interface{}{
+			"code": 1,
+			"msg":  "无效的请求数据",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 验证活动ID
+	if requestData.ActivityId <= 0 {
+		c.Data["json"] = map[string]interface{}{
+			"code": 1,
+			"msg":  "无效的活动ID",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 开启事务
+	o := orm.NewOrm()
+	err := o.Begin()
+	if err != nil {
+		c.Data["json"] = map[string]interface{}{
+			"code": 1,
+			"msg":  "开启事务失败",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 更新签到状态
+	for _, participant := range requestData.Participants {
+		// 更新报名记录状态
+		_, err := o.QueryTable("activity_registrations").
+			Filter("id", participant.Id).
+			Update(orm.Params{
+				"is_attended": participant.IsAttended,
+			})
+		if err != nil {
+			o.Rollback()
+			c.Data["json"] = map[string]interface{}{
+				"code": 1,
+				"msg":  "更新签到状态失败",
+			}
+			c.ServeJSON()
+			return
+		}
+
+		// 如果未签到，扣除积分
+		if !participant.IsAttended {
+			// 获取活动信息
+			var activity Models.Activities
+			err := o.QueryTable("activities").
+				Filter("id", requestData.ActivityId).
+				One(&activity)
+			if err != nil {
+				o.Rollback()
+				c.Data["json"] = map[string]interface{}{
+					"code": 1,
+					"msg":  "获取活动信息失败",
+				}
+				c.ServeJSON()
+				return
+			}
+
+			// 获取用户信息
+			var registration Models.ActivityRegistrations
+			err = o.QueryTable("activity_registrations").
+				Filter("id", participant.Id).
+				One(&registration)
+			if err != nil {
+				o.Rollback()
+				c.Data["json"] = map[string]interface{}{
+					"code": 1,
+					"msg":  "获取报名信息失败",
+				}
+				c.ServeJSON()
+				return
+			}
+
+			// 扣除积分
+			_, err = o.QueryTable("users").
+				Filter("id", registration.UserId).
+				Update(orm.Params{
+					"points": orm.ColValue(orm.ColMinus, activity.Points),
+				})
+			if err != nil {
+				o.Rollback()
+				c.Data["json"] = map[string]interface{}{
+					"code": 1,
+					"msg":  "扣除积分失败",
+				}
+				c.ServeJSON()
+				return
+			}
+
+			// 添加积分记录
+			pointsRecord := Models.PointsRecord{
+				UserId:      registration.UserId,
+				ActivityId:  requestData.ActivityId,
+				Points:      -activity.Points,
+				Description: fmt.Sprintf("未参加活动：%s", activity.Name),
+				CreatedAt:   time.Now(),
+			}
+			_, err = o.Insert(&pointsRecord)
+			if err != nil {
+				o.Rollback()
+				c.Data["json"] = map[string]interface{}{
+					"code": 1,
+					"msg":  "添加积分记录失败",
+				}
+				c.ServeJSON()
+				return
+			}
+		}
+	}
+
+	// 更新活动记录的签到人数
+	attendedCount := 0
+	for _, participant := range requestData.Participants {
+		if participant.IsAttended {
+			attendedCount++
+		}
+	}
+
+	_, err = o.QueryTable("activity_records").
+		Filter("activity_id", requestData.ActivityId).
+		Update(orm.Params{
+			"attendance_count": attendedCount,
+		})
+	if err != nil {
+		o.Rollback()
+		c.Data["json"] = map[string]interface{}{
+			"code": 1,
+			"msg":  "更新签到人数失败",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 提交事务
+	err = o.Commit()
+	if err != nil {
+		c.Data["json"] = map[string]interface{}{
+			"code": 1,
+			"msg":  "提交事务失败",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	c.Data["json"] = map[string]interface{}{
+		"code": 0,
+		"msg":  "更新成功",
+	}
+	c.ServeJSON()
 }
