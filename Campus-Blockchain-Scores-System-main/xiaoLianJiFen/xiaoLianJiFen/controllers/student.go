@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"strings"
 	"xiaoLianJiFen/blockchain"
 	Models "xiaoLianJiFen/models"
 
@@ -1048,6 +1049,7 @@ func (c *StudentController) AddActivityRecord() {
 	activityId, _ := c.GetInt64("activityId")
 	attendanceCount, _ := c.GetInt("attendanceCount")
 	summary := c.GetString("summary")
+	absentStr := c.GetString("absentStudents") // ⬅️ 前端传入的未到场学生字符串
 
 	// 检查活动是否存在且已结束
 	var activity Models.Activities
@@ -1081,6 +1083,41 @@ func (c *StudentController) AddActivityRecord() {
 		return
 	}
 
+	// 👇 处理未到场学生自动扣分
+	deductedNames := []string{}
+	if absentStr != "" {
+		names := strings.Split(absentStr, ",")
+		for _, name := range names {
+			name = strings.TrimSpace(name)
+			if name == "" {
+				continue
+			}
+
+			var student Models.Users
+			err := o.QueryTable("users").Filter("username", name).One(&student)
+			if err != nil {
+				beego.Warn("未找到学生：", name)
+				continue
+			}
+
+			// 扣除当前活动的积分
+			student.Points -= activity.Points
+			_, err = o.Update(&student, "Points")
+			if err != nil {
+				beego.Warn("扣分失败：", name)
+				continue
+			}
+
+			deductedNames = append(deductedNames, name)
+		}
+	}
+
+	// ⬇️ 把扣分信息写入 summary 备注
+	if len(deductedNames) > 0 {
+		summary += "\n未到场学生扣分：" + strings.Join(deductedNames, ", ")
+	}
+
+	//插入记录
 	record := Models.ActivityRecords{
 		ActivityId:      activityId,
 		AttendanceCount: attendanceCount,
@@ -1105,6 +1142,40 @@ func (c *StudentController) AddActivityRecord() {
 	}
 	c.ServeJSON()
 }
+
+// GetActivityById 获取指定活动的详情（用于前端自动填充积分信息）
+func (c *StudentController) GetActivityById() {
+	activityId, err := c.GetInt64("id")
+	if err != nil {
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "参数错误",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	o := orm.NewOrm()
+	var activity Models.Activities
+	err = o.QueryTable("activities").Filter("id", activityId).One(&activity)
+	if err != nil {
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "活动不存在",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	c.Data["json"] = map[string]interface{}{
+		"success": true,
+		"data": map[string]interface{}{
+			"points": activity.Points,
+		},
+	}
+	c.ServeJSON()
+}
+
 
 // 在修改积分的函数中添加更新头衔的逻辑
 func (c *StudentController) UpdatePoints(points int) {

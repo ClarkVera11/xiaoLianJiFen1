@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,7 +23,7 @@
         .nav-bar {
             background-color: #73C088;
             padding: 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             width: 100%;
             z-index: 1000;
         }
@@ -56,7 +57,7 @@
         }
 
         .nav-links a:hover {
-            background-color: rgba(255,255,255,0.1);
+            background-color: rgba(255, 255, 255, 0.1);
         }
 
         .nav-links a:hover::after {
@@ -70,7 +71,7 @@
         }
 
         .nav-links a.active {
-            background-color: rgba(255,255,255,0.1);
+            background-color: rgba(255, 255, 255, 0.1);
         }
 
         .nav-links a.active::after {
@@ -144,7 +145,7 @@
             background-color: white;
             border-radius: 8px;
             padding: 1.5rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .record-header {
@@ -229,7 +230,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.5);
+            background-color: rgba(0, 0, 0, 0.5);
             z-index: 1000;
             justify-content: center;
             align-items: center;
@@ -320,23 +321,24 @@
         }
     </style>
 </head>
+
 <body>
     <nav class="nav-bar">
         <div class="nav-container">
             <div class="nav-links">
-                <a href="/student" class="{{if eq .ActivePage "home"}}active{{end}}">首页</a>
-                <a href="/student/activities" class="{{if eq .ActivePage "activities"}}active{{end}}">活动管理</a>
-                <a href="/student/my-activities" class="{{if eq .ActivePage "myactivities"}}active{{end}}">我的活动</a>
+                <a href="/student" class="{{if eq .ActivePage " home"}}active{{end}}">首页</a>
+                <a href="/student/activities" class="{{if eq .ActivePage " activities"}}active{{end}}">活动管理</a>
+                <a href="/student/my-activities" class="{{if eq .ActivePage " myactivities"}}active{{end}}">我的活动</a>
                 {{if .IsClubAdmin}}
-                <a href="/student/club" class="{{if eq .ActivePage "club"}}active{{end}}">社团活动</a>
+                <a href="/student/club" class="{{if eq .ActivePage " club"}}active{{end}}">社团活动</a>
                 <a href="/student/activity-records" class="{{if eq .ActivePage "activity_records"}}active{{end}}">活动记录</a>
                 {{end}}
-                
-                <a href="/student/shop" class="{{if eq .ActivePage "shop"}}active{{end}}">积分商城</a>
-                <a href="/student/ranking" class="{{if eq .ActivePage "ranking"}}active{{end}}">积分排名</a>
-                <a href="/student/points-records" class="{{if eq .ActivePage "points_records"}}active{{end}}">积分记录</a>
-                <a href="/student/rules" class="{{if eq .ActivePage "rules"}}active{{end}}">积分规则</a>
-                <a href="/blockchain/info" class="{{if eq .ActivePage "blockchain"}}active{{end}}">区块链信息</a>
+
+                <a href="/student/shop" class="{{if eq .ActivePage " shop"}}active{{end}}">积分商城</a>
+                <a href="/student/ranking" class="{{if eq .ActivePage " ranking"}}active{{end}}">积分排名</a>
+                <a href="/student/points-records" class="{{if eq .ActivePage " points_records"}}active{{end}}">积分记录</a>
+                <a href="/student/rules" class="{{if eq .ActivePage " rules"}}active{{end}}">积分规则</a>
+                <a href="/blockchain/info" class="{{if eq .ActivePage " blockchain"}}active{{end}}">区块链信息</a>
             </div>
             <button class="logout-button" onclick="confirmLogout()">安全退出</button>
         </div>
@@ -371,13 +373,21 @@
                     </select>
                 </div>
                 <div class="form-group">
+                    <label for="activityPoints">活动积分</label>
+                    <input type="text" id="activityPoints" readonly placeholder="自动填充" />
+                </div>
+                <div class="form-group">
                     <label for="attendanceCount">实际到场人数</label>
                     <input type="number" id="attendanceCount" min="0" required>
                 </div>
                 <div class="form-group">
-                    <label for="recordSummary">活动总结</label>
-                    <textarea id="recordSummary" required></textarea>
+                    <label for="absentStudents">未到场学生姓名（用逗号分隔）:</label>
+                    <textarea id="absentStudents" name="absentStudents" rows="4" cols="50" placeholder="张三, 李四"></textarea>
                 </div>
+                <div class="form-group">
+                    <label for="recordSummary">活动总结</label>
+                    <textarea id="recordSummary" name="summary" rows="4" cols="50" placeholder="请输入活动总结内容"></textarea>
+                </div>                
                 <div class="modal-buttons">
                     <button type="button" class="modal-button modal-cancel" onclick="closeModal()">取消</button>
                     <button type="submit" class="modal-button modal-submit">提交记录</button>
@@ -412,13 +422,35 @@
                     if (data.success) {
                         const select = document.getElementById('activitySelect');
                         select.innerHTML = '<option value="">请选择活动</option>';
-                        
+
                         data.activities.forEach(activity => {
-                            if (activity.Status === 3) { // 只显示已结束的活动
+                            if (activity.Status === 3) {
                                 const option = document.createElement('option');
                                 option.value = activity.Id;
                                 option.textContent = activity.Name;
                                 select.appendChild(option);
+                            }
+                        });
+
+                        // 监听选择变化后获取积分
+                        select.addEventListener('change', function () {
+                            const activityId = this.value;
+                            if (activityId) {
+                                fetch(`/student/activities/get?id=${activityId}`)
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.success) {
+                                            document.getElementById('activityPoints').value = data.data.points + ' 分';
+                                        } else {
+                                            document.getElementById('activityPoints').value = '获取失败';
+                                        }
+                                    })
+                                    .catch(err => {
+                                        console.error('获取积分失败', err);
+                                        document.getElementById('activityPoints').value = '获取失败';
+                                    });
+                            } else {
+                                document.getElementById('activityPoints').value = '';
                             }
                         });
                     }
@@ -428,6 +460,7 @@
                     alert('获取活动列表失败，请稍后重试');
                 });
         }
+
 
         function loadRecords() {
             fetch('/student/activity-records/list')
@@ -457,7 +490,7 @@
                 grid.innerHTML = '<div class="no-records">暂无活动记录</div>';
                 return;
             }
-            
+
             grid.innerHTML = records.map(record => `
                 <div class="record-card">
                     <div class="record-header">
@@ -493,20 +526,20 @@
         function renderPagination(total) {
             const totalPages = Math.ceil(total / itemsPerPage);
             const pagination = document.getElementById('pagination');
-            
+
             let html = '';
-            
+
             // 上一页按钮
             html += `<button onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>上一页</button>`;
-            
+
             // 页码按钮
             for (let i = 1; i <= totalPages; i++) {
                 html += `<button onclick="changePage(${i})" class="${currentPage === i ? 'active' : ''}">${i}</button>`;
             }
-            
+
             // 下一页按钮
             html += `<button onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>下一页</button>`;
-            
+
             pagination.innerHTML = html;
         }
 
@@ -517,31 +550,32 @@
 
         function submitRecord(event) {
             event.preventDefault();
-            
+
             const formData = new FormData();
             formData.append('activityId', document.getElementById('activitySelect').value);
             formData.append('attendanceCount', document.getElementById('attendanceCount').value);
             formData.append('summary', document.getElementById('recordSummary').value);
+            formData.append('absentStudents', document.getElementById('absentStudents').value);
 
             fetch('/student/activity-records/add', {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('活动记录添加成功');
-                    closeModal();
-                    document.getElementById('recordForm').reset();
-                    loadRecords();
-                } else {
-                    alert(data.message || '添加活动记录失败');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('添加活动记录失败，请稍后重试');
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('活动记录添加成功');
+                        closeModal();
+                        document.getElementById('recordForm').reset();
+                        loadRecords();
+                    } else {
+                        alert(data.message || '添加活动记录失败');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('添加活动记录失败，请稍后重试');
+                });
         }
 
         function formatDate(dateString) {
@@ -561,7 +595,7 @@
         }
 
         // 点击模态框外部关闭
-        window.onclick = function(event) {
+        window.onclick = function (event) {
             const modal = document.getElementById('addRecordModal');
             if (event.target == modal) {
                 closeModal();
@@ -572,4 +606,5 @@
         document.addEventListener('DOMContentLoaded', loadRecords);
     </script>
 </body>
-</html> 
+
+</html>
