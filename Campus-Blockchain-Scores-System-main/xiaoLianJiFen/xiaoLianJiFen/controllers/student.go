@@ -1176,7 +1176,6 @@ func (c *StudentController) GetActivityById() {
 	c.ServeJSON()
 }
 
-
 // 在修改积分的函数中添加更新头衔的逻辑
 func (c *StudentController) UpdatePoints(points int) {
 	userID := c.GetSession("userId")
@@ -1433,4 +1432,33 @@ func (c *StudentController) ExchangeItem() {
 
 	c.Data["json"] = map[string]interface{}{"success": true, "message": "兑换成功", "points": user.Points}
 	c.ServeJSON()
+}
+
+// 展示兑换历史页面
+func (c *StudentController) ShowExchangeHistory() {
+	c.Data["ActivePage"] = "exchange_history"
+	userID := c.GetSession("userId")
+	if userID == nil {
+		c.Redirect("/", 302)
+		return
+	}
+
+	o := orm.NewOrm()
+	var user Models.Users
+	err := o.QueryTable("users").Filter("username", userID).One(&user)
+	if err != nil {
+		c.Data["ExchangeMap"] = map[string]int{}
+		c.TplName = "student_exchange_history.html"
+		return
+	}
+
+	exchangeMap := map[string]int{}
+	if user.Exchange != "" {
+		items := strings.Split(user.Exchange, ",")
+		for _, item := range items {
+			exchangeMap[item]++
+		}
+	}
+	c.Data["ExchangeMap"] = exchangeMap
+	c.TplName = "student_exchange_history.html"
 }

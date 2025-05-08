@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>兑换记录 - 校链积分</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background-color: #C8EAD1;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .nav-bar {
+            background-color: #73C088;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 100%;
+        }
+        .nav-container {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            height: 50px;
+        }
+        .nav-links {
+            display: flex;
+            align-items: center;
+            height: 100%;
+        }
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 0 20px;
+            font-size: 15px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        .nav-links a:hover,
+        .nav-links a.active {
+            background-color: rgba(255,255,255,0.1);
+        }
+        .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: white;
+        }
+        .logout-button {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 0 25px;
+            cursor: pointer;
+            font-size: 15px;
+            height: 100%;
+            transition: background-color 0.3s ease;
+        }
+        .logout-button:hover {
+            background-color: #c0392b;
+        }
+        .main-content {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .page-title {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        .exchange-list {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .exchange-item {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            padding: 1.5rem;
+            text-align: center;
+            width: 220px;
+        }
+        .exchange-img {
+            width: 180px;
+            height: 120px;
+            object-fit: contain;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+        }
+        .exchange-count {
+            color: #73C088;
+            font-size: 1.1rem;
+            margin-top: 0.5rem;
+        }
+        .no-records {
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 1.1rem;
+            padding: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav-bar">
+        <div class="nav-container">
+            <div class="nav-links">
+                <a href="/student" class="{{if eq .ActivePage "home"}}active{{end}}">首页</a>
+                <a href="/student/activities" class="{{if eq .ActivePage "activities"}}active{{end}}">活动管理</a>
+                <a href="/student/my-activities" class="{{if eq .ActivePage "myactivities"}}active{{end}}">我的活动</a>
+                {{if .IsClubAdmin}}
+                <a href="/student/club" class="{{if eq .ActivePage "club"}}active{{end}}">社团活动</a>
+                <a href="/student/activity-records" class="{{if eq .ActivePage "activity_records"}}active{{end}}">活动记录</a>
+                {{end}}
+                <a href="/student/shop" class="{{if eq .ActivePage "shop"}}active{{end}}">积分商城</a>
+                <a href="/student/exchange-history" class="active">兑换记录</a>
+                <a href="/student/ranking" class="{{if eq .ActivePage "ranking"}}active{{end}}">积分排名</a>
+                <a href="/student/points-records" class="{{if eq .ActivePage "points_records"}}active{{end}}">积分记录</a>
+                <a href="/student/rules" class="{{if eq .ActivePage "rules"}}active{{end}}">积分规则</a>
+                <a href="/blockchain/info" class="{{if eq .ActivePage "blockchain"}}active{{end}}">区块链信息</a>
+            </div>
+            <button class="logout-button" onclick="confirmLogout()">安全退出</button>
+        </div>
+    </nav>
+    <div class="main-content">
+        <div class="page-title">兑换记录</div>
+        {{if or .ExchangeMap.clothe .ExchangeMap.book .ExchangeMap.coupon}}
+        <div class="exchange-list">
+            {{if .ExchangeMap.clothe}}
+            <div class="exchange-item">
+                <img src="/static/images/clothe.png" class="exchange-img" alt="定制校园T恤">
+                <div>定制校园T恤</div>
+                <div class="exchange-count">已兑换 {{index .ExchangeMap "clothe"}} 件</div>
+            </div>
+            {{end}}
+            {{if .ExchangeMap.book}}
+            <div class="exchange-item">
+                <img src="/static/images/book.png" class="exchange-img" alt="图书馆借阅券">
+                <div>图书馆借阅券</div>
+                <div class="exchange-count">已兑换 {{index .ExchangeMap "book"}} 件</div>
+            </div>
+            {{end}}
+            {{if .ExchangeMap.coupon}}
+            <div class="exchange-item">
+                <img src="/static/images/coupon.png" class="exchange-img" alt="食堂优惠券">
+                <div>食堂优惠券</div>
+                <div class="exchange-count">已兑换 {{index .ExchangeMap "coupon"}} 件</div>
+            </div>
+            {{end}}
+        </div>
+        {{else}}
+        <div class="no-records">暂无兑换记录</div>
+        {{end}}
+    </div>
+    <script>
+        function confirmLogout() {
+            if (confirm("您确定要退出吗？")) {
+                window.location.href = "/logout";
+            }
+        }
+    </script>
+</body>
+</html> 

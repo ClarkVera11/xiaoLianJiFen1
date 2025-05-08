@@ -58,6 +58,7 @@ func init() {
 	beego.Router("/student/points-records/list", &controllers.StudentController{}, "get:GetPointsRecords")
 	beego.Router("/student/activities/get", &controllers.StudentController{}, "get:GetActivityById")
 	beego.Router("/student/exchange", &controllers.StudentController{}, "post:ExchangeItem")
+	beego.Router("/student/exchange-history", &controllers.StudentController{}, "get:ShowExchangeHistory")
 
 	// 区块链信息路由
 	beego.Router("/blockchain/info", &controllers.BlockchainController{}, "get:ShowBlockchainInfo")
