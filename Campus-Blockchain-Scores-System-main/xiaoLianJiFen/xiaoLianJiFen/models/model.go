@@ -5,7 +5,6 @@ import (
 
 	"github.com/astaxie/beego/orm"
 	_ "github.com/go-sql-driver/mysql"
-
 )
 
 // Users 用户模型
@@ -21,7 +20,8 @@ type Users struct {
 	Title          string `orm:"column(title);size(50);default(倔强青铜)"` // 用户头衔
 	TxHash         string `orm:"column(tx_hash);size(66);null"`        // 区块链交易哈希
 	BlockTimestamp int64  `orm:"column(block_timestamp);default(0)"`   // 区块链交易时间戳
-	Rank int `orm:"-"` // orm:"-" 表示该字段不映射到数据库，仅用于程序逻辑，若需映射到数据库则去掉此标签并调整数据库表结构
+	Rank           int    `orm:"-"`                                    // orm:"-" 表示该字段不映射到数据库，仅用于程序逻辑，若需映射到数据库则去掉此标签并调整数据库表结构
+	Exchange       string `orm:"type(text);null" json:"exchange"`
 }
 
 // Activities 活动模型
@@ -246,7 +246,6 @@ func insertInitialUsers() {
 	}
 }
 
-
 // 辅助函数：解析时间字符串
 func parseTime(timeStr string) time.Time {
 	t, err := time.Parse("2006-01-02 15:04:05", timeStr)
@@ -256,7 +255,6 @@ func parseTime(timeStr string) time.Time {
 	}
 	return t
 }
-
 
 // UpdateUserTitle 根据积分更新用户头衔
 func (u *Users) UpdateUserTitle() {

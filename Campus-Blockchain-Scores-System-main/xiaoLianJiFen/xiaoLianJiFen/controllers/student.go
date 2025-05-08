@@ -77,6 +77,22 @@ func (c *StudentController) ShowShop() {
 	beego.Info("进入积分商城页面")
 	c.Data["ActivePage"] = "shop"
 	c.Data["IsClubAdmin"] = c.isClubAdmin()
+
+	// 新增：获取当前用户积分
+	userID := c.GetSession("userId")
+	if userID != nil {
+		o := orm.NewOrm()
+		var user Models.Users
+		err := o.QueryTable("users").Filter("username", userID).One(&user)
+		if err == nil {
+			c.Data["UserPoints"] = user.Points
+		} else {
+			c.Data["UserPoints"] = 0
+		}
+	} else {
+		c.Data["UserPoints"] = 0
+	}
+
 	c.TplName = "student_shop.html"
 }
 
@@ -256,24 +272,24 @@ func (c *StudentController) SubmitActivity() {
 	// 获取当前登录用户的ID
 	userID := c.GetSession("userId")
 	if userID == nil {
-			c.Data["json"] = map[string]interface{}{
-					"success": false,
-					"message": "请先登录",
-			}
-			c.ServeJSON()
-			return
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "请先登录",
+		}
+		c.ServeJSON()
+		return
 	}
 
 	// 解析请求数据
 	var activity Models.Activities
 	if err := c.ParseForm(&activity); err != nil {
-			beego.Error("解析表单数据失败：", err)
-			c.Data["json"] = map[string]interface{}{
-					"success": false,
-					"message": "提交数据格式错误",
-			}
-			c.ServeJSON()
-			return
+		beego.Error("解析表单数据失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "提交数据格式错误",
+		}
+		c.ServeJSON()
+		return
 	}
 
 	// 获取前端传入的时间字段
@@ -286,24 +302,24 @@ func (c *StudentController) SubmitActivity() {
 	// 解析开始时间和结束时间
 	startTime, err := time.Parse(layout, startTimeStr)
 	if err != nil {
-			beego.Error("解析开始时间失败：", err)
-			c.Data["json"] = map[string]interface{}{
-					"success": false,
-					"message": "无效的开始时间格式",
-			}
-			c.ServeJSON()
-			return
+		beego.Error("解析开始时间失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "无效的开始时间格式",
+		}
+		c.ServeJSON()
+		return
 	}
 
 	endTime, err := time.Parse(layout, endTimeStr)
 	if err != nil {
-			beego.Error("解析结束时间失败：", err)
-			c.Data["json"] = map[string]interface{}{
-					"success": false,
-					"message": "无效的结束时间格式",
-			}
-			c.ServeJSON()
-			return
+		beego.Error("解析结束时间失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "无效的结束时间格式",
+		}
+		c.ServeJSON()
+		return
 	}
 
 	// 增加8小时
@@ -322,20 +338,20 @@ func (c *StudentController) SubmitActivity() {
 	o := orm.NewOrm()
 	_, err = o.Insert(&activity)
 	if err != nil {
-			beego.Error("保存活动数据失败：", err)
-			c.Data["json"] = map[string]interface{}{
-					"success": false,
-					"message": "保存活动失败，请稍后重试",
-			}
-			c.ServeJSON()
-			return
+		beego.Error("保存活动数据失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "保存活动失败，请稍后重试",
+		}
+		c.ServeJSON()
+		return
 	}
 
 	beego.Info("活动申报成功：", activity)
 	c.Data["json"] = map[string]interface{}{
-			"success": true,
-			"message": "活动申报成功，等待审核",
-			"data":    activity,
+		"success": true,
+		"message": "活动申报成功，等待审核",
+		"data":    activity,
 	}
 	c.ServeJSON()
 }
@@ -1286,4 +1302,83 @@ func (c *StudentController) ShowPointsRecords() {
 	c.Data["ActivePage"] = "points_records"
 	c.Data["IsClubAdmin"] = c.isClubAdmin()
 	c.TplName = "student_points_records.html"
+}
+
+// 兑换商品
+func (c *StudentController) ExchangeItem() {
+	userID := c.GetSession("userId")
+	if userID == nil {
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "请先登录",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	item := c.GetString("item") // 前端传递的商品类型
+	var cost int
+	switch item {
+	case "clothe":
+		cost = 50
+	case "book":
+		cost = 30
+	case "coupon":
+		cost = 20
+	default:
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "无效的商品类型",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	o := orm.NewOrm()
+	var user Models.Users
+	err := o.QueryTable("users").Filter("username", userID).One(&user)
+	if err != nil {
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "用户不存在",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	if user.Points < cost {
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "积分不足，无法兑换",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 扣除积分
+	user.Points -= cost
+
+	// 追加兑换记录
+	if user.Exchange == "" {
+		user.Exchange = item
+	} else {
+		user.Exchange = user.Exchange + "," + item
+	}
+
+	_, err = o.Update(&user, "Points", "Exchange")
+	if err != nil {
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "兑换失败，请稍后重试",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	c.Data["json"] = map[string]interface{}{
+		"success": true,
+		"message": "兑换成功",
+		"points":  user.Points,
+	}
+	c.ServeJSON()
 }

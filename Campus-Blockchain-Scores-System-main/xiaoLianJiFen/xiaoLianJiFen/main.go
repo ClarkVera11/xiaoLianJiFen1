@@ -34,7 +34,7 @@ func init() {
 	orm.RegisterDataBase("default", "mysql", "root:123456@tcp(127.0.0.1:3306)/xiaolianjifen?charset=utf8&parseTime=True&loc=Asia%2FShanghai")
 	loc, err := time.LoadLocation("Asia/Shanghai")
 	if err != nil {
-			panic("无法加载 Asia/Shanghai 时区")
+		panic("无法加载 Asia/Shanghai 时区")
 	}
 	time.Local = loc
 }
@@ -42,11 +42,11 @@ func init() {
 func main() {
 
 	// 读取 keystore 文件内容
-	files, err := os.ReadDir(`D:/解压/geth student 1009/student/dev-chain/keystore`)
+	files, err := os.ReadDir(`D:/geth student 1009/student/dev-chain/keystore`)
 	if err != nil {
 		log.Fatal("读取目录失败:", err)
 	}
-	keystoreFile := `D:/解压/geth student 1009/student/dev-chain/keystore/` + files[0].Name()
+	keystoreFile := `D:/geth student 1009/student/dev-chain/keystore/` + files[0].Name()
 	password := "12345678" // 输入你的钱包密码
 
 	// 打开 keystore 文件
@@ -95,6 +95,7 @@ func main() {
 	}
 
 	beego.AddFuncMap("add1", add1)
+	beego.SetStaticPath("/static", "static")
 	beego.Run()
 }
 
