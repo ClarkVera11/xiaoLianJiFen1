@@ -1304,19 +1304,16 @@ func (c *StudentController) ShowPointsRecords() {
 	c.TplName = "student_points_records.html"
 }
 
-// 兑换商品
+// 兑换商品接口
 func (c *StudentController) ExchangeItem() {
 	userID := c.GetSession("userId")
 	if userID == nil {
-		c.Data["json"] = map[string]interface{}{
-			"success": false,
-			"message": "请先登录",
-		}
+		c.Data["json"] = map[string]interface{}{"success": false, "message": "请先登录"}
 		c.ServeJSON()
 		return
 	}
 
-	item := c.GetString("item") // 前端传递的商品类型
+	item := c.GetString("item")
 	var cost int
 	switch item {
 	case "clothe":
@@ -1326,10 +1323,7 @@ func (c *StudentController) ExchangeItem() {
 	case "coupon":
 		cost = 20
 	default:
-		c.Data["json"] = map[string]interface{}{
-			"success": false,
-			"message": "无效的商品类型",
-		}
+		c.Data["json"] = map[string]interface{}{"success": false, "message": "无效的商品类型"}
 		c.ServeJSON()
 		return
 	}
@@ -1338,19 +1332,13 @@ func (c *StudentController) ExchangeItem() {
 	var user Models.Users
 	err := o.QueryTable("users").Filter("username", userID).One(&user)
 	if err != nil {
-		c.Data["json"] = map[string]interface{}{
-			"success": false,
-			"message": "用户不存在",
-		}
+		c.Data["json"] = map[string]interface{}{"success": false, "message": "用户不存在"}
 		c.ServeJSON()
 		return
 	}
 
 	if user.Points < cost {
-		c.Data["json"] = map[string]interface{}{
-			"success": false,
-			"message": "积分不足，无法兑换",
-		}
+		c.Data["json"] = map[string]interface{}{"success": false, "message": "积分不足，无法兑换"}
 		c.ServeJSON()
 		return
 	}
@@ -1367,18 +1355,11 @@ func (c *StudentController) ExchangeItem() {
 
 	_, err = o.Update(&user, "Points", "Exchange")
 	if err != nil {
-		c.Data["json"] = map[string]interface{}{
-			"success": false,
-			"message": "兑换失败，请稍后重试",
-		}
+		c.Data["json"] = map[string]interface{}{"success": false, "message": "兑换失败，请稍后重试"}
 		c.ServeJSON()
 		return
 	}
 
-	c.Data["json"] = map[string]interface{}{
-		"success": true,
-		"message": "兑换成功",
-		"points":  user.Points,
-	}
+	c.Data["json"] = map[string]interface{}{"success": true, "message": "兑换成功", "points": user.Points}
 	c.ServeJSON()
 }

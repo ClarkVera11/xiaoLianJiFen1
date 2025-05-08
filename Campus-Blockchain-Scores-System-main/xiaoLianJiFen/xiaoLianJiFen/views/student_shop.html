@@ -371,9 +371,30 @@
         }
 
         function confirmExchange() {
-            // TODO: 实现兑换逻辑
-            alert('兑换功能开发中，敬请期待！');
-            closeModal();
+            if (!currentItemId) return;
+            const itemMap = {1: "clothe", 2: "book", 3: "coupon"};
+            const item = itemMap[currentItemId];
+
+            fetch('/student/exchange', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                body: 'item=' + encodeURIComponent(item)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('兑换成功！');
+                    // 更新左上角积分
+                    document.querySelector('.points-value').textContent = data.points;
+                } else {
+                    alert(data.message || '兑换失败');
+                }
+                closeModal();
+            })
+            .catch(() => {
+                alert('网络错误，兑换失败');
+                closeModal();
+            });
         }
 
         // 点击模态框外部关闭
