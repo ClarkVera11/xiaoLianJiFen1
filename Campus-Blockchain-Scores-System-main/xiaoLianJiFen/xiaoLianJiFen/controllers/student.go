@@ -1140,6 +1140,19 @@ func (c *StudentController) AddActivityRecord() {
 		"success": true,
 		"message": "添加活动记录成功",
 	}
+
+	pointsRecord := Models.PointsRecord{
+		UserId:      user.Id, // 或者上传该活动记录的用户ID
+		ActivityId:  activity.Id,
+		Points:      activity.Points, // 通常是你表单中的积分值
+		Description: "活动记录扣除积分", // 你也可以根据需求自定义描述
+		CreatedAt:   time.Now(),
+	}
+	_, err = o.Insert(&pointsRecord)
+	if err != nil {
+		beego.Error("创建活动积分记录失败：", err)
+	}
+	
 	c.ServeJSON()
 }
 
@@ -1436,7 +1449,9 @@ func (c *StudentController) ExchangeItem() {
 
 // 展示兑换历史页面
 func (c *StudentController) ShowExchangeHistory() {
+	beego.Info("进入兑换历史页面")
 	c.Data["ActivePage"] = "exchange_history"
+	c.Data["IsClubAdmin"] = c.isClubAdmin()
 	userID := c.GetSession("userId")
 	if userID == nil {
 		c.Redirect("/", 302)

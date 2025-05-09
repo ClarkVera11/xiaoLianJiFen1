@@ -6,172 +6,198 @@
     <title>积分记录 - 校园积分系统</title>
     <style>
         * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
         }
-
+    
         body {
-            font-family: 'Microsoft YaHei', sans-serif;
-            background-color: #73C088;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
+          font-family: 'Microsoft YaHei', sans-serif;
+          background-color: #73C088;
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
         }
-
+    
         .nav-bar {
-            background-color: #73C088;
-            padding: 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            width: 100%;
-            z-index: 1000;
+          background-color: #73C088;
+          padding: 0;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          width: 100%;
+          z-index: 1000;
         }
-
+    
         .nav-container {
-            display: flex;
-            justify-content: flex-end;
-            align-items: center;
-            height: 50px;
-            padding-right: 0;
-            margin-right: 0;
+          display: flex;
+          justify-content: flex-end;
+          align-items: center;
+          height: 50px;
         }
-
+    
         .nav-links {
-            display: flex;
-            align-items: center;
-            height: 100%;
-            margin-right: 0;
+          display: flex;
+          align-items: center;
+          height: 100%;
         }
-
+    
         .nav-links a {
-            color: white;
-            text-decoration: none;
-            padding: 0 20px;
-            font-size: 15px;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            position: relative;
-            transition: all 0.3s ease;
+          color: white;
+          text-decoration: none;
+          padding: 0 20px;
+          font-size: 15px;
+          height: 100%;
+          display: flex;
+          align-items: center;
+          position: relative;
+          transition: all 0.3s ease;
         }
-
+    
         .nav-links a:hover {
-            background-color: rgba(255,255,255,0.1);
+          background-color: rgba(255,255,255,0.1);
         }
-
-        .nav-links a:hover::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background-color: white;
-        }
-
-        .nav-links a.active {
-            background-color: rgba(255,255,255,0.1);
-        }
-
+    
+        .nav-links a:hover::after,
         .nav-links a.active::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 3px;
-            background-color: white;
+          content: '';
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          width: 100%;
+          height: 3px;
+          background-color: white;
         }
-
+    
+        .nav-links a.active {
+          background-color: rgba(255,255,255,0.1);
+        }
+    
         .logout-button {
-            background-color: #e74c3c;
-            color: white;
-            border: none;
-            padding: 0 25px;
-            cursor: pointer;
-            font-size: 15px;
-            height: 100%;
-            transition: background-color 0.3s ease;
-            margin-left: 0;
+          background-color: #e74c3c;
+          color: white;
+          border: none;
+          padding: 0 25px;
+          cursor: pointer;
+          font-size: 15px;
+          height: 100%;
+          transition: background-color 0.3s ease;
         }
-
+    
         .logout-button:hover {
-            background-color: #c0392b;
+          background-color: #c0392b;
         }
-
+    
         .main-content {
-            padding: 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-            flex-grow: 1;
+          padding: 2rem;
+          max-width: 1200px;
+          margin: 0 auto;
+          flex-grow: 1;
         }
-
+    
         .points-records {
-            background: #C8EAD1;
-            border-radius: 8px;
-            padding: 2rem;
-            margin-top: 2rem;
+          background: #C8EAD1;
+          border-radius: 8px;
+          padding: 2rem;
+          margin-top: 2rem;
         }
-
+    
         .points-records h2 {
-            color: #2c3e50;
-            margin-bottom: 1.5rem;
-            font-size: 1.8rem;
+          color: #2c3e50;
+          margin-bottom: 1.5rem;
+          font-size: 1.8rem;
         }
-
+    
+        #recordsList {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 1.5rem;
+        }
+    
         .record-card {
-            background: #fff;
-            border-radius: 8px;
-            padding: 1.5rem;
-            margin-bottom: 1rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
+          background: #fff;
+          border-radius: 8px;
+          padding: 1.5rem;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+          transition: transform 0.3s ease;
         }
-
+    
         .record-card:hover {
-            transform: translateY(-2px);
+          transform: translateY(-2px);
         }
-
+    
         .record-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 1rem;
         }
-
+    
         .record-title {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #2c3e50;
+          font-size: 1.2rem;
+          font-weight: bold;
+          color: #2c3e50;
         }
-
+    
         .record-points {
-            font-size: 1.1rem;
-            color: #27ae60;
-            font-weight: bold;
-            background: #e8f5e9;
-            padding: 0.5rem 1rem;
-            border-radius: 4px;
+          font-size: 1.1rem;
+          color: #27ae60;
+          font-weight: bold;
+          background: #e8f5e9;
+          padding: 0.5rem 1rem;
+          border-radius: 4px;
         }
-
+    
         .record-info {
-            color: #666;
-            font-size: 1rem;
-            margin-bottom: 0.5rem;
+          color: #666;
+          font-size: 1rem;
+          margin-bottom: 0.5rem;
         }
-
+    
         .record-time {
-            color: #95a5a6;
-            font-size: 0.9rem;
+          color: #95a5a6;
+          font-size: 0.9rem;
         }
-
+    
         .no-records {
-            text-align: center;
-            color: #7f8c8d;
-            font-size: 1.1rem;
-            padding: 2rem;
+          text-align: center;
+          color: #7f8c8d;
+          font-size: 1.1rem;
+          padding: 2rem;
+          grid-column: span 3;
         }
-    </style>
+    
+        .pagination {
+          display: flex;
+          justify-content: center;
+          margin-top: 2rem;
+          flex-wrap: wrap;
+          gap: 0.5rem;
+        }
+    
+        .pagination button {
+          background-color: white;
+          border: 1px solid #ccc;
+          padding: 0.5rem 1rem;
+          cursor: pointer;
+          border-radius: 4px;
+          transition: background-color 0.3s;
+        }
+    
+        .pagination button:hover {
+          background-color: #eee;
+        }
+    
+        .pagination button.active {
+          background-color: #73C088;
+          color: white;
+          border-color: #73C088;
+        }
+    
+        .pagination button:disabled {
+          background-color: #f0f0f0;
+          color: #999;
+          cursor: default;
+        }
+      </style>
 </head>
 <body>
     <nav class="nav-bar">
@@ -197,52 +223,110 @@
 
     <div class="main-content">
         <div class="points-records">
-            <h2>积分记录</h2>
-            <div id="recordsList">
-                <!-- 积分记录将通过JavaScript动态加载 -->
-            </div>
+          <h2>积分记录</h2>
+          <div id="recordsList">
+            <!-- 积分记录将通过JavaScript动态加载 -->
+          </div>
+          <div class="pagination" id="paginationControls"></div>
         </div>
-    </div>
-
-    <script>
+      </div>
+    
+      <script>
+        let allRecords = [];
+        const pageSize = 6;
+        let currentPage = 1;
+    
         function confirmLogout() {
-            if (confirm("您确定要退出吗？")) {
-                window.location.href = "/logout";
+          if (confirm("您确定要退出吗？")) {
+            window.location.href = "/logout";
+          }
+        }
+    
+        function renderRecordsPage(page) {
+          const recordsList = document.getElementById('recordsList');
+          const startIndex = (page - 1) * pageSize;
+          const endIndex = startIndex + pageSize;
+          const recordsToShow = allRecords.slice(startIndex, endIndex);
+    
+          if (recordsToShow.length === 0) {
+            recordsList.innerHTML = '<div class="no-records">暂无积分记录</div>';
+          } else {
+            recordsList.innerHTML = recordsToShow.map(record => `
+              <div class="record-card">
+                <div class="record-header">
+                  <div class="record-title">${record.activity_name}</div>
+                  <div class="record-points">${record.points} 积分</div>
+                </div>
+                <div class="record-info">${record.description}</div>
+                <div class="record-time">${record.created_at}</div>
+              </div>
+            `).join('');
+          }
+    
+          renderPaginationControls();
+        }
+    
+        function renderPaginationControls() {
+          const totalPages = Math.ceil(allRecords.length / pageSize);
+          const pagination = document.getElementById('paginationControls');
+          pagination.innerHTML = '';
+    
+          // 上一页按钮
+          const prevBtn = document.createElement('button');
+          prevBtn.textContent = '上一页';
+          prevBtn.disabled = currentPage === 1;
+          prevBtn.onclick = () => {
+            if (currentPage > 1) {
+              currentPage--;
+              renderRecordsPage(currentPage);
             }
+          };
+          pagination.appendChild(prevBtn);
+    
+          // 页码按钮
+          for (let i = 1; i <= totalPages; i++) {
+            const btn = document.createElement('button');
+            btn.textContent = i;
+            btn.classList.toggle('active', i === currentPage);
+            btn.onclick = () => {
+              currentPage = i;
+              renderRecordsPage(currentPage);
+            };
+            pagination.appendChild(btn);
+          }
+    
+          // 下一页按钮
+          const nextBtn = document.createElement('button');
+          nextBtn.textContent = '下一页';
+          nextBtn.disabled = currentPage === totalPages;
+          nextBtn.onclick = () => {
+            if (currentPage < totalPages) {
+              currentPage++;
+              renderRecordsPage(currentPage);
+            }
+          };
+          pagination.appendChild(nextBtn);
         }
-
+    
         function loadPointsRecords() {
-            fetch('/student/points-records/list')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        const recordsList = document.getElementById('recordsList');
-                        if (data.records && data.records.length > 0) {
-                            recordsList.innerHTML = data.records.map(record => `
-                                <div class="record-card">
-                                    <div class="record-header">
-                                        <div class="record-title">${record.activity_name}</div>
-                                        <div class="record-points">${record.points} 积分</div>
-                                    </div>
-                                    <div class="record-info">${record.description}</div>
-                                    <div class="record-time">${record.created_at}</div>
-                                </div>
-                            `).join('');
-                        } else {
-                            recordsList.innerHTML = '<div class="no-records">暂无积分记录</div>';
-                        }
-                    } else {
-                        alert('获取积分记录失败：' + data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('获取积分记录失败，请稍后重试');
-                });
+          fetch('/student/points-records/list')
+            .then(response => response.json())
+            .then(data => {
+              if (data.success) {
+                allRecords = data.records || [];
+                currentPage = 1;
+                renderRecordsPage(currentPage);
+              } else {
+                alert('获取积分记录失败：' + data.message);
+              }
+            })
+            .catch(error => {
+              console.error('Error:', error);
+              alert('获取积分记录失败，请稍后重试');
+            });
         }
-
-        // 页面加载时获取积分记录
+    
         document.addEventListener('DOMContentLoaded', loadPointsRecords);
-    </script>
-</body>
-</html> 
+      </script>
+    </body>
+    </html>
