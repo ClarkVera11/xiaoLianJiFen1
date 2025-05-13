@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"regexp"
 	"strings"
 	"xiaoLianJiFen/blockchain"
 	Models "xiaoLianJiFen/models"
@@ -1086,6 +1087,31 @@ func (c *StudentController) AddActivityRecord() {
 	// 👇 处理未到场学生自动扣分
 	deductedNames := []string{}
 	if absentStr != "" {
+		// 去除首尾空格
+	trimmed := strings.TrimSpace(absentStr)
+
+	// 如果没有英文逗号，且字符串中含有多个中文名字（没有被逗号隔开），则认为格式不正确
+	if !strings.Contains(trimmed, ",") {
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "活动记录添加失败，请使用英文逗号分隔多个学生姓名，例如：张三,李四,王五",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// 使用正则检查格式是否正确：只能是“中文名,中文名,...”，中间是英文逗号，不能有空项
+	validFormat := regexp.MustCompile(`^([\p{Han}]+)(,[\p{Han}]+)*$`)
+	if !validFormat.MatchString(trimmed) {
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "活动记录添加失败，学生姓名格式不正确，请确保姓名之间用英文逗号分隔，且无空项",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	// ✅ 通过格式校验后再处理扣分逻辑
 		names := strings.Split(absentStr, ",")
 		for _, name := range names {
 			name = strings.TrimSpace(name)
