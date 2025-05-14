@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>区块链信息 - 校内活动积分系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            background-color: #C8EAD1;
+            min-height: 100vh;
+        }
+
+        .nav-bar {
+            background-color: #73C088;
+            padding: 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            width: 100%;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            height: 50px;
+            padding-right: 0;
+            margin-right: 0;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            height: 100%;
+            margin-right: 0;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 0 20px;
+            font-size: 15px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .nav-links a:hover::after, .nav-links a.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: white;
+        }
+
+        .logout-button {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 0 25px;
+            cursor: pointer;
+            font-size: 15px;
+            height: 100%;
+            transition: background-color 0.3s ease;
+        }
+
+        .logout-button:hover {
+            background-color: #c0392b;
+        }
+
+        .main-content {
+            padding: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            color: #2c3e50;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+
+        .blockchain-info {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .info-card {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .info-card h3 {
+            color: #2c3e50;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .info-item {
+            margin-bottom: 0.8rem;
+            color: #666;
+        }
+
+        .info-label {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-right: 0.5rem;
+        }
+
+        .info-value {
+            word-break: break-all;
+        }
+
+        .timestamp {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #666;
+            padding: 2rem;
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 0.75rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .search-button {
+            background-color: #73C088;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+
+        .search-button:hover {
+            background-color: #5fa572;
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav-bar">
+        <div class="nav-container">
+            <div class="nav-links">
+                <a href="/teacher" class="{{if eq .ActivePage "home"}}active{{end}}">首页</a>
+                <a href="/teacher/activity" class="{{if eq .ActivePage "activity"}}active{{end}}">活动管理</a>
+                <a href="/teacher/student" class="{{if eq .ActivePage "student"}}active{{end}}">学生管理</a>
+                <a href="/teacher/club" class="{{if eq .ActivePage "club"}}active{{end}}">社团管理</a>
+                <a href="/teacher/activity-records" class="{{if eq .ActivePage "activity_records"}}active{{end}}">活动记录</a>
+                <a href="/teacher/blockchain-info" class="{{if eq .ActivePage "blockchain"}}active{{end}}">区块链信息</a>
+            </div>
+            <button class="logout-button" onclick="confirmLogout()">安全退出</button>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="page-header">
+            <h1 class="page-title">区块链信息</h1>
+        </div>
+
+        <div class="search-bar">
+            <input type="text" class="search-input" id="searchInput" placeholder="搜索学号/工号...">
+            <button class="search-button" onclick="searchUser()">搜索</button>
+        </div>
+
+        <div class="blockchain-info">
+            {{if .Users}}
+            <div class="info-grid">
+                {{range .Users}}
+                <div class="info-card">
+                    <h3>{{.Username}}</h3>
+                    <div class="info-item">
+                        <span class="info-label">学号/工号:</span>
+                        <span class="info-value">{{.Username}}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">角色:</span>
+                        <span class="info-value">{{.Role_name}}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">交易哈希:</span>
+                        <span class="info-value">{{if .TxHash}}{{.TxHash}}{{else}}未上链{{end}}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">上链时间:</span>
+                        <span class="info-value timestamp">{{if .BlockTimestamp}}{{.BlockTimestamp | formatTimestamp}}{{else}}未上链{{end}}</span>
+                    </div>
+                </div>
+                {{end}}
+            </div>
+            {{else}}
+            <div class="no-data">
+                <p>暂无区块链信息</p>
+            </div>
+            {{end}}
+        </div>
+    </div>
+
+    <script>
+        function confirmLogout() {
+            if (confirm('确定要退出吗？')) {
+                window.location.href = '/logout';
+            }
+        }
+
+        function searchUser() {
+            const searchValue = document.getElementById('searchInput').value.trim();
+            if (searchValue) {
+                window.location.href = `/teacher/blockchain-info?search=${encodeURIComponent(searchValue)}`;
+            }
+        }
+
+        // 添加回车键搜索功能
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchUser();
+            }
+        });
+    </script>
+</body>
+</html> 
