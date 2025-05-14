@@ -1088,30 +1088,30 @@ func (c *StudentController) AddActivityRecord() {
 	deductedNames := []string{}
 	if absentStr != "" {
 		// 去除首尾空格
-	trimmed := strings.TrimSpace(absentStr)
+		trimmed := strings.TrimSpace(absentStr)
 
-	// 如果没有英文逗号，且字符串中含有多个中文名字（没有被逗号隔开），则认为格式不正确
-	if !strings.Contains(trimmed, ",") {
-		c.Data["json"] = map[string]interface{}{
-			"success": false,
-			"message": "活动记录添加失败，请使用英文逗号分隔多个学生姓名，例如：张三,李四,王五",
+		// 如果没有英文逗号，且字符串中含有多个中文名字（没有被逗号隔开），则认为格式不正确
+		if !strings.Contains(trimmed, ",") {
+			c.Data["json"] = map[string]interface{}{
+				"success": false,
+				"message": "活动记录添加失败，请使用英文逗号分隔多个学生姓名，例如：张三,李四,王五",
+			}
+			c.ServeJSON()
+			return
 		}
-		c.ServeJSON()
-		return
-	}
 
-	// 使用正则检查格式是否正确：只能是“中文名,中文名,...”，中间是英文逗号，不能有空项
-	validFormat := regexp.MustCompile(`^([\p{Han}]+)(,[\p{Han}]+)*$`)
-	if !validFormat.MatchString(trimmed) {
-		c.Data["json"] = map[string]interface{}{
-			"success": false,
-			"message": "活动记录添加失败，学生姓名格式不正确，请确保姓名之间用英文逗号分隔，且无空项",
+		// 使用正则检查格式是否正确：只能是"中文名,中文名,...",中间是英文逗号，不能有空项
+		validFormat := regexp.MustCompile(`^([\p{Han}]+)(,[\p{Han}]+)*$`)
+		if !validFormat.MatchString(trimmed) {
+			c.Data["json"] = map[string]interface{}{
+				"success": false,
+				"message": "活动记录添加失败，学生姓名格式不正确，请确保姓名之间用英文逗号分隔，且无空项",
+			}
+			c.ServeJSON()
+			return
 		}
-		c.ServeJSON()
-		return
-	}
 
-	// ✅ 通过格式校验后再处理扣分逻辑
+		// ✅ 通过格式校验后再处理扣分逻辑
 		names := strings.Split(absentStr, ",")
 		for _, name := range names {
 			name = strings.TrimSpace(name)
@@ -1171,14 +1171,14 @@ func (c *StudentController) AddActivityRecord() {
 		UserId:      user.Id, // 或者上传该活动记录的用户ID
 		ActivityId:  activity.Id,
 		Points:      activity.Points, // 通常是你表单中的积分值
-		Description: "活动记录扣除积分", // 你也可以根据需求自定义描述
+		Description: "活动记录扣除积分",      // 你也可以根据需求自定义描述
 		CreatedAt:   time.Now(),
 	}
 	_, err = o.Insert(&pointsRecord)
 	if err != nil {
 		beego.Error("创建活动积分记录失败：", err)
 	}
-	
+
 	c.ServeJSON()
 }
 
@@ -1422,16 +1422,29 @@ func (c *StudentController) ExchangeItem() {
 		return
 	}
 
-	item := c.GetString("item")
-	var cost int
-	switch item {
-	case "clothe":
-		cost = 50
-	case "book":
-		cost = 30
-	case "coupon":
-		cost = 20
-	default:
+	item := strings.TrimSpace(c.GetString("item"))
+	beego.Info("收到兑换商品类型：", item)
+
+	// 商品类型与所需积分映射
+	itemCostMap := map[string]int{
+		"clothe":      50,
+		"book":        30,
+		"coupon":      20,
+		"badge":       25,
+		"canvas_bag":  40,
+		"cup":         35,
+		"fan":         28,
+		"kettle":      60,
+		"keychain":    15,
+		"mouse_pad":   18,
+		"notebook":    22,
+		"phone_stand": 20,
+		"speaker":     80,
+		"tshirt":      55,
+	}
+
+	cost, ok := itemCostMap[item]
+	if !ok {
 		c.Data["json"] = map[string]interface{}{"success": false, "message": "无效的商品类型"}
 		c.ServeJSON()
 		return

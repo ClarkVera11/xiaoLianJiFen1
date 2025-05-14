@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -22,7 +23,7 @@
         .nav-bar {
             background-color: #73C088;
             padding: 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             width: 100%;
             z-index: 1000;
         }
@@ -56,7 +57,7 @@
         }
 
         .nav-links a:hover {
-            background-color: rgba(255,255,255,0.1);
+            background-color: rgba(255, 255, 255, 0.1);
         }
 
         .nav-links a:hover::after {
@@ -70,7 +71,7 @@
         }
 
         .nav-links a.active {
-            background-color: rgba(255,255,255,0.1);
+            background-color: rgba(255, 255, 255, 0.1);
         }
 
         .nav-links a.active::after {
@@ -204,7 +205,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.5);
+            background-color: rgba(0, 0, 0, 0.5);
             z-index: 1000;
             justify-content: center;
             align-items: center;
@@ -262,26 +263,61 @@
             background-color: #e0e0e0;
             color: #666;
         }
+
+        /* Add pagination styles */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 2rem;
+            gap: 0.5rem;
+        }
+
+        .pagination button {
+            background-color: #73C088;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+
+        .pagination button:hover {
+            background-color: #5fa572;
+        }
+
+        .pagination button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .pagination span {
+            color: #666;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
+
 <body>
     <nav class="nav-bar">
         <div class="nav-container">
             <div class="nav-links">
-                <a href="/student" class="{{if eq .ActivePage "home"}}active{{end}}">首页</a>
-                <a href="/student/activities" class="{{if eq .ActivePage "activities"}}active{{end}}">活动管理</a>
-                <a href="/student/my-activities" class="{{if eq .ActivePage "myactivities"}}active{{end}}">我的活动</a>
+                <a href="/student" class="{{if eq .ActivePage " home"}}active{{end}}">首页</a>
+                <a href="/student/activities" class="{{if eq .ActivePage " activities"}}active{{end}}">活动管理</a>
+                <a href="/student/my-activities" class="{{if eq .ActivePage " myactivities"}}active{{end}}">我的活动</a>
                 {{if .IsClubAdmin}}
                 <a href="/student/club" class="{{if eq .ActivePage "club"}}active{{end}}">社团活动</a>
                 <a href="/student/activity-records" class="{{if eq .ActivePage "activity_records"}}active{{end}}">活动记录</a>
                 {{end}}
-                
-                <a href="/student/shop" class="{{if eq .ActivePage "shop"}}active{{end}}">积分商城</a>
+
+                <a href="/student/shop" class="{{if eq .ActivePage " shop"}}active{{end}}">积分商城</a>
                 <a href="/student/exchange-history" class="{{if eq .ActivePage "exchange_history"}}active{{end}}">兑换记录</a>
-                <a href="/student/ranking" class="{{if eq .ActivePage "ranking"}}active{{end}}">积分排名</a>
-                <a href="/student/points-records" class="{{if eq .ActivePage "points_records"}}active{{end}}">积分记录</a>
-                <a href="/student/rules" class="{{if eq .ActivePage "rules"}}active{{end}}">积分规则</a>
-                <a href="/blockchain/info" class="{{if eq .ActivePage "blockchain"}}active{{end}}">区块链信息</a>
+                <a href="/student/ranking" class="{{if eq .ActivePage " ranking"}}active{{end}}">积分排名</a>
+                <a href="/student/points-records" class="{{if eq .ActivePage " points_records"}}active{{end}}">积分记录</a>
+                <a href="/student/rules" class="{{if eq .ActivePage " rules"}}active{{end}}">积分规则</a>
+                <a href="/blockchain/info" class="{{if eq .ActivePage " blockchain"}}active{{end}}">区块链信息</a>
             </div>
             <button class="logout-button" onclick="confirmLogout()">安全退出</button>
         </div>
@@ -295,7 +331,7 @@
             </div>
         </div>
 
-        <div class="shop-grid">
+        <div class="shop-grid" id="shopGrid">
             <!-- 示例商品卡片 -->
             <div class="shop-card">
                 <img src="/static/images/clothe.png" alt="定制校园T恤" class="shop-image">
@@ -320,6 +356,101 @@
                 <div class="shop-points">所需积分：20分</div>
                 <button class="exchange-button" onclick="showExchangeModal(3)">立即兑换</button>
             </div>
+
+            <div class="shop-card">
+                <img src="/static/images/badge.png" alt="校园徽章" class="shop-image">
+                <h3 class="shop-title">校园徽章</h3>
+                <p class="shop-description">精美校园徽章，彰显你的独特身份。</p>
+                <div class="shop-points">所需积分：25分</div>
+                <button class="exchange-button" onclick="showExchangeModal(4)">立即兑换</button>
+            </div>
+
+            <div class="shop-card">
+                <img src="/static/images/canvas_bag.png" alt="帆布袋" class="shop-image">
+                <h3 class="shop-title">帆布袋</h3>
+                <p class="shop-description">环保实用的帆布袋，方便日常携带。</p>
+                <div class="shop-points">所需积分：40分</div>
+                <button class="exchange-button" onclick="showExchangeModal(5)">立即兑换</button>
+            </div>
+
+            <div class="shop-card">
+                <img src="/static/images/cup.png" alt="水杯" class="shop-image">
+                <h3 class="shop-title">水杯</h3>
+                <p class="shop-description">高颜值水杯，健康饮水好伴侣。</p>
+                <div class="shop-points">所需积分：35分</div>
+                <button class="exchange-button" onclick="showExchangeModal(6)">立即兑换</button>
+            </div>
+
+            <div class="shop-card">
+                <img src="/static/images/fan.png" alt="小风扇" class="shop-image">
+                <h3 class="shop-title">小风扇</h3>
+                <p class="shop-description">便携式小风扇，夏日清凉必备。</p>
+                <div class="shop-points">所需积分：28分</div>
+                <button class="exchange-button" onclick="showExchangeModal(7)">立即兑换</button>
+            </div>
+
+            <div class="shop-card">
+                <img src="/static/images/kettle.png" alt="保温壶" class="shop-image">
+                <h3 class="shop-title">保温壶</h3>
+                <p class="shop-description">大容量保温壶，四季皆宜。</p>
+                <div class="shop-points">所需积分：60分</div>
+                <button class="exchange-button" onclick="showExchangeModal(8)">立即兑换</button>
+            </div>
+
+            <div class="shop-card">
+                <img src="/static/images/keychain.png" alt="钥匙扣" class="shop-image">
+                <h3 class="shop-title">钥匙扣</h3>
+                <p class="shop-description">创意钥匙扣，随身携带更方便。</p>
+                <div class="shop-points">所需积分：15分</div>
+                <button class="exchange-button" onclick="showExchangeModal(9)">立即兑换</button>
+            </div>
+
+            <div class="shop-card">
+                <img src="/static/images/mouse_pad.png" alt="鼠标垫" class="shop-image">
+                <h3 class="shop-title">鼠标垫</h3>
+                <p class="shop-description">舒适鼠标垫，办公学习更顺畅。</p>
+                <div class="shop-points">所需积分：18分</div>
+                <button class="exchange-button" onclick="showExchangeModal(10)">立即兑换</button>
+            </div>
+
+            <div class="shop-card">
+                <img src="/static/images/notebook.png" alt="笔记本" class="shop-image">
+                <h3 class="shop-title">笔记本</h3>
+                <p class="shop-description">精美笔记本，记录美好生活。</p>
+                <div class="shop-points">所需积分：22分</div>
+                <button class="exchange-button" onclick="showExchangeModal(11)">立即兑换</button>
+            </div>
+
+            <div class="shop-card">
+                <img src="/static/images/phone_stand.png" alt="手机支架" class="shop-image">
+                <h3 class="shop-title">手机支架</h3>
+                <p class="shop-description">多功能手机支架，解放你的双手。</p>
+                <div class="shop-points">所需积分：20分</div>
+                <button class="exchange-button" onclick="showExchangeModal(12)">立即兑换</button>
+            </div>
+
+            <div class="shop-card">
+                <img src="/static/images/speaker.png" alt="蓝牙音箱" class="shop-image">
+                <h3 class="shop-title">蓝牙音箱</h3>
+                <p class="shop-description">便携蓝牙音箱，享受高品质音乐。</p>
+                <div class="shop-points">所需积分：80分</div>
+                <button class="exchange-button" onclick="showExchangeModal(13)">立即兑换</button>
+            </div>
+
+            <div class="shop-card">
+                <img src="/static/images/T-shirt.png" alt="纪念T恤" class="shop-image">
+                <h3 class="shop-title">纪念T恤</h3>
+                <p class="shop-description">限量纪念T恤，青春专属回忆。</p>
+                <div class="shop-points">所需积分：55分</div>
+                <button class="exchange-button" onclick="showExchangeModal(14)">立即兑换</button>
+            </div>
+        </div>
+
+        <!-- Add pagination controls -->
+        <div class="pagination">
+            <button onclick="changePage('prev')" id="prevBtn">上一页</button>
+            <span id="pageInfo">第 1 页 / 共 1 页</span>
+            <button onclick="changePage('next')" id="nextBtn">下一页</button>
         </div>
     </div>
 
@@ -341,6 +472,46 @@
     </div>
 
     <script>
+        // Add pagination logic
+        const itemsPerPage = 6;
+        let currentPage = 1;
+        const shopCards = document.querySelectorAll('.shop-card');
+        const totalPages = Math.ceil(shopCards.length / itemsPerPage);
+
+        function updatePagination() {
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+
+            // Hide all cards first
+            shopCards.forEach(card => card.style.display = 'none');
+
+            // Show only cards for current page
+            for (let i = startIndex; i < endIndex && i < shopCards.length; i++) {
+                shopCards[i].style.display = 'flex';
+            }
+
+            // Update page info with total pages
+            document.getElementById('pageInfo').textContent = `第 ${currentPage} 页 / 共 ${totalPages} 页`;
+
+            // Update button states
+            document.getElementById('prevBtn').disabled = currentPage === 1;
+            document.getElementById('nextBtn').disabled = currentPage === totalPages;
+        }
+
+        function changePage(direction) {
+            if (direction === 'prev' && currentPage > 1) {
+                currentPage--;
+            } else if (direction === 'next' && currentPage < totalPages) {
+                currentPage++;
+            }
+            updatePagination();
+        }
+
+        // Initialize pagination
+        document.addEventListener('DOMContentLoaded', function () {
+            updatePagination();
+        });
+
         function confirmLogout() {
             if (confirm("您确定要退出吗？")) {
                 window.location.href = "/logout";
@@ -354,15 +525,26 @@
             const items = {
                 1: { name: '定制校园T恤', points: 50 },
                 2: { name: '图书馆借阅券', points: 30 },
-                3: { name: '食堂优惠券', points: 20 }
+                3: { name: '食堂优惠券', points: 20 },
+                4: { name: '校园徽章', points: 25 },
+                5: { name: '帆布袋', points: 40 },
+                6: { name: '水杯', points: 35 },
+                7: { name: '小风扇', points: 28 },
+                8: { name: '保温壶', points: 60 },
+                9: { name: '钥匙扣', points: 15 },
+                10: { name: '鼠标垫', points: 18 },
+                11: { name: '笔记本', points: 22 },
+                12: { name: '手机支架', points: 20 },
+                13: { name: '蓝牙音箱', points: 80 },
+                14: { name: '纪念T恤', points: 55 }
             };
 
             const item = items[itemId];
             currentItemId = itemId;
-            
+
             document.getElementById('modalItemName').textContent = item.name;
             document.getElementById('modalItemPoints').textContent = `所需积分：${item.points}分`;
-            
+
             modal.style.display = 'flex';
         }
 
@@ -373,33 +555,48 @@
 
         function confirmExchange() {
             if (!currentItemId) return;
-            const itemMap = {1: "clothe", 2: "book", 3: "coupon"};
+            const itemMap = {
+                1: "clothe",
+                2: "book",
+                3: "coupon",
+                4: "badge",
+                5: "canvas_bag",
+                6: "cup",
+                7: "fan",
+                8: "kettle",
+                9: "keychain",
+                10: "mouse_pad",
+                11: "notebook",
+                12: "phone_stand",
+                13: "speaker",
+                14: "tshirt"
+            };
             const item = itemMap[currentItemId];
 
             fetch('/student/exchange', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: 'item=' + encodeURIComponent(item)
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('兑换成功！');
-                    // 更新左上角积分
-                    document.querySelector('.points-value').textContent = data.points;
-                } else {
-                    alert(data.message || '兑换失败');
-                }
-                closeModal();
-            })
-            .catch(() => {
-                alert('网络错误，兑换失败');
-                closeModal();
-            });
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('兑换成功！');
+                        // 更新左上角积分
+                        document.querySelector('.points-value').textContent = data.points;
+                    } else {
+                        alert(data.message || '兑换失败');
+                    }
+                    closeModal();
+                })
+                .catch(() => {
+                    alert('网络错误，兑换失败');
+                    closeModal();
+                });
         }
 
         // 点击模态框外部关闭
-        window.onclick = function(event) {
+        window.onclick = function (event) {
             const modal = document.getElementById('exchangeModal');
             if (event.target == modal) {
                 closeModal();
@@ -407,4 +604,5 @@
         }
     </script>
 </body>
-</html> 
+
+</html>

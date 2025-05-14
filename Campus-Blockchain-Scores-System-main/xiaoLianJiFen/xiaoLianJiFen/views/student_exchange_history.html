@@ -75,10 +75,11 @@
             text-align: center;
         }
         .exchange-list {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
             gap: 2rem;
-            justify-content: center;
-            flex-wrap: wrap;
+            justify-items: center;
+            margin: 0 auto;
         }
         .exchange-item {
             background: #fff;
@@ -106,6 +107,23 @@
             font-size: 1.1rem;
             padding: 2rem;
         }
+        .pagination {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .pagination button {
+            background-color: #73C088;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-size: 15px;
+            margin: 0 5px;
+        }
+        .pagination button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -132,8 +150,8 @@
     </nav>
     <div class="main-content">
         <div class="page-title">兑换记录</div>
-        {{if or .ExchangeMap.clothe .ExchangeMap.book .ExchangeMap.coupon}}
-        <div class="exchange-list">
+        {{if or .ExchangeMap.clothe .ExchangeMap.book .ExchangeMap.coupon .ExchangeMap.badge .ExchangeMap.canvas_bag .ExchangeMap.cup .ExchangeMap.fan .ExchangeMap.kettle .ExchangeMap.keychain .ExchangeMap.mouse_pad .ExchangeMap.notebook .ExchangeMap.phone_stand .ExchangeMap.speaker .ExchangeMap.tshirt}}
+        <div class="exchange-list" id="exchangeList">
             {{if .ExchangeMap.clothe}}
             <div class="exchange-item">
                 <img src="/static/images/clothe.png" class="exchange-img" alt="定制校园T恤">
@@ -155,6 +173,88 @@
                 <div class="exchange-count">已兑换 {{index .ExchangeMap "coupon"}} 件</div>
             </div>
             {{end}}
+            {{if .ExchangeMap.badge}}
+            <div class="exchange-item">
+                <img src="/static/images/badge.png" class="exchange-img" alt="校园徽章">
+                <div>校园徽章</div>
+                <div class="exchange-count">已兑换 {{index .ExchangeMap "badge"}} 件</div>
+            </div>
+            {{end}}
+            {{if .ExchangeMap.canvas_bag}}
+            <div class="exchange-item">
+                <img src="/static/images/canvas_bag.png" class="exchange-img" alt="帆布袋">
+                <div>帆布袋</div>
+                <div class="exchange-count">已兑换 {{index .ExchangeMap "canvas_bag"}} 件</div>
+            </div>
+            {{end}}
+            {{if .ExchangeMap.cup}}
+            <div class="exchange-item">
+                <img src="/static/images/cup.png" class="exchange-img" alt="水杯">
+                <div>水杯</div>
+                <div class="exchange-count">已兑换 {{index .ExchangeMap "cup"}} 件</div>
+            </div>
+            {{end}}
+            {{if .ExchangeMap.fan}}
+            <div class="exchange-item">
+                <img src="/static/images/fan.png" class="exchange-img" alt="小风扇">
+                <div>小风扇</div>
+                <div class="exchange-count">已兑换 {{index .ExchangeMap "fan"}} 件</div>
+            </div>
+            {{end}}
+            {{if .ExchangeMap.kettle}}
+            <div class="exchange-item">
+                <img src="/static/images/kettle.png" class="exchange-img" alt="保温壶">
+                <div>保温壶</div>
+                <div class="exchange-count">已兑换 {{index .ExchangeMap "kettle"}} 件</div>
+            </div>
+            {{end}}
+            {{if .ExchangeMap.keychain}}
+            <div class="exchange-item">
+                <img src="/static/images/keychain.png" class="exchange-img" alt="钥匙扣">
+                <div>钥匙扣</div>
+                <div class="exchange-count">已兑换 {{index .ExchangeMap "keychain"}} 件</div>
+            </div>
+            {{end}}
+            {{if .ExchangeMap.mouse_pad}}
+            <div class="exchange-item">
+                <img src="/static/images/mouse_pad.png" class="exchange-img" alt="鼠标垫">
+                <div>鼠标垫</div>
+                <div class="exchange-count">已兑换 {{index .ExchangeMap "mouse_pad"}} 件</div>
+            </div>
+            {{end}}
+            {{if .ExchangeMap.notebook}}
+            <div class="exchange-item">
+                <img src="/static/images/notebook.png" class="exchange-img" alt="笔记本">
+                <div>笔记本</div>
+                <div class="exchange-count">已兑换 {{index .ExchangeMap "notebook"}} 件</div>
+            </div>
+            {{end}}
+            {{if .ExchangeMap.phone_stand}}
+            <div class="exchange-item">
+                <img src="/static/images/phone_stand.png" class="exchange-img" alt="手机支架">
+                <div>手机支架</div>
+                <div class="exchange-count">已兑换 {{index .ExchangeMap "phone_stand"}} 件</div>
+            </div>
+            {{end}}
+            {{if .ExchangeMap.speaker}}
+            <div class="exchange-item">
+                <img src="/static/images/speaker.png" class="exchange-img" alt="蓝牙音箱">
+                <div>蓝牙音箱</div>
+                <div class="exchange-count">已兑换 {{index .ExchangeMap "speaker"}} 件</div>
+            </div>
+            {{end}}
+            {{if .ExchangeMap.tshirt}}
+            <div class="exchange-item">
+                <img src="/static/images/T-shirt.png" class="exchange-img" alt="纪念T恤">
+                <div>纪念T恤</div>
+                <div class="exchange-count">已兑换 {{index .ExchangeMap "tshirt"}} 件</div>
+            </div>
+            {{end}}
+        </div>
+        <div class="pagination">
+            <button onclick="changePage('prev')" id="prevBtn">上一页</button>
+            <span id="pageInfo">第 1 页 / 共 1 页</span>
+            <button onclick="changePage('next')" id="nextBtn">下一页</button>
         </div>
         {{else}}
         <div class="no-records">暂无兑换记录</div>
@@ -165,6 +265,38 @@
             if (confirm("您确定要退出吗？")) {
                 window.location.href = "/logout";
             }
+        }
+        const itemsPerPage = 6;
+        let currentPage = 1;
+        let exchangeItems = [];
+        let totalPages = 1;
+
+        document.addEventListener('DOMContentLoaded', function() {
+            exchangeItems = Array.from(document.querySelectorAll('.exchange-item'));
+            totalPages = Math.ceil(exchangeItems.length / itemsPerPage);
+            updatePagination();
+        });
+
+        function updatePagination() {
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+
+            exchangeItems.forEach((item, idx) => {
+                item.style.display = (idx >= startIndex && idx < endIndex) ? 'block' : 'none';
+            });
+
+            document.getElementById('pageInfo').textContent = `第 ${currentPage} 页 / 共 ${totalPages} 页`;
+            document.getElementById('prevBtn').disabled = currentPage === 1;
+            document.getElementById('nextBtn').disabled = currentPage === totalPages;
+        }
+
+        function changePage(direction) {
+            if (direction === 'prev' && currentPage > 1) {
+                currentPage--;
+            } else if (direction === 'next' && currentPage < totalPages) {
+                currentPage++;
+            }
+            updatePagination();
         }
     </script>
 </body>
