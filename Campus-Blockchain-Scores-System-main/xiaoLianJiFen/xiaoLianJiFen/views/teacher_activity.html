@@ -226,15 +226,17 @@
         }
 
         .modal-content {
-            position: relative;
-            background-color: white;
-            margin: 5% auto;
-            padding: 2rem;
-            width: 90%;
-            max-width: 600px;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
+    position: relative;
+    background-color: white;
+    margin: 5% auto;
+    padding: 2rem;
+    width: 90%;
+    max-width: 600px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    max-height: 80vh; /* 设置最大高度为视口高度的80% */
+    overflow-y: auto; /* 超出最大高度时自动显示滚动条 */
+}
 
         .close-btn {
             position: absolute;
