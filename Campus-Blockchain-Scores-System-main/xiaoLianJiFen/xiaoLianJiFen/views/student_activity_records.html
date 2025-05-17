@@ -136,9 +136,11 @@
 
         .records-grid {
             display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 2rem;
-            margin-bottom: 2rem;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            justify-items: center;
+            margin-bottom: 60px;
         }
 
         .record-card {
@@ -201,8 +203,23 @@
         .pagination {
             display: flex;
             justify-content: center;
-            gap: 0.5rem;
-            margin-top: 2rem;
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            padding: 10px 0;
+            background-color: #C8EAD1;
+            z-index: 1000;
+        }
+
+        .records-grid {
+            display: flex;
+            flex-direction: row-reverse;
+            flex-wrap: wrap-reverse;
+            justify-content: flex-start;
+            align-content: flex-start;
+            gap: 1rem;
+            padding-bottom: 60px;
         }
 
         .pagination button {
