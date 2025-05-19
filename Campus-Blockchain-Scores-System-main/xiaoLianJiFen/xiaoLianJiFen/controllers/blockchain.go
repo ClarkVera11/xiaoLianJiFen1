@@ -12,16 +12,18 @@ type BlockchainController struct {
 	beego.Controller
 }
 
-// ShowBlockchainInfo displays the blockchain information page for students
+// ShowBlockchainInfo displays the blockchain information page for students and admins
 func (c *BlockchainController) ShowBlockchainInfo() {
-	// Check if user is logged in
+	beego.Info("进入区块链信息页面")
+
+	// 检查用户是否登录
 	userID := c.GetSession("userId")
 	if userID == nil {
 		c.Redirect("/", 302)
 		return
 	}
 
-	// Get current user's role
+	// 获取当前用户信息
 	o := orm.NewOrm()
 	var currentUser Models.Users
 	err := o.QueryTable("users").Filter("username", userID).One(&currentUser)
@@ -30,12 +32,30 @@ func (c *BlockchainController) ShowBlockchainInfo() {
 		return
 	}
 
-	// Set role for navigation
-	c.Data["Role"] = currentUser.Role_name
-	c.Data["ActivePage"] = "blockchain"
-	c.Data["IsClubAdmin"] = currentUser.Role_name == "admin" || currentUser.Role_name == "club_admin"
+	// 判断角色
+	role := currentUser.Role_name
+	isAdmin := role == "admin" || role == "club_admin" || role == "社团管理员"
+	isStudent := role == "student" || role == "学生"
 
-	// Get all users with blockchain information
+	// 若不是社团管理员或学生，重定向
+	if !isAdmin && !isStudent {
+		c.Redirect("/", 302)
+		return
+	}
+
+	// 若不是管理员或学生，重定向
+	if !isAdmin && !isStudent {
+		c.Redirect("/", 302)
+		return
+	}
+
+	// 设置模板数据
+	c.Data["Role"] = role
+	c.Data["ActivePage"] = "blockchain"
+	c.Data["IsClubAdmin"] = isAdmin
+	c.Data["IsStudent"] = isStudent
+
+	// 获取所有用户链上信息
 	var users []Models.Users
 	_, err = o.QueryTable("users").All(&users)
 	if err != nil {
@@ -51,49 +71,47 @@ func (c *BlockchainController) ShowBlockchainInfo() {
 
 // ShowTeacherBlockchainInfo displays the blockchain information page for teachers
 func (c *BlockchainController) ShowTeacherBlockchainInfo() {
-	// Check if user is logged in
+	beego.Info("进入教师区块链信息页面")
+
+	// 检查是否登录
 	userID := c.GetSession("userId")
-	beego.Info("session userId:", userID)
 	if userID == nil {
 		beego.Info("未登录，跳转首页")
 		c.Redirect("/", 302)
 		return
 	}
 
-	// Get current user's role
+	// 获取当前用户信息
 	o := orm.NewOrm()
 	var currentUser Models.Users
 	err := o.QueryTable("users").Filter("username", userID).One(&currentUser)
-	beego.Info("查到用户:", currentUser, "err:", err)
 	if err != nil {
 		beego.Info("查不到用户，跳转首页")
 		c.Redirect("/", 302)
 		return
 	}
 
-	// Check if user is a teacher
-	if currentUser.Role_name != "教师" && currentUser.Role_name != "teacher" {
-		beego.Info("不是教师，跳转首页, 当前角色:", currentUser.Role_name)
+	// 判断是否为教师
+	role := currentUser.Role_name
+	if role != "teacher" && role != "教师" {
+		beego.Info("不是教师，跳转首页, 当前角色:", role)
 		c.Redirect("/", 302)
 		return
 	}
 
-	// Set role for navigation
-	c.Data["Role"] = currentUser.Role_name
+	// 设置模板数据
+	c.Data["Role"] = role
 	c.Data["ActivePage"] = "blockchain"
 
-	// Get search query
+	// 获取搜索条件
 	searchQuery := c.GetString("search")
 
-	// Get users with blockchain information
+	// 查询用户信息（支持搜索）
 	var users []Models.Users
 	qs := o.QueryTable("users")
-
-	// Apply search filter if search query exists
 	if searchQuery != "" {
 		qs = qs.Filter("username__icontains", searchQuery)
 	}
-
 	_, err = qs.All(&users)
 	if err != nil {
 		beego.Error("获取用户列表失败：", err)
