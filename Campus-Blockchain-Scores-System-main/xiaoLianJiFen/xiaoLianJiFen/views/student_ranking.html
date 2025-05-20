@@ -196,6 +196,7 @@
                     </thead>
                     <tbody>
                         {{range $user := .Users}}
+                        {{if ne $user.Role_name "教师"}}
                         <tr>
                             <td>
                                 <span class="rank-number {{if le $user.Rank 2}}top-three{{end}}">
@@ -206,8 +207,11 @@
                             <td>{{$user.Role_name}}</td>
                             <td>{{$user.Points}}</td>
                             <td>{{$user.Title}}</td>
-                            <td>{{$user.Phone}}</td>
+                            <td>
+                                <span class="phone-mask" data-phone="{{$user.Phone}}"></span>
+                            </td>
                         </tr>
+                        {{end}}
                         {{end}}
                     </tbody>
                 </table>
@@ -221,6 +225,16 @@
                 window.location.href = '/logout';
             }
         }
+
+        // 手机号中间四位变成****
+        document.querySelectorAll('.phone-mask').forEach(function(el) {
+            var phone = el.getAttribute('data-phone');
+            if (phone && phone.length === 11) {
+                el.textContent = phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2');
+            } else {
+                el.textContent = phone || '';
+            }
+        });
     </script>
 </body>
 </html>
