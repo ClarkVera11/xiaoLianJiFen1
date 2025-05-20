@@ -45,7 +45,6 @@ func init() {
 	beego.Router("/student/club-activities", &controllers.StudentController{}, "get:GetClubActivities")
 	beego.Router("/student/submit-activity", &controllers.StudentController{}, "post:SubmitActivity")
 	beego.Router("/student/request-admin", &controllers.StudentController{}, "post:RequestAdmin")
-	beego.Router("/student/rules", &controllers.StudentController{}, "get:ShowRules")
 	beego.Router("/student/register-activity", &controllers.StudentController{}, "post:RegisterActivity")
 	beego.Router("/student/registration-status", &controllers.StudentController{}, "get:GetRegistrationStatus")
 	beego.Router("/student/my-activities", &controllers.StudentController{}, "get:ShowMyActivities")

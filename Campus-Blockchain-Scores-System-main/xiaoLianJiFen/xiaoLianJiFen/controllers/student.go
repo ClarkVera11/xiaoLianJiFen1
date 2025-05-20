@@ -126,13 +126,7 @@ func (c *StudentController) ShowClub() {
 	c.TplName = "student_club.html"
 }
 
-// ShowRules 显示积分规则页面
-func (c *StudentController) ShowRules() {
-	beego.Info("进入积分规则页面")
-	c.Data["ActivePage"] = "rules"
-	c.Data["IsClubAdmin"] = c.isClubAdmin()
-	c.TplName = "student_rules.html"
-}
+
 
 // GetActivities 获取活动列表
 func (c *StudentController) GetActivities() {
