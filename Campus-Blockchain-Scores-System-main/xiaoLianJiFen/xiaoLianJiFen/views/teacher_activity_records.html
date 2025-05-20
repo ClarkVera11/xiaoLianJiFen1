@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>活动记录管理 - 校内活动积分系统</title>
+    <title>扣除积分管理 - 校内活动积分系统</title>
     <style>
         * {
             margin: 0;
@@ -327,23 +327,6 @@
             color: #999;
         }
 
-        .record-summary {
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid #eee;
-        }
-
-        .record-summary-title {
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-            color: #333;
-        }
-
-        .record-summary-content {
-            color: #666;
-            line-height: 1.5;
-        }
-
         .pagination {
             display: flex;
             justify-content: center;
@@ -407,7 +390,7 @@
                 <a href="/teacher/activity" class="{{if eq .ActivePage "activity"}}active{{end}}">活动管理</a>
                 <a href="/teacher/student" class="{{if eq .ActivePage "student"}}active{{end}}">学生管理</a>
                 <a href="/teacher/club" class="{{if eq .ActivePage "club"}}active{{end}}">社团管理</a>
-                <a href="/teacher/activity-records" class="{{if eq .ActivePage "activity_records"}}active{{end}}">活动记录</a>
+                <a href="/teacher/activity-records" class="{{if eq .ActivePage "activity_records"}}active{{end}}">扣除积分</a>
                 <a href="/teacher/blockchain-info" class="{{if eq .ActivePage "blockchain"}}active{{end}}">区块链信息</a>
             </div>
             <button class="logout-button" onclick="confirmLogout()">安全退出</button>
@@ -416,7 +399,7 @@
 
     <div class="main-content">
         <div class="page-header">
-            <h1 class="page-title">活动记录管理</h1>
+            <h1 class="page-title">扣除积分管理</h1>
         </div>
 
         <div class="search-bar">
@@ -425,7 +408,7 @@
         </div>
 
         <div class="records-grid" id="recordsGrid">
-            <!-- 活动记录卡片将通过JavaScript动态加载 -->
+            <!-- 扣除积分卡片将通过JavaScript动态加载 -->
         </div>
 
         <div class="pagination" id="pagination">
@@ -437,16 +420,12 @@
     <div class="edit-modal" id="editModal">
         <div class="edit-modal-content">
             <span class="edit-modal-close" onclick="closeEditModal()">&times;</span>
-            <h2 class="edit-modal-title">编辑活动记录</h2>
+            <h2 class="edit-modal-title">编辑扣除积分</h2>
             <form id="editForm" onsubmit="submitEdit(event)">
                 <input type="hidden" id="editRecordId">
                 <div class="form-group">
                     <label for="editAttendanceCount">实际到场人数</label>
                     <input type="number" id="editAttendanceCount" min="0" required>
-                </div>
-                <div class="form-group">
-                    <label for="editSummary">活动总结</label>
-                    <textarea id="editSummary" required placeholder="请输入活动总结内容..."></textarea>
                 </div>
                 <div class="modal-buttons">
                     <button type="button" class="modal-button modal-cancel" onclick="closeEditModal()">取消</button>
@@ -481,12 +460,12 @@
                         displayRecords(data.data.records);
                         updatePagination(data.data.total, data.data.page, data.data.pageSize);
                     } else {
-                        alert('获取活动记录失败：' + data.msg);
+                        alert('获取扣除积分失败：' + data.msg);
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('获取活动记录失败，请稍后重试');
+                    alert('获取扣除积分失败，请稍后重试');
                 });
         }
 
@@ -513,10 +492,6 @@
                             <span>${record.attendance_count}人</span>
                         </div>
                     </div>
-                    <div class="record-summary">
-                        <div class="record-summary-title">活动总结</div>
-                        <div class="record-summary-content">${record.summary}</div>
-                    </div>
                 `;
                 grid.appendChild(card);
             });
@@ -525,11 +500,10 @@
         function showEditModal(record) {
             document.getElementById('editRecordId').value = record.id;
             document.getElementById('editAttendanceCount').value = record.attendance_count;
-            document.getElementById('editSummary').value = record.summary || '';
             
             // 显示活动基本信息
             const modalTitle = document.querySelector('.edit-modal-title');
-            modalTitle.innerHTML = `编辑活动记录 - ${record.activity_name}`;
+            modalTitle.innerHTML = `编辑扣除积分 - ${record.activity_name}`;
             
             // 显示模态框
             document.getElementById('editModal').style.display = 'flex';
@@ -543,16 +517,10 @@
             event.preventDefault();
             const recordId = document.getElementById('editRecordId').value;
             const attendanceCount = document.getElementById('editAttendanceCount').value;
-            const summary = document.getElementById('editSummary').value;
 
             // 表单验证
             if (!attendanceCount || attendanceCount < 0) {
                 alert('请输入有效的实际到场人数');
-                return;
-            }
-
-            if (!summary.trim()) {
-                alert('请输入活动总结');
                 return;
             }
 
@@ -566,7 +534,6 @@
             const formData = new FormData();
             formData.append('id', recordId);
             formData.append('attendance_count', attendanceCount);
-            formData.append('summary', summary.trim());
 
             fetch('/teacher/activity-records/update', {
                 method: 'POST',
@@ -656,7 +623,7 @@
             loadRecords();
         }
 
-        // 页面加载时加载活动记录
+        // 页面加载时加载扣除积分
         document.addEventListener('DOMContentLoaded', function() {
             loadRecords();
         });

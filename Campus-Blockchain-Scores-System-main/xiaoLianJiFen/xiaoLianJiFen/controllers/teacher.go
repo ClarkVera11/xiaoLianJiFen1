@@ -298,10 +298,10 @@ func (c *TeacherController) ApproveActivity() {
 	}
 
 	if num == 0 {
-		beego.Error("未找到要更新的活动记录")
+		beego.Error("未找到要更新的扣除积分记录")
 		c.Data["json"] = map[string]interface{}{
 			"success": false,
-			"message": "未找到活动记录",
+			"message": "未找到扣除积分记录",
 		}
 		c.ServeJSON()
 		return
@@ -381,10 +381,10 @@ func (c *TeacherController) UpdateActivity() {
 	}
 
 	if num == 0 {
-		beego.Error("未找到要更新的活动记录")
+		beego.Error("未找到要更新的扣除积分记录")
 		c.Data["json"] = map[string]interface{}{
 			"success": false,
-			"message": "未找到活动记录",
+			"message": "未找到扣除积分记录",
 		}
 		c.ServeJSON()
 		return
@@ -431,10 +431,10 @@ func (c *TeacherController) RejectActivity() {
 	}
 
 	if num == 0 {
-		beego.Error("未找到要更新的活动记录")
+		beego.Error("未找到要更新的扣除积分记录")
 		c.Data["json"] = map[string]interface{}{
 			"success": false,
-			"message": "未找到活动记录",
+			"message": "未找到扣除积分记录",
 		}
 		c.ServeJSON()
 		return
@@ -609,7 +609,7 @@ func (c *TeacherController) RevokeAdmin() {
 	c.ServeJSON()
 }
 
-// ShowActivityRecords 显示活动记录页面
+// ShowActivityRecords 显示扣除积分页面
 func (c *TeacherController) ShowActivityRecords() {
 	// 检查用户是否登录
 	userID := c.GetSession("userId")
@@ -627,12 +627,12 @@ func (c *TeacherController) ShowActivityRecords() {
 		return
 	}
 
-	beego.Info("进入活动记录页面")
+	beego.Info("进入扣除积分页面")
 	c.Data["ActivePage"] = "activity_records"
 	c.TplName = "teacher_activity_records.html"
 }
 
-// GetActivityRecords 获取活动记录列表
+// GetActivityRecords 获取扣除积分列表
 func (c *TeacherController) GetActivityRecords() {
 	page, _ := c.GetInt("page", 1)
 	pageSize, _ := c.GetInt("pageSize", 6)
@@ -672,7 +672,6 @@ func (c *TeacherController) GetActivityRecords() {
 			"id":               record.Id,
 			"activity_name":    activity.Name,
 			"attendance_count": record.AttendanceCount,
-			"summary":          record.Summary,
 			"created_by_name":  user.Username,
 			"created_at":       record.CreatedAt.Format("2006-01-02 15:04:05"),
 		})
@@ -691,7 +690,7 @@ func (c *TeacherController) GetActivityRecords() {
 	c.ServeJSON()
 }
 
-// UpdateActivityRecord 更新活动记录
+// UpdateActivityRecord 更新扣除积分
 func (c *TeacherController) UpdateActivityRecord() {
 	// 检查用户是否登录
 	userID := c.GetSession("userId")
@@ -750,19 +749,19 @@ func (c *TeacherController) UpdateActivityRecord() {
 		return
 	}
 
-	// 更新活动记录
+	// 更新扣除积分
 	record := Models.ActivityRecords{Id: recordId}
 	if err := o.Read(&record); err != nil {
 		c.Data["json"] = map[string]interface{}{
 			"code": 4,
-			"msg":  "活动记录不存在",
+			"msg":  "扣除积分记录不存在",
 		}
 		c.ServeJSON()
 		return
 	}
 
 	record.AttendanceCount = attendanceCount
-	record.Summary = summary
+
 
 	if _, err := o.Update(&record, "attendance_count", "summary"); err != nil {
 		c.Data["json"] = map[string]interface{}{

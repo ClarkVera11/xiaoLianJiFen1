@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>活动记录管理 - 校内活动积分系统</title>
+    <title>扣除积分管理 - 校内活动积分系统</title>
     <style>
         * {
             margin: 0;
@@ -183,23 +183,6 @@
             color: #999;
         }
 
-        .record-summary {
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 1px solid #eee;
-        }
-
-        .record-summary-title {
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-            color: #333;
-        }
-
-        .record-summary-content {
-            color: #666;
-            line-height: 1.5;
-        }
-
         .pagination {
             display: flex;
             justify-content: center;
@@ -348,11 +331,10 @@
                 <a href="/student/my-activities" class="{{if eq .ActivePage " myactivities"}}active{{end}}">我的活动</a>
                 {{if .IsClubAdmin}}
                 <a href="/student/club" class="{{if eq .ActivePage " club"}}active{{end}}">社团活动</a>
-                <a href="/student/activity-records" class="{{if eq .ActivePage "activity_records"}}active{{end}}">活动记录</a>
+                <a href="/student/activity-records" class="{{if eq .ActivePage "activity_records"}}active{{end}}">扣除积分</a>
                 {{end}}
-
                 <a href="/student/shop" class="{{if eq .ActivePage " shop"}}active{{end}}">积分商城</a>
-                <a href="/student/exchange-history" class="{{if eq .ActivePage "exchange_history"}}active{{end}}">兑换记录</a>
+                <a href="/student/exchange-history" class="{{if eq .ActivePage " exchange_history"}}active{{end}}">兑换记录</a>
                 <a href="/student/ranking" class="{{if eq .ActivePage " ranking"}}active{{end}}">积分排名</a>
                 <a href="/student/points-records" class="{{if eq .ActivePage " points_records"}}active{{end}}">积分记录</a>
                 <a href="/blockchain/info" class="{{if eq .ActivePage " blockchain"}}active{{end}}">区块链信息</a>
@@ -363,12 +345,12 @@
 
     <div class="main-content">
         <div class="page-header">
-            <h1 class="page-title">活动记录管理</h1>
-            <button class="add-record-btn" onclick="showAddRecordModal()">添加活动记录</button>
+            <h1 class="page-title">扣除积分管理</h1>
+            <button class="add-record-btn" onclick="showAddRecordModal()">添加扣除积分记录</button>
         </div>
 
         <div class="records-grid" id="recordsGrid">
-            <!-- 活动记录卡片将通过JavaScript动态加载 -->
+            <!-- 扣除积分记录卡片将通过JavaScript动态加载 -->
         </div>
 
         <div class="pagination" id="pagination">
@@ -376,11 +358,11 @@
         </div>
     </div>
 
-    <!-- 添加活动记录模态框 -->
+    <!-- 添加扣除积分记录模态框 -->
     <div class="modal" id="addRecordModal">
         <div class="modal-content">
             <span class="modal-close" onclick="closeModal()">&times;</span>
-            <h2 class="modal-title">添加活动记录</h2>
+            <h2 class="modal-title">添加扣除积分记录</h2>
             <form id="recordForm" onsubmit="submitRecord(event)">
                 <div class="form-group">
                     <label for="activitySelect">选择活动</label>
@@ -395,16 +377,13 @@
                 </div>
                 <div class="form-group">
                     <label for="attendanceCount">实际到场人数</label>
-                    <input type="number" id="attendanceCount" min="0" required>
+                    <input type="number" id="attendanceCount" min="0" readonly placeholder="自动填充">
                 </div>
                 <div class="form-group">
                     <label for="absentStudents">未到场学生姓名（用逗号分隔）:</label>
-                    <textarea id="absentStudents" name="absentStudents" rows="4" cols="50" placeholder="张三, 李四"></textarea>
+                    <textarea id="absentStudents" name="absentStudents" rows="4" cols="50"
+                        placeholder="张三, 李四"></textarea>
                 </div>
-                <div class="form-group">
-                    <label for="recordSummary">活动总结</label>
-                    <textarea id="recordSummary" name="summary" rows="4" cols="50" placeholder="请输入活动总结内容"></textarea>
-                </div>                
                 <div class="modal-buttons">
                     <button type="button" class="modal-button modal-cancel" onclick="closeModal()">取消</button>
                     <button type="submit" class="modal-button modal-submit">提交记录</button>
@@ -466,10 +445,26 @@
                                         console.error('获取积分失败', err);
                                         document.getElementById('activityPoints').value = '获取失败';
                                     });
+                                // ✅ 获取实际到场人数
+                                fetch(`/student/activity-records/attendance-count?id=${activityId}`)
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.success) {
+                                            document.getElementById('attendanceCount').value = data.count;
+                                        } else {
+                                            document.getElementById('attendanceCount').value = '获取失败';
+                                        }
+                                    })
+                                    .catch(err => {
+                                        console.error('获取到场人数失败', err);
+                                        document.getElementById('attendanceCount').value = '获取失败';
+                                    });
                             } else {
                                 document.getElementById('activityPoints').value = '';
+                                document.getElementById('attendanceCount').value = '';
                             }
                         });
+
                     }
                 })
                 .catch(error => {
@@ -489,22 +484,22 @@
                             renderPagination(data.total);
                         } else {
                             console.error('Records data is not an array:', data.records);
-                            alert('获取活动记录失败：数据格式错误');
+                            alert('获取扣除积分记录失败：数据格式错误');
                         }
                     } else {
-                        alert(data.message || '获取活动记录失败');
+                        alert(data.message || '获取扣除积分记录失败');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('获取活动记录失败，请稍后重试');
+                    alert('获取扣除积分记录失败，请稍后重试');
                 });
         }
 
         function renderRecords(records) {
             const grid = document.getElementById('recordsGrid');
             if (!records || records.length === 0) {
-                grid.innerHTML = '<div class="no-records">暂无活动记录</div>';
+                grid.innerHTML = '<div class="no-records">暂无扣除积分记录</div>';
                 return;
             }
 
@@ -528,13 +523,13 @@
                             <span>${record.points || 0}分</span>
                         </div>
                         <div class="record-info-item">
-                            <span class="record-info-label">到场人数：</span>
+                            <span class="record-info-label">实际到场：</span>
                             <span>${record.AttendanceCount || record.attendance_count || 0}人</span>
                         </div>
-                    </div>
-                    <div class="record-summary">
-                        <h4 class="record-summary-title">活动总结</h4>
-                        <p class="record-summary-content">${record.Summary || record.summary || '暂无总结'}</p>
+                        <div class="record-info-item">
+                            <span class="record-info-label">未到场学生：</span>
+                            <span>${record.absent_students || '无'}</span>
+                        </div>
                     </div>
                 </div>
             `).join('');
@@ -561,8 +556,23 @@
         }
 
         function changePage(page) {
-            currentPage = page;
-            loadRecords();
+            if (page < 1) return;
+
+            fetch(`/student/activity-records/list?page=${page}&pageSize=${itemsPerPage}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        currentPage = page;
+                        renderRecords(data.records);
+                        renderPagination(data.total);
+                    } else {
+                        alert(data.message || '分页加载失败');
+                    }
+                })
+                .catch(error => {
+                    console.error('分页请求失败:', error);
+                    alert('加载失败，请稍后重试');
+                });
         }
 
         function submitRecord(event) {
@@ -570,8 +580,6 @@
 
             const formData = new FormData();
             formData.append('activityId', document.getElementById('activitySelect').value);
-            formData.append('attendanceCount', document.getElementById('attendanceCount').value);
-            formData.append('summary', document.getElementById('recordSummary').value);
             formData.append('absentStudents', document.getElementById('absentStudents').value);
 
             fetch('/student/activity-records/add', {
@@ -581,17 +589,17 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        alert('活动记录添加成功');
+                        alert('扣除积分记录添加成功');
                         closeModal();
                         document.getElementById('recordForm').reset();
                         loadRecords();
                     } else {
-                        alert(data.message || '添加活动记录失败');
+                        alert(data.message || '添加扣除积分记录失败');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('添加活动记录失败，请稍后重试');
+                    alert('添加扣除积分记录失败，请稍后重试');
                 });
         }
 
@@ -619,7 +627,7 @@
             }
         }
 
-        // 页面加载时获取活动记录列表
+        // 页面加载时获取扣除积分记录列表
         document.addEventListener('DOMContentLoaded', loadRecords);
     </script>
 </body>

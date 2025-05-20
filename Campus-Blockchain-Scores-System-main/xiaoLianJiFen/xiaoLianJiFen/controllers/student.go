@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 	"xiaoLianJiFen/blockchain"
@@ -860,9 +861,9 @@ func (c *StudentController) CancelRegistration() {
 	c.ServeJSON()
 }
 
-// ShowActivityRecords 显示活动记录管理页面
+// ShowActivityRecords 显示扣除积分管理页面
 func (c *StudentController) ShowActivityRecords() {
-	beego.Info("进入活动记录管理页面")
+	beego.Info("进入扣除积分管理页面")
 
 	// 检查用户是否是社团管理员
 	userID := c.GetSession("userId")
@@ -897,9 +898,9 @@ func (c *StudentController) ShowActivityRecords() {
 	c.TplName = "student_activity_records.html"
 }
 
-// GetActivityRecords 获取活动记录列表
+// GetActivityRecords 获取扣除积分列表
 func (c *StudentController) GetActivityRecords() {
-	beego.Info("开始获取活动记录列表")
+	beego.Info("开始获取扣除积分列表")
 
 	// 检查用户是否是社团管理员
 	userID := c.GetSession("userId")
@@ -943,13 +944,13 @@ func (c *StudentController) GetActivityRecords() {
 		ActivityId      int64     `json:"activity_id"`
 		ActivityName    string    `json:"activity_name"`
 		AttendanceCount int       `json:"attendance_count"`
-		Summary         string    `json:"summary"`
 		CreatedBy       int64     `json:"created_by"`
 		CreatedAt       time.Time `json:"created_at"`
 		StartTime       time.Time `json:"start_time"`
 		EndTime         time.Time `json:"end_time"`
 		Location        string    `json:"location"`
 		Points          int       `json:"points"`
+		AbsentStudents  string    `json:"absent_students"` // ✅ 加这一行
 	}
 
 	var records []RecordResult
@@ -960,30 +961,30 @@ func (c *StudentController) GetActivityRecords() {
 
 	// 构建查询
 	sql := `
-		SELECT 
-			ar.id,
-			ar.activity_id,
-			a.name as activity_name,
-			ar.attendance_count,
-			ar.summary,
-			ar.created_by,
-			ar.created_at,
-			a.start_time,
-			a.end_time,
-			a.location,
-			a.points
-		FROM activity_records ar
-		LEFT JOIN activities a ON ar.activity_id = a.id
-		ORDER BY ar.created_at DESC
-		LIMIT ? OFFSET ?
-	`
+	SELECT 
+		ar.id,
+		ar.activity_id,
+		a.name as activity_name,
+		ar.attendance_count,
+		ar.created_by,
+		ar.created_at,
+		a.start_time,
+		a.end_time,
+		a.location,
+		a.points,
+		ar.absent_students
+	FROM activity_records ar
+	LEFT JOIN activities a ON ar.activity_id = a.id
+	ORDER BY ar.created_at DESC
+	LIMIT ? OFFSET ?
+`
 
 	_, err = o.Raw(sql, pageSize, offset).QueryRows(&records)
 	if err != nil {
-		beego.Error("查询活动记录失败：", err)
+		beego.Error("查询扣除积分记录失败：", err)
 		c.Data["json"] = map[string]interface{}{
 			"success": false,
-			"message": "获取活动记录失败",
+			"message": "获取扣除积分记录失败",
 			"error":   err.Error(),
 		}
 		c.ServeJSON()
@@ -1003,9 +1004,9 @@ func (c *StudentController) GetActivityRecords() {
 	c.ServeJSON()
 }
 
-// AddActivityRecord 添加活动记录
+// AddActivityRecord 添加扣除积分列表
 func (c *StudentController) AddActivityRecord() {
-	beego.Info("开始添加活动记录")
+	beego.Info("开始添加扣除积分记录")
 
 	// 检查用户是否是社团管理员
 	userID := c.GetSession("userId")
@@ -1040,9 +1041,25 @@ func (c *StudentController) AddActivityRecord() {
 	}
 
 	activityId, _ := c.GetInt64("activityId")
-	attendanceCount, _ := c.GetInt("attendanceCount")
 	summary := c.GetString("summary")
-	absentStr := c.GetString("absentStudents") // ⬅️ 前端传入的未到场学生字符串
+	absentStr := c.GetString("absentStudents")
+
+	// 自动计算实际到场人数（根据报名表中 status 为 1 的记录）
+	attendanceCount64, err := o.QueryTable("activity_registrations").
+		Filter("activity_id", activityId).
+		Filter("status", 1). // 根据业务定义实际到场状态
+		Count()
+
+	if err != nil {
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "统计实际到场人数失败",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	attendanceCount := int(attendanceCount64) // 转换为 int 类型
 
 	// 检查活动是否存在且已结束
 	var activity Models.Activities
@@ -1077,56 +1094,79 @@ func (c *StudentController) AddActivityRecord() {
 	}
 
 	// 👇 处理未到场学生自动扣分
+	// 👇 处理未到场学生自动扣分（根据学号处理）
 	deductedNames := []string{}
 	if absentStr != "" {
-		// 去除首尾空格
 		trimmed := strings.TrimSpace(absentStr)
 
-		// 如果没有英文逗号，且字符串中含有多个中文名字（没有被逗号隔开），则认为格式不正确
-		if !strings.Contains(trimmed, ",") {
-			c.Data["json"] = map[string]interface{}{
-				"success": false,
-				"message": "活动记录添加失败，请使用英文逗号分隔多个学生姓名，例如：张三,李四,王五",
-			}
-			c.ServeJSON()
-			return
-		}
+		// 判断是否是多个学号（包含英文逗号）
+		if strings.Contains(trimmed, ",") {
+			ids := strings.Split(trimmed, ",")
+			for _, id := range ids {
+				id = strings.TrimSpace(id)
 
-		// 使用正则检查格式是否正确：只能是"中文名,中文名,...",中间是英文逗号，不能有空项
-		validFormat := regexp.MustCompile(`^([\p{Han}]+)(,[\p{Han}]+)*$`)
-		if !validFormat.MatchString(trimmed) {
-			c.Data["json"] = map[string]interface{}{
-				"success": false,
-				"message": "活动记录添加失败，学生姓名格式不正确，请确保姓名之间用英文逗号分隔，且无空项",
-			}
-			c.ServeJSON()
-			return
-		}
+				// 校验学号是否为9位数字
+				if len(id) != 9 || !regexp.MustCompile(`^\d{9}$`).MatchString(id) {
+					c.Data["json"] = map[string]interface{}{
+						"success": false,
+						"message": "学生学号有误，请确保学号为9位数字并用英文逗号分隔",
+					}
+					c.ServeJSON()
+					return
+				}
 
-		// ✅ 通过格式校验后再处理扣分逻辑
-		names := strings.Split(absentStr, ",")
-		for _, name := range names {
-			name = strings.TrimSpace(name)
-			if name == "" {
-				continue
+				var student Models.Users
+				err := o.QueryTable("users").Filter("username", id).One(&student)
+				if err != nil {
+					c.Data["json"] = map[string]interface{}{
+						"success": false,
+						"message": fmt.Sprintf("学生 %s 不存在，请验证后重新添加", id),
+					}
+					c.ServeJSON()
+					return
+				}
+
+				// 扣除当前活动的积分
+				student.Points -= activity.Points
+				_, err = o.Update(&student, "Points")
+				if err != nil {
+					beego.Warn("扣分失败：", id)
+					continue
+				}
+
+				deductedNames = append(deductedNames, id)
+			}
+
+		} else {
+			// 处理单个学号
+			id := trimmed
+			if len(id) != 9 || !regexp.MustCompile(`^\d{9}$`).MatchString(id) {
+				c.Data["json"] = map[string]interface{}{
+					"success": false,
+					"message": "学生学号格式有误，请确保为9位数字",
+				}
+				c.ServeJSON()
+				return
 			}
 
 			var student Models.Users
-			err := o.QueryTable("users").Filter("username", name).One(&student)
+			err := o.QueryTable("users").Filter("username", id).One(&student)
 			if err != nil {
-				beego.Warn("未找到学生：", name)
-				continue
+				c.Data["json"] = map[string]interface{}{
+					"success": false,
+					"message": "当前学生不存在，请验证后添加记录",
+				}
+				c.ServeJSON()
+				return
 			}
 
-			// 扣除当前活动的积分
 			student.Points -= activity.Points
 			_, err = o.Update(&student, "Points")
 			if err != nil {
-				beego.Warn("扣分失败：", name)
-				continue
+				beego.Warn("扣分失败：", id)
+			} else {
+				deductedNames = append(deductedNames, id)
 			}
-
-			deductedNames = append(deductedNames, name)
 		}
 	}
 
@@ -1139,16 +1179,17 @@ func (c *StudentController) AddActivityRecord() {
 	record := Models.ActivityRecords{
 		ActivityId:      activityId,
 		AttendanceCount: attendanceCount,
-		Summary:         summary,
+		AbsentStudents:  absentStr,
 		CreatedBy:       user.Id,
+		CreatedAt:       time.Now(),
 	}
 
 	_, err = o.Insert(&record)
 	if err != nil {
-		beego.Error("添加活动记录失败：", err)
+		beego.Error("添加扣除积分记录失败：", err)
 		c.Data["json"] = map[string]interface{}{
 			"success": false,
-			"message": "添加活动记录失败",
+			"message": "添加扣除积分记录失败",
 		}
 		c.ServeJSON()
 		return
@@ -1156,25 +1197,25 @@ func (c *StudentController) AddActivityRecord() {
 
 	c.Data["json"] = map[string]interface{}{
 		"success": true,
-		"message": "添加活动记录成功",
+		"message": "添加扣除积分记录成功",
 	}
 
 	pointsRecord := Models.PointsRecord{
-		UserId:      user.Id, // 或者上传该活动记录的用户ID
+		UserId:      user.Id, // 或者上传该活动的用户ID
 		ActivityId:  activity.Id,
 		Points:      activity.Points, // 通常是你表单中的积分值
-		Description: "活动记录扣除积分",      // 你也可以根据需求自定义描述
+		Description: "扣除积分记录",        // 你也可以根据需求自定义描述
 		CreatedAt:   time.Now(),
 	}
 	_, err = o.Insert(&pointsRecord)
 	if err != nil {
-		beego.Error("创建活动积分记录失败：", err)
+		beego.Error("创建扣除积分记录失败：", err)
 	}
 
 	c.ServeJSON()
 }
 
-// GetActivityById 获取指定活动的详情（用于前端自动填充积分信息）
+// GetActivityById 获取指定活动的积分（用于前端自动填充积分信息）
 func (c *StudentController) GetActivityById() {
 	activityId, err := c.GetInt64("id")
 	if err != nil {
@@ -1203,6 +1244,40 @@ func (c *StudentController) GetActivityById() {
 		"data": map[string]interface{}{
 			"points": activity.Points,
 		},
+	}
+	c.ServeJSON()
+}
+
+// GetAttendanceCount 获取活动的实际到场人数
+func (c *StudentController) GetAttendanceCount() {
+	activityId, err := c.GetInt64("id")
+	if err != nil || activityId <= 0 {
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "活动ID无效",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	o := orm.NewOrm()
+	count, err := o.QueryTable("activity_registrations").
+		Filter("activity_id", activityId).
+		Filter("status", 1). // 1 表示实际到场
+		Count()
+
+	if err != nil {
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "查询到场人数失败",
+		}
+		c.ServeJSON()
+		return
+	}
+
+	c.Data["json"] = map[string]interface{}{
+		"success": true,
+		"count":   count,
 	}
 	c.ServeJSON()
 }
@@ -1406,16 +1481,30 @@ func (c *StudentController) GetPointsRecords() {
 	// 获取活动名称
 	var result []map[string]interface{}
 	for _, record := range records {
-		var activity Models.Activities
-		err = o.QueryTable("activities").Filter("id", record.ActivityId).One(&activity)
-		if err != nil {
-			beego.Error("查询活动信息失败：", err)
-			continue
+		var activityName string
+
+		// 根据积分记录的来源类型判断
+		switch record.Source {
+		case "activity":
+			var activity Models.Activities
+			err = o.QueryTable("activities").Filter("id", record.ActivityId).One(&activity)
+			if err != nil {
+				beego.Error("查询活动信息失败：", err)
+				activityName = "未知活动"
+			} else {
+				activityName = activity.Name
+			}
+		case "exchange":
+			activityName = "兑换商品"
+		case "admin":
+			activityName = "管理员操作"
+		default:
+			activityName = "其他来源"
 		}
 
 		result = append(result, map[string]interface{}{
 			"id":            record.Id,
-			"activity_name": activity.Name,
+			"activity_name": activityName,
 			"points":        record.Points,
 			"description":   record.Description,
 			"created_at":    record.CreatedAt.Format("2006-01-02 15:04:05"),
@@ -1507,6 +1596,21 @@ func (c *StudentController) ExchangeItem() {
 	}
 
 	c.Data["json"] = map[string]interface{}{"success": true, "message": "兑换成功", "points": user.Points}
+
+	// 添加兑换商品的积分记录
+	pointsRecord := Models.PointsRecord{
+		UserId:      user.Id,
+		Points:      -cost,
+		Description: fmt.Sprintf("兑换商品：%s", item),
+		Source:      "exchange",
+		CreatedAt:   time.Now(),
+	}
+
+	_, err = o.Insert(&pointsRecord)
+	if err != nil {
+		beego.Error("创建兑换商品积分记录失败：", err)
+	}
+
 	c.ServeJSON()
 }
 
