@@ -126,8 +126,6 @@ func (c *StudentController) ShowClub() {
 	c.TplName = "student_club.html"
 }
 
-
-
 // GetActivities 获取活动列表
 func (c *StudentController) GetActivities() {
 	beego.Info("开始获取活动列表")
@@ -1293,10 +1291,42 @@ func (c *StudentController) ShowRanking() {
 	c.Data["IsClubAdmin"] = c.isClubAdmin()
 
 	o := orm.NewOrm()
-	var users []Models.Users
 
-	// 获取所有用户，按积分降序排序
-	_, err := o.QueryTable("users").OrderBy("-points").All(&users)
+	// --- 新增：每次进入排名页面时，实时统计并更新total、activity_count、points ---
+	// 1. 统计本月所有积分记录，重算total和activity_count
+	// 先将所有用户的total和activity_count清零
+	o.Raw("UPDATE users SET total = 0, activity_count = 0").Exec()
+
+	// 获取本月开始时间
+	now := time.Now()
+	firstDayOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+
+	// 查询本月所有积分记录
+	var records []Models.PointsRecord
+	_, err := o.QueryTable("points_record").
+		Filter("created_at__gte", firstDayOfMonth).
+		All(&records)
+	if err == nil {
+		userTotal := make(map[int64]int)
+		userCount := make(map[int64]int)
+		for _, record := range records {
+			userTotal[record.UserId] += record.Points
+			userCount[record.UserId] += 1
+		}
+		for userId, total := range userTotal {
+			count := userCount[userId]
+			o.QueryTable("users").Filter("id", userId).Update(orm.Params{
+				"total":          total,
+				"activity_count": count,
+			})
+		}
+	}
+	// 2. 实时刷新points字段（积分商城是直接更新users表的Points字段）
+	// 这里不需要额外处理，因商城和活动等操作已实时更新Points
+
+	// --- 继续原有排名逻辑 ---
+	var users []Models.Users
+	_, err = o.QueryTable("users").OrderBy("-points").All(&users)
 	if err != nil {
 		beego.Error("获取排名数据失败：", err)
 		c.Data["Error"] = "获取排名数据失败"

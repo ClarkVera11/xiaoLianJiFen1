@@ -20,7 +20,9 @@ type Users struct {
 	Title          string `orm:"column(title);size(50);default(倔强青铜)"` // 用户头衔
 	TxHash         string `orm:"column(tx_hash);size(66);null"`        // 区块链交易哈希
 	BlockTimestamp int64  `orm:"column(block_timestamp);default(0)"`   // 区块链交易时间戳
-	Rank           int    `orm:"-"`                                    // orm:"-" 表示该字段不映射到数据库，仅用于程序逻辑，若需映射到数据库则去掉此标签并调整数据库表结构
+	Total          int    `orm:"column(total);default(0)"`             // 总积分
+	ActivityCount  int    `orm:"column(activity_count);default(0)"`    // 参与活动次数
+	Rank           int    `orm:"-"`                                    // orm:"-" 表示该字段不映射到数据库，仅用于程序逻辑
 	Exchange       string `orm:"type(text);null" json:"exchange"`
 }
 
@@ -70,6 +72,54 @@ type PointsRecord struct {
 	CreatedAt   time.Time `orm:"column(created_at);auto_now_add"` // 创建时间
 }
 
+// UpdateUserTotalAndCount 统计本月所有积分记录，重算total和activity_count
+func UpdateUserTotalAndCount() error {
+	o := orm.NewOrm()
+
+	// 先将所有用户的total和activity_count清零
+	o.Raw("UPDATE users SET total = 0, activity_count = 0").Exec()
+
+	// 获取本月开始时间
+	now := time.Now()
+	firstDayOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+
+	// 查询本月所有积分记录
+	var records []PointsRecord
+	_, err := o.QueryTable("points_record").
+		Filter("created_at__gte", firstDayOfMonth).
+		All(&records)
+	if err != nil {
+		return err
+	}
+
+	// 用map统计每个用户的积分和次数
+	userTotal := make(map[int64]int)
+	userCount := make(map[int64]int)
+
+	for _, record := range records {
+		userTotal[record.UserId] += record.Points
+		userCount[record.UserId] += 1
+	}
+
+	// 更新到users表
+	for userId, total := range userTotal {
+		count := userCount[userId]
+		o.QueryTable("users").Filter("id", userId).Update(orm.Params{
+			"total":          total,
+			"activity_count": count,
+		})
+	}
+
+	return nil
+}
+
+// ResetMonthlyTotal 每月重置用户总积分
+func ResetMonthlyTotal() error {
+	o := orm.NewOrm()
+	_, err := o.Raw("UPDATE users SET total = 0").Exec()
+	return err
+}
+
 // 初始化数据库
 func init() {
 	// 注册数据库驱动
@@ -95,6 +145,48 @@ func init() {
 	if err != nil {
 		// println("添加block_timestamp字段失败:", err)
 	}
+
+	// 添加新字段
+	_, err = o.Raw("ALTER TABLE users ADD COLUMN IF NOT EXISTS total INT DEFAULT 0 COMMENT '总积分'").Exec()
+	if err != nil {
+		// println("添加total字段失败:", err)
+	}
+
+	_, err = o.Raw("ALTER TABLE users ADD COLUMN IF NOT EXISTS activity_count INT DEFAULT 0 COMMENT '参与活动次数'").Exec()
+	if err != nil {
+		// println("添加activity_count字段失败:", err)
+	}
+
+	// 启动定时任务
+	go func() {
+		for {
+			now := time.Now()
+			// 计算下个月1号的时间
+			nextMonth := now.AddDate(0, 1, 0)
+			nextMonthFirstDay := time.Date(nextMonth.Year(), nextMonth.Month(), 1, 0, 0, 0, 0, nextMonth.Location())
+
+			// 等待到下个月1号
+			time.Sleep(nextMonthFirstDay.Sub(now))
+
+			// 重置总积分
+			err := ResetMonthlyTotal()
+			if err != nil {
+				println("重置总积分失败:", err)
+			}
+		}
+	}()
+
+	// 启动定时更新用户总积分和活动次数的任务
+	go func() {
+		for {
+			// 每小时更新一次
+			err := UpdateUserTotalAndCount()
+			if err != nil {
+				println("更新用户总积分和活动次数失败:", err)
+			}
+			time.Sleep(time.Hour)
+		}
+	}()
 
 	// 插入初始数据
 	insertInitialActivities()
@@ -278,4 +370,46 @@ func (u *Users) UpdateUserTitle() {
 	default:
 		u.Title = "倔强青铜"
 	}
+}
+
+// 在ActivityRecords结构体后添加AfterInsert方法
+func (ar *ActivityRecords) AfterInsert() {
+	o := orm.NewOrm()
+
+	// 获取活动信息
+	activity := Activities{Id: ar.ActivityId}
+	err := o.Read(&activity)
+	if err != nil {
+		return
+	}
+
+	// 更新用户数据
+	user := Users{Id: ar.CreatedBy}
+	err = o.Read(&user)
+	if err != nil {
+		return
+	}
+
+	user.Total += activity.Points
+	user.ActivityCount += 1
+	o.Update(&user)
+}
+
+// 在PointsRecord结构体后添加AfterInsert方法
+func (pr *PointsRecord) AfterInsert() {
+	o := orm.NewOrm()
+
+	// 获取本月开始时间
+	now := time.Now()
+	firstDayOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+
+	// 统计该用户本月的总积分和次数
+	var total, count int
+	o.Raw("SELECT IFNULL(SUM(points),0), COUNT(*) FROM points_record WHERE user_id = ? AND created_at >= ?", pr.UserId, firstDayOfMonth).QueryRow(&total, &count)
+
+	// 更新users表
+	o.QueryTable("users").Filter("id", pr.UserId).Update(orm.Params{
+		"total":          total,
+		"activity_count": count,
+	})
 }

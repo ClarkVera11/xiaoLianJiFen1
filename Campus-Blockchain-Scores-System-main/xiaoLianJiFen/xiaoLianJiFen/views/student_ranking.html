@@ -189,7 +189,8 @@
                             <th>排名</th>
                             <th>用户名</th>
                             <th>角色</th>
-                            <th>积分</th>
+                            <th>总积分</th>
+                            <th>参与活动次数</th>
                             <th>头衔</th>
                             <th>电话</th>
                         </tr>
@@ -205,7 +206,8 @@
                             </td>
                             <td>{{$user.Username}}</td>
                             <td>{{$user.Role_name}}</td>
-                            <td>{{$user.Points}}</td>
+                            <td>{{$user.Total}}</td>
+                            <td>{{$user.ActivityCount}}</td>
                             <td>{{$user.Title}}</td>
                             <td>
                                 <span class="phone-mask" data-phone="{{$user.Phone}}"></span>
