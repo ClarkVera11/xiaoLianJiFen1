@@ -522,7 +522,7 @@
             return statusMap[status] || '未知状态';
         }
 
-// 加载所有活动，并按时间由早到晚排序
+// 加载所有活动，并按时间由wan到zao排序
 function loadActivities() {
     document.getElementById('activitiesGrid').innerHTML = '<div class="no-activities">正在加载活动列表...</div>';
     
@@ -540,7 +540,7 @@ function loadActivities() {
                 allActivities = data.activities;
 
                 // 按开始时间升序排序，先转换成 Date 对象比较
-                allActivities.sort((a, b) => new Date(a.StartTime) - new Date(b.StartTime));
+                allActivities.sort((a, b) => new Date(b.StartTime) - new Date(a.StartTime));
 
                 filteredActivities = [...allActivities];
 

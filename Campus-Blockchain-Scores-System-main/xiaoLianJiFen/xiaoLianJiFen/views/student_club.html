@@ -394,7 +394,7 @@
                 .then(data => {
                     if (data.success) {
                         allActivities = data.data;
-                allActivities.sort((a, b) => new Date(a.StartTime) - new Date(b.StartTime));
+                allActivities.sort((a, b) => new Date(b.StartTime) - new Date(a.StartTime));
 
                 renderPagination();
                 renderCurrentPage();
