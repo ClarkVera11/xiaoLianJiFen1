@@ -314,7 +314,7 @@
 
     <div class="main-content">
         <div class="header">
-            <h1>社团活动</h1>
+            <h1>总活动数量</h1>
             <div class="action-buttons">
                 <button class="btn btn-primary" onclick="showApplyModal()">活动申报</button>
                 <button class="btn btn-secondary" onclick="viewRulesDoc()">积分规则</button>
@@ -394,8 +394,10 @@
                 .then(data => {
                     if (data.success) {
                         allActivities = data.data;
-                        renderPagination();
-                        renderCurrentPage();
+                allActivities.sort((a, b) => new Date(a.StartTime) - new Date(b.StartTime));
+
+                renderPagination();
+                renderCurrentPage();
                     } else {
                         console.error('获取活动列表失败：', data.message);
                     }

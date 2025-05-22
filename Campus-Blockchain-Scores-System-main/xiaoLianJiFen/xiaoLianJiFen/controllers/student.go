@@ -48,23 +48,28 @@ func (c *StudentController) isClubAdmin() bool {
 
 // ShowDashboard 显示学生端首页
 func (c *StudentController) ShowDashboard() {
-	beego.Info("进入学生端首页")
-	c.Data["ActivePage"] = "home"
-	c.Data["IsClubAdmin"] = c.isClubAdmin()
+    beego.Info("进入学生端首页")
+    c.Data["ActivePage"] = "home"
+    c.Data["IsClubAdmin"] = c.isClubAdmin()
 
-	// 获取当前用户积分
-	userID := c.GetSession("userId")
-	if userID != nil {
-		o := orm.NewOrm()
-		var user Models.Users
-		err := o.QueryTable("users").Filter("username", userID).One(&user)
-		if err == nil {
-			c.Data["UserPoints"] = user.Points
-			c.Data["UserTitle"] = user.Title
-		}
-	}
+    // 获取当前用户积分
+    userID := c.GetSession("userId")
+    if userID != nil {
+        o := orm.NewOrm()
+        var user Models.Users
+        err := o.QueryTable("users").Filter("username", userID).One(&user)
+        if err == nil {
+            c.Data["UserPoints"] = user.Points
+            c.Data["UserTitle"] = user.Title
+			c.Data["ActivityCount"] = user.ActivityCount
+        } else {
+            beego.Error("查询用户信息失败:", err)
+        }
+    } else {
+        beego.Error("未获取到用户ID")
+    }
 
-	c.TplName = "student_nav.html"
+    c.TplName = "student_nav.html"
 }
 
 // ShowActivities 显示活动列表页面
@@ -212,7 +217,7 @@ func (c *StudentController) ShowStudentNav() {
 		return
 	}
 
-	// 检查用户角色
+	// 获取当前用户信息
 	o := orm.NewOrm()
 	var user Models.Users
 	err := o.QueryTable("users").Filter("username", userID).One(&user)
@@ -221,16 +226,69 @@ func (c *StudentController) ShowStudentNav() {
 		return
 	}
 
-	// 设置导航栏当前页面和管理员状态
+	// 设置基础数据
 	c.Data["ActivePage"] = "home"
 	c.Data["IsClubAdmin"] = user.Role_name == "社团管理员"
 	c.Data["UserPoints"] = user.Points
 	c.Data["UserTitle"] = user.Title
+	c.Data["ActivityCount"] = user.ActivityCount
 	c.Data["IsAdminRequest"] = user.IsAdminRequest == 1
 
-	// 渲染学生导航页面
+	var allUsers []Models.Users
+	_, err = o.QueryTable("users").Filter("role_name__in", "学生", "社团管理员").OrderBy("-points").All(&allUsers)
+	if err == nil {
+		total := len(allUsers)
+		rank := 0
+		lastPoints := -1
+		userRank := 0
+
+		for i, u := range allUsers {
+			if u.Points != lastPoints {
+				rank = i + 1
+				lastPoints = u.Points
+			}
+			if u.Username == user.Username {
+				userRank = rank
+				break
+			}
+		}
+
+		var percent float64
+		if total > 1 {
+			percent = float64(total - userRank) / float64(total - 1) * 100
+		} else {
+			percent = 100
+		}
+
+		c.Data["UserRank"] = userRank
+		c.Data["TotalStudents"] = total
+		c.Data["PercentSurpassed"] = fmt.Sprintf("%.0f", percent)
+
+		if percent >= 90 {
+			c.Data["Encouragement"] = fmt.Sprintf("你已超过 %.0f%% 的同学，太厉害了！", percent)
+			c.Data["EncouragementColor"] = "#27ae60" // 绿色
+		} else {
+			c.Data["Encouragement"] = fmt.Sprintf("你已超过 %.0f%% 的同学，请继续努力！", percent)
+			c.Data["EncouragementColor"] = "#e67e22" // 橙色
+		}
+	}
+// 查询当前用户最新三条积分记录
+	var pointsRecords []Models.PointsRecord
+	_, err = o.QueryTable("points_record").
+		Filter("user_id", user.Id).
+		OrderBy("-created_at").
+		Limit(3).
+		All(&pointsRecords)
+	if err != nil {
+		pointsRecords = []Models.PointsRecord{}
+	}
+
+	c.Data["LatestPointsRecords"] = pointsRecords
+	// 渲染页面
 	c.TplName = "student_nav.html"
 }
+
+
 
 // GetClubActivities 获取社团活动列表
 func (c *StudentController) GetClubActivities() {

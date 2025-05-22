@@ -522,62 +522,59 @@
             return statusMap[status] || '未知状态';
         }
 
-        // 加载所有活动
-        function loadActivities() {
-            // 显示加载状态
-            document.getElementById('activitiesGrid').innerHTML = '<div class="no-activities">正在加载活动列表...</div>';
+// 加载所有活动，并按时间由早到晚排序
+function loadActivities() {
+    document.getElementById('activitiesGrid').innerHTML = '<div class="no-activities">正在加载活动列表...</div>';
+    
+    fetch('/student/activities/list')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('网络响应异常');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('返回的活动数据示例:', data.activities && data.activities[0]); // 查看字段
             
-            // 从服务器获取活动列表
-            fetch('/student/activities/list')
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('网络响应异常');
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    if (data.success) {
-                        // 保存活动数据
-                        allActivities = data.activities;
-                        filteredActivities = [...allActivities]; // 初始时显示所有活动
-                        
-                        // 如果没有活动数据
-                        if (allActivities.length === 0) {
-                            document.getElementById('activitiesGrid').innerHTML = '<div class="no-activities">暂无活动数据</div>';
-                            document.getElementById('pagination').innerHTML = '';
-                            return;
-                        }
-                        
-                        // 检查每个活动的报名状态
-                        const promises = allActivities.map(activity => 
-                            checkRegistrationStatus(activity.Id)
-                                .then(isRegistered => {
-                                    activity.isRegistered = isRegistered;
-                                    return activity;
-                                })
-                        );
-                        
-                        // 所有报名状态检查完成后渲染页面
-                        Promise.all(promises).then(() => {
-                            renderActivities();
-                            renderPagination();
-                        });
-                    } else {
-                        // 处理服务器返回的错误
-                        console.error('获取活动列表失败:', data.message);
-                        document.getElementById('activitiesGrid').innerHTML = 
-                            `<div class="no-activities">获取活动列表失败: ${data.message || '未知错误'}</div>`;
-                        document.getElementById('pagination').innerHTML = '';
-                    }
-                })
-                .catch(error => {
-                    // 处理网络错误
-                    console.error('Error:', error);
-                    document.getElementById('activitiesGrid').innerHTML = 
-                        `<div class="no-activities">获取活动列表失败，请稍后重试</div>`;
+            if (data.success) {
+                allActivities = data.activities;
+
+                // 按开始时间升序排序，先转换成 Date 对象比较
+                allActivities.sort((a, b) => new Date(a.StartTime) - new Date(b.StartTime));
+
+                filteredActivities = [...allActivities];
+
+                if (allActivities.length === 0) {
+                    document.getElementById('activitiesGrid').innerHTML = '<div class="no-activities">暂无活动数据</div>';
                     document.getElementById('pagination').innerHTML = '';
+                    return;
+                }
+
+                const promises = allActivities.map(activity =>
+                    checkRegistrationStatus(activity.Id).then(isRegistered => {
+                        activity.isRegistered = isRegistered;
+                        return activity;
+                    })
+                );
+
+                Promise.all(promises).then(() => {
+                    renderActivities();
+                    renderPagination();
                 });
-        }
+            } else {
+                console.error('获取活动列表失败:', data.message);
+                document.getElementById('activitiesGrid').innerHTML = `<div class="no-activities">获取活动列表失败: ${data.message || '未知错误'}</div>`;
+                document.getElementById('pagination').innerHTML = '';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('activitiesGrid').innerHTML = `<div class="no-activities">获取活动列表失败，请稍后重试</div>`;
+            document.getElementById('pagination').innerHTML = '';
+        });
+}
+
+
 
         // 检查活动报名状态
         async function checkRegistrationStatus(activityId) {
