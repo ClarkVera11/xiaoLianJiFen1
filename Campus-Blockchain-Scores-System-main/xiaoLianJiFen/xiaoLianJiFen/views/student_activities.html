@@ -193,6 +193,16 @@
             margin-bottom: 1rem;
         }
 
+        .activity-details {
+            margin-bottom: 1rem;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .activity-description {
+            margin-bottom: 0.5rem;
+        }
+        
         .card-buttons {
             display: flex;
             gap: 1rem;
@@ -472,19 +482,7 @@
         }
 
         // 显示活动详情
-        function showDetails(activityId) {
-            const activity = allActivities.find(a => a.Id === activityId);
-            
-            if (!activity) return;
-            
-            document.getElementById('modalTitle').textContent = activity.Name;
-            document.getElementById('modalTime').textContent = `${formatDateTime(activity.StartTime)} - ${formatDateTime(activity.EndTime)}`;
-            document.getElementById('modalLocation').textContent = activity.Location;
-            document.getElementById('modalPoints').textContent = `${activity.Points}分`;
-            document.getElementById('modalDescription').textContent = activity.Description;
-
-            document.getElementById('activityModal').style.display = 'flex';
-        }
+        
 
         // 关闭模态框
         function closeModal() {
@@ -522,59 +520,64 @@
             return statusMap[status] || '未知状态';
         }
 
-// 加载所有活动，并按时间由wan到zao排序
-function loadActivities() {
-    document.getElementById('activitiesGrid').innerHTML = '<div class="no-activities">正在加载活动列表...</div>';
-    
-    fetch('/student/activities/list')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('网络响应异常');
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('返回的活动数据示例:', data.activities && data.activities[0]); // 查看字段
+        // 加载所有活动
+        function loadActivities() {
+            // 显示加载状态
+            document.getElementById('activitiesGrid').innerHTML = '<div class="no-activities">正在加载活动列表...</div>';
             
-            if (data.success) {
-                allActivities = data.activities;
-
-                // 按开始时间升序排序，先转换成 Date 对象比较
-                allActivities.sort((a, b) => new Date(b.StartTime) - new Date(a.StartTime));
-
-                filteredActivities = [...allActivities];
-
-                if (allActivities.length === 0) {
-                    document.getElementById('activitiesGrid').innerHTML = '<div class="no-activities">暂无活动数据</div>';
+            // 从服务器获取活动列表
+            fetch('/student/activities/list')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('网络响应异常');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        // 保存活动数据并按照开始时间降序排序
+                        allActivities = data.activities.sort((a, b) => {
+                            return new Date(b.StartTime) - new Date(a.StartTime);
+                        });
+                        filteredActivities = [...allActivities]; // 初始时显示所有活动
+                        
+                        // 如果没有活动数据
+                        if (allActivities.length === 0) {
+                            document.getElementById('activitiesGrid').innerHTML = '<div class="no-activities">暂无活动数据</div>';
+                            document.getElementById('pagination').innerHTML = '';
+                            return;
+                        }
+                        
+                        // 检查每个活动的报名状态
+                        const promises = allActivities.map(activity => 
+                            checkRegistrationStatus(activity.Id)
+                                .then(isRegistered => {
+                                    activity.isRegistered = isRegistered;
+                                    return activity;
+                                })
+                        );
+                        
+                        // 所有报名状态检查完成后渲染页面
+                        Promise.all(promises).then(() => {
+                            renderActivities();
+                            renderPagination();
+                        });
+                    } else {
+                        // 处理服务器返回的错误
+                        console.error('获取活动列表失败:', data.message);
+                        document.getElementById('activitiesGrid').innerHTML = 
+                            `<div class="no-activities">获取活动列表失败: ${data.message || '未知错误'}</div>`;
+                        document.getElementById('pagination').innerHTML = '';
+                    }
+                })
+                .catch(error => {
+                    // 处理网络错误
+                    console.error('Error:', error);
+                    document.getElementById('activitiesGrid').innerHTML = 
+                        `<div class="no-activities">获取活动列表失败，请稍后重试</div>`;
                     document.getElementById('pagination').innerHTML = '';
-                    return;
-                }
-
-                const promises = allActivities.map(activity =>
-                    checkRegistrationStatus(activity.Id).then(isRegistered => {
-                        activity.isRegistered = isRegistered;
-                        return activity;
-                    })
-                );
-
-                Promise.all(promises).then(() => {
-                    renderActivities();
-                    renderPagination();
                 });
-            } else {
-                console.error('获取活动列表失败:', data.message);
-                document.getElementById('activitiesGrid').innerHTML = `<div class="no-activities">获取活动列表失败: ${data.message || '未知错误'}</div>`;
-                document.getElementById('pagination').innerHTML = '';
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            document.getElementById('activitiesGrid').innerHTML = `<div class="no-activities">获取活动列表失败，请稍后重试</div>`;
-            document.getElementById('pagination').innerHTML = '';
-        });
-}
-
-
+        }
 
         // 检查活动报名状态
         async function checkRegistrationStatus(activityId) {
@@ -620,9 +623,11 @@ function loadActivities() {
                         <span>剩余名额：${activity.Capacity}</span>
                     </div>
                     <div class="activity-points">积分：${activity.Points}分</div>
+                    <div class="activity-details">
+                        <div class="activity-description">${activity.Description}</div>
+                    </div>
                     <div class="card-buttons">
                         ${getRegisterButton(activity)}
-                        <button class="btn btn-secondary" onclick="showDetails(${activity.Id})">查看详情</button>
                     </div>
                 `;
                 
