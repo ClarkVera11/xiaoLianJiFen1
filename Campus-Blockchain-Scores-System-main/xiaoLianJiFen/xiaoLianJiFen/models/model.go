@@ -53,26 +53,24 @@ type ActivityRegistrations struct {
 
 // ActivityRecords 扣除积分记录模型
 type ActivityRecords struct {
-	Id              int64     `orm:"column(id);pk;auto"`              // 记录ID
-	ActivityId      int64     `orm:"column(activity_id)"`             // 活动ID
-	AttendanceCount int       `orm:"column(attendance_count)"`        // 实际到场人数
-	AbsentStudents  string       `orm:"type(text)"` // 存储逗号分隔字符串
-	CreatedBy       int64     `orm:"column(created_by)"`              // 记录创建者ID
-	CreatedAt       time.Time    `orm:"auto_now_add;type(datetime)"`
+	Id              int64     `orm:"column(id);pk;auto"`       // 记录ID
+	ActivityId      int64     `orm:"column(activity_id)"`      // 活动ID
+	AttendanceCount int       `orm:"column(attendance_count)"` // 实际到场人数
+	AbsentStudents  string    `orm:"type(text)"`               // 存储逗号分隔字符串
+	CreatedBy       int64     `orm:"column(created_by)"`       // 记录创建者ID
+	CreatedAt       time.Time `orm:"auto_now_add;type(datetime)"`
 }
-
 
 // PointsRecord 积分记录模型
 type PointsRecord struct {
 	Id          int64     `orm:"column(id);pk;auto"`
 	UserId      int64     `orm:"column(user_id)"`
-	ActivityId  int64     `orm:"column(activity_id);null"`        // 活动ID，可为 NULL
+	ActivityId  int64     `orm:"column(activity_id);null"` // 活动ID，可为 NULL
 	Points      int       `orm:"column(points)"`
 	Description string    `orm:"column(description);size(255)"`
-	Source      string    `orm:"column(source);size(50)"`         // 新增：来源，如 activity, exchange, admin
+	Source      string    `orm:"column(source);size(50)"` // 新增：来源，如 activity, exchange, admin
 	CreatedAt   time.Time `orm:"column(created_at);auto_now_add"`
 }
-
 
 // UpdateUserTotalAndCount 统计本月所有积分记录，重算total和activity_count
 func UpdateUserTotalAndCount() error {
@@ -311,6 +309,16 @@ func insertInitialUsers() {
 			Email:          "3331245112@email.com",
 			Phone:          "15478954222",
 			Role_name:      "教师",
+			IsAdminRequest: 0,
+			Points:         100,
+			Title:          "秩序白银",
+		},
+		{
+			Username:       "202200710",
+			Password:       "123456",
+			Email:          "2981437377@qq.com",
+			Phone:          "17152946914",
+			Role_name:      "学生",
 			IsAdminRequest: 0,
 			Points:         100,
 			Title:          "秩序白银",

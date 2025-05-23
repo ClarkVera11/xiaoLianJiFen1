@@ -111,8 +111,13 @@
             border-radius: 8px;
             margin-bottom: 2rem;
             display: flex;
-            justify-content: flex-end;
-            margin-right: 2rem;
+            justify-content: center;
+            margin-right: 0;
+        }
+
+        .activity-stats {
+            text-align: center;
+            white-space: nowrap;
         }
 
         .search-box {
@@ -129,6 +134,19 @@
             font-size: 14px;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             background-color: white;
+        }
+
+        .activity-stats {
+            padding: 0.75rem 1rem;
+            background-color: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            color: #333;
+            font-size: 14px;
+            margin-bottom: 1rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .search-box button {
@@ -367,7 +385,8 @@
     <div class="main-content">
         <div class="search-container">
             <div class="search-box">
-                <input type="text" placeholder="搜索活动名称..." id="searchInput">
+                <div class="activity-stats">总活动: <span id="totalActivities"></span>，可报名: <span id="availableActivities"></span></div>
+    <input type="text" placeholder="搜索活动名称..." id="searchInput" oninput="searchActivities()">
                 <button onclick="searchActivities()">搜索</button>
             </div>
         </div>
@@ -540,6 +559,12 @@
                             return new Date(b.StartTime) - new Date(a.StartTime);
                         });
                         filteredActivities = [...allActivities]; // 初始时显示所有活动
+
+            // 更新活动统计信息
+            const totalCount = allActivities.length;
+            const availableCount = allActivities.filter(a => a.Status === 1).length;
+            document.getElementById('totalActivities').textContent = totalCount;
+            document.getElementById('availableActivities').textContent = availableCount;
                         
                         // 如果没有活动数据
                         if (allActivities.length === 0) {
