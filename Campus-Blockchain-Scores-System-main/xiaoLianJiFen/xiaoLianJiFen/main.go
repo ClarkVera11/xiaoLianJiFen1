@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"time"
 	"xiaoLianJiFen/blockchain"
+	"xiaoLianJiFen/config"
 	_ "xiaoLianJiFen/models"
 	_ "xiaoLianJiFen/routers"
 
@@ -42,11 +43,11 @@ func init() {
 func main() {
 
 	// 读取 keystore 文件内容
-	files, err := os.ReadDir(`D:/geth/geth student 1009/student/dev-chain/keystore`)
+	files, err := os.ReadDir(`D:/解压/geth student 1009/student/dev-chain/keystore`)
 	if err != nil {
 		log.Fatal("读取目录失败:", err)
 	}
-	keystoreFile := `D:/geth/geth student 1009/student/dev-chain/keystore/` + files[0].Name()
+	keystoreFile := `D:/解压/geth student 1009/student/dev-chain/keystore/` + files[0].Name()
 	password := "12345678" // 输入你的钱包密码
 
 	// 打开 keystore 文件
@@ -68,11 +69,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	// 获取私钥
-	privateKey := key.PrivateKey
+	// 正确使用：给公共配置赋值
+	config.PrivateKey = key.PrivateKey
 
-	// 输出私钥
-	fmt.Printf("Private Key: %x\n", crypto.FromECDSA(privateKey))
+	// 下面就可以打印它
+	fmt.Printf("Private Key: %x\n", crypto.FromECDSA(config.PrivateKey))
 
 	err = beego.AddFuncMap("ShowPrePage", HandlePerPage)
 	if err != nil {
@@ -87,7 +88,7 @@ func main() {
 	beego.AddFuncMap("formatTimestamp", formatTimestamp)
 
 	// 上传所有用户信息到区块链
-	err = blockchain.UploadAllUsersToBlockchain(privateKey)
+	err = blockchain.UploadAllUsersToBlockchain(config.PrivateKey)
 	if err != nil {
 		beego.Error("批量上链失败：", err)
 	} else {

@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"xiaoLianJiFen/blockchain"
+	"xiaoLianJiFen/config"
 	Models "xiaoLianJiFen/models"
 
 	"fmt"
@@ -762,7 +764,6 @@ func (c *TeacherController) UpdateActivityRecord() {
 
 	record.AttendanceCount = attendanceCount
 
-
 	if _, err := o.Update(&record, "attendance_count", "summary"); err != nil {
 		c.Data["json"] = map[string]interface{}{
 			"code": 5,
@@ -821,6 +822,8 @@ func CheckActivityEndStatus() {
 			beego.Error("查询报名记录失败：", err)
 			continue
 		}
+		// 上链队列
+		uploadQueue := make([]Models.Users, 0)
 
 		// 为每个已报名的学生发放积分
 		for _, registration := range registrations {
@@ -862,8 +865,10 @@ func CheckActivityEndStatus() {
 				beego.Error("创建积分记录失败：", err)
 				continue
 			}
-
+			// 加入上链队列
+			uploadQueue = append(uploadQueue, user)
 			beego.Info("为用户发放积分成功，用户ID：", user.Id, "，活动ID：", activity.Id, "，积分：", activity.Points)
+
 		}
 
 		// 提交事务
@@ -872,6 +877,16 @@ func CheckActivityEndStatus() {
 			o.Rollback()
 			beego.Error("提交事务失败：", err)
 			continue
+		}
+
+		// 提交成功后，执行上链（避免事务内网络阻塞）
+		for _, user := range uploadQueue {
+			err = blockchain.UploadStudentPoints(config.PrivateKey, user.Username)
+			if err != nil {
+				beego.Error("上链失败：", err)
+			} else {
+				beego.Info("用户最新积分已上链，用户名：", user.Username)
+			}
 		}
 
 		beego.Info("活动已结束，ID：", activity.Id, "，结束时间：", activity.EndTime)

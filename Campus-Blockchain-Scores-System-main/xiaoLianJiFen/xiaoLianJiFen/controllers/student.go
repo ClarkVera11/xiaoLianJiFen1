@@ -5,14 +5,14 @@ import (
 	"regexp"
 	"strings"
 	"xiaoLianJiFen/blockchain"
+	"xiaoLianJiFen/config"
 	Models "xiaoLianJiFen/models"
+
+	"os"
+	"time"
 
 	"github.com/astaxie/beego"
 	"github.com/astaxie/beego/orm"
-
-	// "github.com/ethereum/go-ethereum/console"
-	"os"
-	"time"
 
 	// 由于报错信息显示导入包时出现问题，可能是依赖未正确安装或者版本不兼容。
 	// 尝试先清理缓存并重新安装依赖。
@@ -48,28 +48,28 @@ func (c *StudentController) isClubAdmin() bool {
 
 // ShowDashboard 显示学生端首页
 func (c *StudentController) ShowDashboard() {
-    beego.Info("进入学生端首页")
-    c.Data["ActivePage"] = "home"
-    c.Data["IsClubAdmin"] = c.isClubAdmin()
+	beego.Info("进入学生端首页")
+	c.Data["ActivePage"] = "home"
+	c.Data["IsClubAdmin"] = c.isClubAdmin()
 
-    // 获取当前用户积分
-    userID := c.GetSession("userId")
-    if userID != nil {
-        o := orm.NewOrm()
-        var user Models.Users
-        err := o.QueryTable("users").Filter("username", userID).One(&user)
-        if err == nil {
-            c.Data["UserPoints"] = user.Points
-            c.Data["UserTitle"] = user.Title
+	// 获取当前用户积分
+	userID := c.GetSession("userId")
+	if userID != nil {
+		o := orm.NewOrm()
+		var user Models.Users
+		err := o.QueryTable("users").Filter("username", userID).One(&user)
+		if err == nil {
+			c.Data["UserPoints"] = user.Points
+			c.Data["UserTitle"] = user.Title
 			c.Data["ActivityCount"] = user.ActivityCount
-        } else {
-            beego.Error("查询用户信息失败:", err)
-        }
-    } else {
-        beego.Error("未获取到用户ID")
-    }
+		} else {
+			beego.Error("查询用户信息失败:", err)
+		}
+	} else {
+		beego.Error("未获取到用户ID")
+	}
 
-    c.TplName = "student_nav.html"
+	c.TplName = "student_nav.html"
 }
 
 // ShowActivities 显示活动列表页面
@@ -255,7 +255,7 @@ func (c *StudentController) ShowStudentNav() {
 
 		var percent float64
 		if total > 1 {
-			percent = float64(total - userRank) / float64(total - 1) * 100
+			percent = float64(total-userRank) / float64(total-1) * 100
 		} else {
 			percent = 100
 		}
@@ -272,7 +272,7 @@ func (c *StudentController) ShowStudentNav() {
 			c.Data["EncouragementColor"] = "#e67e22" // 橙色
 		}
 	}
-// 查询当前用户最新三条积分记录
+	// 查询当前用户最新三条积分记录
 	var pointsRecords []Models.PointsRecord
 	_, err = o.QueryTable("points_record").
 		Filter("user_id", user.Id).
@@ -287,8 +287,6 @@ func (c *StudentController) ShowStudentNav() {
 	// 渲染页面
 	c.TplName = "student_nav.html"
 }
-
-
 
 // GetClubActivities 获取社团活动列表
 func (c *StudentController) GetClubActivities() {
@@ -909,6 +907,14 @@ func (c *StudentController) CancelRegistration() {
 		if err != nil {
 			beego.Error("创建积分记录失败：", err)
 		}
+
+		// ===== ✅ 上链调用 =====
+		err = blockchain.UploadStudentPoints(config.PrivateKey, user.Username)
+		if err != nil {
+			beego.Error("上链失败：", err)
+		} else {
+			beego.Info("用户最新积分已上链")
+		}
 	}
 
 	c.Data["json"] = map[string]interface{}{
@@ -1269,7 +1275,12 @@ func (c *StudentController) AddActivityRecord() {
 	if err != nil {
 		beego.Error("创建扣除积分记录失败：", err)
 	}
-
+		err = blockchain.UploadStudentPoints(config.PrivateKey, user.Username)
+		if err != nil {
+			beego.Error("上链失败：", err)
+		} else {
+			beego.Info("用户最新积分已上链")
+		}
 	c.ServeJSON()
 }
 
@@ -1667,6 +1678,14 @@ func (c *StudentController) ExchangeItem() {
 	_, err = o.Insert(&pointsRecord)
 	if err != nil {
 		beego.Error("创建兑换商品积分记录失败：", err)
+	}
+
+	// ===== ✅ 上链调用 =====
+	err = blockchain.UploadStudentPoints(config.PrivateKey, user.Username)
+	if err != nil {
+		beego.Error("上链失败：", err)
+	} else {
+		beego.Info("用户最新积分已上链")
 	}
 
 	c.ServeJSON()
