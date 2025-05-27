@@ -48,7 +48,7 @@ func UploadAllUsersToBlockchain(privateKey *ecdsa.PrivateKey) error {
 			log.Printf("用户 %s 上链失败: %v", user.Username, err)
 			continue
 		}
-		log.Printf("用户姓名： %s \n手机号: %s \n角色:%s \n积分:%s \n头衔:%s",user.Username,user.Phone,user.Role_name,user.Points,user.Title)
+		log.Printf("用户姓名： %s \n手机号: %s \n角色:%s \n积分:%s \n头衔:%s", user.Username, user.Phone, user.Role_name, user.Points, user.Title)
 		log.Printf("用户 %s 成功上链", user.Username)
 		// 等待一段时间，避免交易拥堵
 		time.Sleep(time.Second * 2)
@@ -121,6 +121,8 @@ func UploadStudentPoints(privateKey *ecdsa.PrivateKey, username string) error {
 	log.Printf("交易已发送，等待确认，交易哈希: %s", tx.Hash().Hex())
 
 	// 等待交易被确认，最多等待 10 次，每次 10 秒
+	// 这一段明确表明你不是发送完交易就认为它成功了，而是等待区块链返回的 回执（Receipt）。
+	// 如果收不到 receipt，就视为未确认成功，不记录为“成功上链”。
 	var receipt *types.Receipt
 	for i := 0; i < 10; i++ {
 		receipt, err = client.TransactionReceipt(context.Background(), tx.Hash())
@@ -145,15 +147,22 @@ func UploadStudentPoints(privateKey *ecdsa.PrivateKey, username string) error {
 	if err != nil {
 		return fmt.Errorf("获取区块信息失败: %v", err)
 	}
+	// ✅ 日志输出
+	log.Printf("✅ 交易已确认，交易哈希: %s，区块号: %d，时间戳: %d",
+		tx.Hash().Hex(),
+		receipt.BlockNumber.Uint64(),
+		block.Time(),
+	)
 
 	// 更新数据库中的交易哈希和时间戳
 	user.TxHash = tx.Hash().Hex()
 	user.BlockTimestamp = int64(block.Time())
-	_, err = o.Update(&user, "TxHash", "BlockTimestamp")
+	user.BlockNumber = receipt.BlockNumber.Int64() // ✅ 新增
+	_, err = o.Update(&user, "TxHash", "BlockTimestamp", "BlockNumber")
 	if err != nil {
 		return fmt.Errorf("更新数据库失败: %v", err)
 	}
 
-	log.Printf("✅ 交易已确认，数据库更新成功，交易哈希: %s, 时间戳: %d", tx.Hash().Hex(), block.Time())
+	log.Printf("✅ 交易已确认，数据库更新成功，交易哈希: %s, 区块号: %d，时间戳: %d", tx.Hash().Hex(), receipt.BlockNumber.Uint64(), block.Time())
 	return nil
 }

@@ -19,6 +19,7 @@ type Users struct {
 	Points         int    `orm:"column(points);default(100)"`
 	Title          string `orm:"column(title);size(50);default(倔强青铜)"` // 用户头衔
 	TxHash         string `orm:"column(tx_hash);size(66);null"`        // 区块链交易哈希
+	BlockNumber    int64  `orm:"null" json:"block_number"`             //区块号
 	BlockTimestamp int64  `orm:"column(block_timestamp);default(0)"`   // 区块链交易时间戳
 	Total          int    `orm:"column(total);default(0)"`             // 总积分
 	ActivityCount  int    `orm:"column(activity_count);default(0)"`    // 参与活动次数

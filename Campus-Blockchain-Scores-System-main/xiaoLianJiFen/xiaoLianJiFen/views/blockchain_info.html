@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -20,7 +21,7 @@
         .nav-bar {
             background-color: #73C088;
             padding: 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             width: 100%;
             z-index: 1000;
         }
@@ -53,11 +54,13 @@
             transition: all 0.3s ease;
         }
 
-        .nav-links a:hover, .nav-links a.active {
-            background-color: rgba(255,255,255,0.1);
+        .nav-links a:hover,
+        .nav-links a.active {
+            background-color: rgba(255, 255, 255, 0.1);
         }
 
-        .nav-links a:hover::after, .nav-links a.active::after {
+        .nav-links a:hover::after,
+        .nav-links a.active::after {
             content: '';
             position: absolute;
             bottom: 0;
@@ -102,7 +105,7 @@
             background: white;
             border-radius: 10px;
             padding: 2rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .info-grid {
@@ -152,22 +155,23 @@
         }
     </style>
 </head>
+
 <body>
     <nav class="nav-bar">
         <div class="nav-container">
             <div class="nav-links">
-                <a href="/student" class="{{if eq .ActivePage "home"}}active{{end}}">首页</a>
-                <a href="/student/activities" class="{{if eq .ActivePage "activities"}}active{{end}}">活动管理</a>
-                <a href="/student/my-activities" class="{{if eq .ActivePage "myactivities"}}active{{end}}">我的活动</a>
+                <a href="/student" class="{{if eq .ActivePage " home"}}active{{end}}">首页</a>
+                <a href="/student/activities" class="{{if eq .ActivePage " activities"}}active{{end}}">活动管理</a>
+                <a href="/student/my-activities" class="{{if eq .ActivePage " myactivities"}}active{{end}}">我的活动</a>
                 {{if .IsClubAdmin}}
-                <a href="/student/club" class="{{if eq .ActivePage "club"}}active{{end}}">社团活动</a>
+                <a href="/student/club" class="{{if eq .ActivePage " club"}}active{{end}}">社团活动</a>
                 <a href="/student/activity-records" class="{{if eq .ActivePage "activity_records"}}active{{end}}">扣除积分</a>
                 {{end}}
-                <a href="/student/shop" class="{{if eq .ActivePage "shop"}}active{{end}}">积分商城</a>
+                <a href="/student/shop" class="{{if eq .ActivePage " shop"}}active{{end}}">积分商城</a>
                 <a href="/student/exchange-history" class="{{if eq .ActivePage "exchange_history"}}active{{end}}">兑换记录</a>
-                <a href="/student/ranking" class="{{if eq .ActivePage "ranking"}}active{{end}}">积分排名</a>
-                <a href="/student/points-records" class="{{if eq .ActivePage "points_records"}}active{{end}}">积分记录</a>
-                <a href="/blockchain/info" class="{{if eq .ActivePage "blockchain"}}active{{end}}">区块链信息</a>
+                <a href="/student/ranking" class="{{if eq .ActivePage " ranking"}}active{{end}}">积分排名</a>
+                <a href="/student/points-records" class="{{if eq .ActivePage " points_records"}}active{{end}}">积分记录</a>
+                <a href="/blockchain/info" class="{{if eq .ActivePage " blockchain"}}active{{end}}">区块链信息</a>
             </div>
             <button class="logout-button" onclick="confirmLogout()">安全退出</button>
         </div>
@@ -198,7 +202,12 @@
                     </div>
                     <div class="info-item">
                         <span class="info-label">上链时间:</span>
-                        <span class="info-value timestamp">{{if .BlockTimestamp}}{{.BlockTimestamp | formatTimestamp}}{{else}}未上链{{end}}</span>
+                        <span class="info-value timestamp">{{if .BlockTimestamp}}{{.BlockTimestamp |
+                            formatTimestamp}}{{else}}未上链{{end}}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">区块号:</span>
+                        <span class="info-value">{{if .BlockNumber}}{{.BlockNumber}}{{else}}未上链{{end}}</span>
                     </div>
                 </div>
                 {{end}}
@@ -219,4 +228,5 @@
         }
     </script>
 </body>
-</html> 
+
+</html>
