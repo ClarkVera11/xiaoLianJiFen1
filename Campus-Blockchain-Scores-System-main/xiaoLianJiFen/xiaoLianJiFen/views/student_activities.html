@@ -445,7 +445,7 @@
 
         // 搜索活动
         function searchActivities() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const searchTerm = document.getElementById('searchInput').value.trim().toLowerCase();
             
             if (searchTerm.trim() === '') {
                 // 如果搜索框为空，显示所有活动
