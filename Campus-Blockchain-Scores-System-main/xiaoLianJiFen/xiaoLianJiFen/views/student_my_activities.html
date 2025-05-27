@@ -114,9 +114,12 @@
         }
 
         .activities-list {
-            display: flex;
-            flex-direction: column;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
             gap: 1.5rem;
+            padding: 1rem;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
         .activity-card {
@@ -124,6 +127,9 @@
             border-radius: 8px;
             padding: 1.5rem;
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
         }
 
         .activity-header {
@@ -173,6 +179,40 @@
             border-radius: 8px;
             margin-top: 2rem;
         }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-top: 2rem;
+        }
+
+        .pagination-btn {
+            padding: 8px 12px;
+            border: 1px solid #73C088;
+            background-color: white;
+            color: #73C088;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .pagination-btn:hover {
+            background-color: #73C088;
+            color: white;
+        }
+
+        .pagination-btn.active {
+            background-color: #73C088;
+            color: white;
+        }
+
+        .pagination-btn:disabled {
+            background-color: #e0e0e0;
+            border-color: #e0e0e0;
+            color: #999;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -202,9 +242,16 @@
         <div class="activities-list" id="activitiesList">
             <!-- 活动列表将通过 JavaScript 动态加载 -->
         </div>
+        <div class="pagination" id="pagination">
+            <!-- 分页按钮将通过JavaScript动态加载 -->
+        </div>
     </div>
 
     <script>
+        let currentPage = 1;
+        const itemsPerPage = 4;
+        let allActivities = [];
+
         function confirmLogout() {
             if (confirm("您确定要退出吗？")) {
                 window.location.href = "/logout";
@@ -216,57 +263,10 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        const activitiesList = document.getElementById('activitiesList');
-                        if (data.activities && data.activities.length > 0) {
-                            activitiesList.innerHTML = data.activities.map(activity => `
-                                <div class="activity-card">
-                                    <div class="activity-header">
-                                        <h3 class="activity-name">${activity.activity_name}</h3>
-                                        <span class="activity-status">${activity.activity_status === 1 ? '进行中' : '已结束'}</span>
-                                    </div>
-                                    ${activity.registration_status === 1 ? 
-                                    `<div class="activity-actions">
-                                        <button class="activity-status" ${activity.activity_status === 0 ? 'disabled style="opacity:0.5; cursor:not-allowed"' : ''} onclick="${activity.activity_status === 1 ? `cancelRegistration(${activity.registration_id})` : 'return false'}">取消报名</button>
-                                    </div>` : ''}
-                                    <div class="activity-info">
-                                        <div class="info-item">
-                                            <span class="info-label">活动地点：</span>
-                                            <span>${activity.location}</span>
-                                        </div>
-                                        <div class="info-item">
-                                            <span class="info-label">活动积分：</span>
-                                            <span>${activity.score} 分</span>
-                                        </div>
-                                        <div class="info-item">
-                                            <span class="info-label">开始时间：</span>
-                                            <span>${new Date(activity.start_time).toLocaleString()}</span>
-                                        </div>
-                                        <div class="info-item">
-                                            <span class="info-label">结束时间：</span>
-                                            <span>${new Date(activity.end_time).toLocaleString()}</span>
-                                        </div>
-                                        <div class="info-item">
-                                            <span class="info-label">报名时间：</span>
-                                            <span>${new Date(activity.registered_at).toLocaleString()}</span>
-                                        </div>
-                                        <div class="info-item">
-                                            <span class="info-label">报名状态：</span>
-                                            <span>${activity.registration_status === 1 ? '已报名' : '已取消'}</span>
-                                        </div>
-                                    </div>
-                                    <div class="activity-description">
-                                        <p>${activity.description}</p>
-                                    </div>
-                                </div>
-                            `).join('');
-                        } else {
-                            activitiesList.innerHTML = `
-                                <div class="no-activities">
-                                    <h3>暂无报名活动</h3>
-                                    <p>快去活动管理页面报名参加活动吧！</p>
-                                </div>
-                            `;
-                        }
+                        allActivities = data.activities || [];
+                        allActivities.sort((a, b) => new Date(b.start_time) - new Date(a.start_time));
+                        renderPagination();
+                        renderCurrentPage();
                     } else {
                         alert(data.message || '获取活动列表失败');
                     }
@@ -275,6 +275,94 @@
                     console.error('Error:', error);
                     alert('获取活动列表失败，请稍后重试');
                 });
+        }
+
+        function renderPagination() {
+            const totalPages = Math.ceil(allActivities.length / itemsPerPage);
+            const pagination = document.getElementById('pagination');
+
+            let html = '';
+
+            // 上一页按钮
+            html += `<button class="pagination-btn" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>上一页</button>`;
+
+            // 页码按钮
+            for (let i = 1; i <= totalPages; i++) {
+                html += `<button class="pagination-btn ${currentPage === i ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
+            }
+
+            // 下一页按钮
+            html += `<button class="pagination-btn" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>下一页</button>`;
+
+            pagination.innerHTML = html;
+        }
+
+        function changePage(page) {
+            const totalPages = Math.ceil(allActivities.length / itemsPerPage);
+            if (page < 1 || page > totalPages) return;
+
+            currentPage = page;
+            renderPagination();
+            renderCurrentPage();
+        }
+
+        function renderCurrentPage() {
+            const activitiesList = document.getElementById('activitiesList');
+            if (allActivities.length === 0) {
+                activitiesList.innerHTML = `
+                    <div class="no-activities">
+                        <h3>暂无报名活动</h3>
+                        <p>快去活动管理页面报名参加活动吧！</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const startIndex = (currentPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const currentActivities = allActivities.slice(startIndex, endIndex);
+
+            activitiesList.innerHTML = currentActivities.map(activity => `
+                <div class="activity-card">
+                    <div class="activity-header">
+                        <h3 class="activity-name">${activity.activity_name}</h3>
+                        <span class="activity-status">${activity.activity_status === 1 ? '进行中' : '已结束'}</span>
+                    </div>
+                    ${activity.registration_status === 1 && activity.activity_status === 1 ? 
+                    `<div class="activity-actions">
+                        <button class="activity-status" onclick="cancelRegistration(${activity.registration_id})">取消报名</button>
+                    </div>` : ''}
+                    <div class="activity-info">
+                        <div class="info-item">
+                            <span class="info-label">活动地点：</span>
+                            <span>${activity.location}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">活动积分：</span>
+                            <span>${activity.score} 分</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">开始时间：</span>
+                            <span>${new Date(activity.start_time).toLocaleString()}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">结束时间：</span>
+                            <span>${new Date(activity.end_time).toLocaleString()}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">报名时间：</span>
+                            <span>${new Date(activity.registered_at).toLocaleString()}</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">报名状态：</span>
+                            <span>${activity.registration_status === 1 ? '已报名' : '已取消'}</span>
+                        </div>
+                    </div>
+                    <div class="activity-description">
+                        <p>${activity.description}</p>
+                    </div>
+                </div>
+            `).join('');
         }
 
         // 页面加载时获取活动列表
