@@ -208,7 +208,7 @@ func (c *StudentController) ApplyForAdmin() {
 	c.ServeJSON()
 }
 
-// ShowStudentNav 显示学生导航页面
+// ShowStudentNav 显示学生导航页面// ShowStudentNav 显示学生导航页面
 func (c *StudentController) ShowStudentNav() {
 	// 检查用户是否登录
 	userID := c.GetSession("userId")
@@ -254,8 +254,8 @@ func (c *StudentController) ShowStudentNav() {
 		}
 
 		var percent float64
-		if total > 1 {
-			percent = float64(total-userRank) / float64(total-1) * 100
+		if total > 0 {
+			percent = float64(total-userRank) / float64(total) * 100
 		} else {
 			percent = 100
 		}
@@ -272,10 +272,13 @@ func (c *StudentController) ShowStudentNav() {
 			c.Data["EncouragementColor"] = "#e67e22" // 橙色
 		}
 	}
-	// 查询当前用户最新三条积分记录
+
+	// 查询当前用户一周内的三条积分记录
+	oneWeekAgo := time.Now().AddDate(0, 0, -7)
 	var pointsRecords []Models.PointsRecord
 	_, err = o.QueryTable("points_record").
 		Filter("user_id", user.Id).
+		Filter("created_at__gte", oneWeekAgo).
 		OrderBy("-created_at").
 		Limit(3).
 		All(&pointsRecords)
@@ -284,9 +287,11 @@ func (c *StudentController) ShowStudentNav() {
 	}
 
 	c.Data["LatestPointsRecords"] = pointsRecords
+
 	// 渲染页面
 	c.TplName = "student_nav.html"
 }
+
 
 // GetClubActivities 获取社团活动列表
 func (c *StudentController) GetClubActivities() {
@@ -614,6 +619,20 @@ func (c *StudentController) RegisterActivity() {
 		return
 	}
 
+	// ✅ 更新用户参与活动次数 +1
+	user.ActivityCount += 1
+	_, err = o.Update(&user, "ActivityCount")
+	if err != nil {
+		o.Rollback()
+		beego.Error("更新用户参与活动次数失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "报名失败，请稍后重试",
+		}
+		c.ServeJSON()
+		return
+	}
+
 	// 提交事务
 	err = o.Commit()
 	if err != nil {
@@ -794,7 +813,7 @@ ORDER BY ar.created_at DESC
 }
 
 // CancelRegistration 取消活动报名
-func (c *StudentController) CancelRegistration() {
+    func (c *StudentController) CancelRegistration() {
 	beego.Info("开始处理取消报名请求")
 
 	// 获取当前登录用户的ID
@@ -867,18 +886,25 @@ func (c *StudentController) CancelRegistration() {
 		// 使用UpdatePoints函数扣除积分，这会自动更新区块链
 		c.UpdatePoints(-5)
 
-		// 扣除5积分，4月25日lr重新添加扣除积分功能
+		// 扣除5积分
 		user.Points -= 5
-		_, err = o.Update(&user, "Points")
-		if err != nil {
-			beego.Error("更新用户积分失败：", err)
-			c.Data["json"] = map[string]interface{}{
-				"success": false,
-				"message": "积分扣除失败",
-			}
-			c.ServeJSON()
-			return
+	}
+
+	// === 新增：减少用户活动次数 ===
+	if user.ActivityCount > 0 {
+		user.ActivityCount -= 1
+	}
+
+	// 保存用户更新（包括积分和活动次数）
+	_, err = o.Update(&user, "Points", "ActivityCount")
+	if err != nil {
+		beego.Error("更新用户数据失败：", err)
+		c.Data["json"] = map[string]interface{}{
+			"success": false,
+			"message": "用户数据更新失败",
 		}
+		c.ServeJSON()
+		return
 	}
 
 	// 更新报名状态为已取消(2)
@@ -924,6 +950,7 @@ func (c *StudentController) CancelRegistration() {
 	}
 	c.ServeJSON()
 }
+
 
 // ShowActivityRecords 显示扣除积分管理页面
 func (c *StudentController) ShowActivityRecords() {

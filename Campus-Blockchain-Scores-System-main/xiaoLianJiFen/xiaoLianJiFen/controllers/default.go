@@ -90,8 +90,36 @@ func (c *MainController) HuoQu() {
 
 // 登入
 func (c *MainController) ShowLogin() {
+	o := orm.NewOrm()
+
+	// 获取最新的三个活动，按开始时间倒序
+	var activities []Models.Activities
+	_, err := o.QueryTable("activities").
+		OrderBy("-start_time").
+		Limit(3).
+		All(&activities)
+	if err != nil {
+		beego.Error("获取活动失败：", err)
+	}
+
+	// 获取积分排名前三的学生，按积分倒序
+	var topStudents []Models.Users
+	_, err = o.QueryTable("users").
+		Filter("role_name", "学生").
+		OrderBy("-points").
+		Limit(3).
+		All(&topStudents)
+	if err != nil {
+		beego.Error("获取积分排名失败：", err)
+	}
+
+	// 传递数据给模板
+	c.Data["Activities"] = activities
+	c.Data["TopStudents"] = topStudents
+
 	c.TplName = "DengRu.html"
 }
+
 
 // HandleLogin 处理登录请求
 func (c *MainController) HandleLogin() {
@@ -108,6 +136,7 @@ func (c *MainController) HandleLogin() {
 
 	// 3. 查询数据库（只查用户名）
 	o := orm.NewOrm()
+	
 	var user Models.Users
 	err := o.QueryTable("users").Filter("username", userName).One(&user)
 	if err != nil {
