@@ -106,10 +106,38 @@
           font-size: 1.8rem;
         }
     
-        #recordsList {
-          display: grid;
-          grid-template-columns: repeat(3, 1fr);
-          gap: 1.5rem;
+        .records-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 2rem;
+        }
+
+        .records-table th {
+          background-color: #73C088;
+          color: white;
+          padding: 24px;
+          text-align: left;
+          font-size: 20px;
+        }
+
+        .records-table td {
+          padding: 24px;
+          border-bottom: 1px solid #ddd;
+          font-size: 20px;
+        }
+
+        .records-table tr:hover {
+          background-color: #f5f5f5;
+        }
+
+        .positive-points {
+          color: #27ae60;
+          font-weight: bold;
+        }
+
+        .negative-points {
+          color: #e74c3c;
+          font-weight: bold;
         }
     
         .record-card {
@@ -223,16 +251,26 @@
     <div class="main-content">
         <div class="points-records">
           <h2>积分记录</h2>
-          <div id="recordsList">
-            <!-- 积分记录将通过JavaScript动态加载 -->
-          </div>
+          <table class="records-table">
+            <thead>
+              <tr>
+                <th>活动名称</th>
+                <th>积分</th>
+                <th>描述</th>
+                <th>时间</th>
+              </tr>
+            </thead>
+            <tbody id="recordsList">
+              <!-- 积分记录将通过JavaScript动态加载 -->
+            </tbody>
+          </table>
           <div class="pagination" id="paginationControls"></div>
         </div>
       </div>
     
       <script>
         let allRecords = [];
-        const pageSize = 6;
+        const pageSize = 10;
         let currentPage = 1;
     
         function confirmLogout() {
@@ -251,14 +289,12 @@
             recordsList.innerHTML = '<div class="no-records">暂无积分记录</div>';
           } else {
             recordsList.innerHTML = recordsToShow.map(record => `
-              <div class="record-card">
-                <div class="record-header">
-                  <div class="record-title">${record.activity_name}</div>
-                  <div class="record-points" style="color: ${record.points < 0 ? '#e74c3c' : '#27ae60'}">${record.points} 积分</div>
-                </div>
-                <div class="record-info">${record.description}</div>
-                <div class="record-time">${record.created_at}</div>
-              </div>
+              <tr>
+                <td>${record.activity_name}</td>
+                <td class="${record.points < 0 ? 'negative-points' : 'positive-points'}">${record.points} 积分</td>
+                <td>${record.description}</td>
+                <td>${record.created_at}</td>
+              </tr>
             `).join('');
           }
     
