@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>扣除积分管理 - 校内活动积分系统</title>
+    <title>扣分记录 - 校内活动积分系统</title>
     <style>
         * {
             margin: 0;
@@ -334,22 +334,31 @@
             margin-top: 2rem;
         }
 
-        .pagination button {
-            padding: 0.5rem 1rem;
-            border: 1px solid #ddd;
+        .pagination-btn {
+            padding: 8px 12px;
+            border: 1px solid #73C088;
             background-color: white;
+            color: #73C088;
             cursor: pointer;
-            transition: all 0.3s;
+            border-radius: 4px;
+            transition: all 0.3s ease;
         }
 
-        .pagination button:hover {
-            background-color: #f5f5f5;
-        }
-
-        .pagination button.active {
+        .pagination-btn:hover {
             background-color: #73C088;
             color: white;
-            border-color: #73C088;
+        }
+
+        .pagination-btn.active {
+            background-color: #73C088;
+            color: white;
+        }
+
+        .pagination-btn:disabled {
+            background-color: #e0e0e0;
+            border-color: #e0e0e0;
+            color: #999;
+            cursor: not-allowed;
         }
 
         .search-bar {
@@ -390,7 +399,7 @@
                 <a href="/teacher/activity" class="{{if eq .ActivePage "activity"}}active{{end}}">活动管理</a>
                 <a href="/teacher/student" class="{{if eq .ActivePage "student"}}active{{end}}">学生管理</a>
                 <a href="/teacher/club" class="{{if eq .ActivePage "club"}}active{{end}}">社团管理</a>
-                <a href="/teacher/activity-records" class="{{if eq .ActivePage "activity_records"}}active{{end}}">扣除积分</a>
+                <a href="/teacher/activity-records" class="{{if eq .ActivePage "activity_records"}}active{{end}}">扣分记录</a>
                 <a href="/teacher/blockchain-info" class="{{if eq .ActivePage "blockchain"}}active{{end}}">区块链信息</a>
             </div>
             <button class="logout-button" onclick="confirmLogout()">安全退出</button>
@@ -399,11 +408,11 @@
 
     <div class="main-content">
         <div class="page-header">
-            <h1 class="page-title">扣除积分管理</h1>
+            <h1 class="page-title">扣分记录</h1>
         </div>
 
         <div class="search-bar">
-            <input type="text" id="searchInput" class="search-input" placeholder="搜索活动名称...">
+            <input type="text" id="searchInput" class="search-input" placeholder="搜索学号...">
             <button class="search-button" onclick="searchRecords()">搜索</button>
         </div>
 
@@ -477,19 +486,22 @@
                 const card = document.createElement('div');
                 card.className = 'record-card';
                 card.innerHTML = `
-                    <button class="edit-button" onclick="showEditModal(${JSON.stringify(record).replace(/"/g, '&quot;')})">编辑</button>
                     <div class="record-header">
-                        <h3 class="record-title">${record.activity_name}</h3>
+                        <h3 class="record-title">${record.activity_name || '系统扣分'}</h3>
                         <span class="record-date">${new Date(record.created_at).toLocaleString()}</span>
                     </div>
                     <div class="record-info">
                         <div class="record-info-item">
-                            <span class="record-info-label">记录人：</span>
-                            <span>${record.created_by_name}</span>
+                            <span class="record-info-label">学生学号：</span>
+                            <span>${record.username}</span>
                         </div>
                         <div class="record-info-item">
-                            <span class="record-info-label">实际到场：</span>
-                            <span>${record.attendance_count}人</span>
+                            <span class="record-info-label">扣分：</span>
+                            <span>${record.points}分</span>
+                        </div>
+                        <div class="record-info-item">
+                            <span class="record-info-label">原因：</span>
+                            <span>${record.description}</span>
                         </div>
                     </div>
                 `;
@@ -581,6 +593,7 @@
             // 添加第一页按钮
             if (startPage > 1) {
                 const firstPageBtn = document.createElement('button');
+                firstPageBtn.className = 'pagination-btn';
                 firstPageBtn.textContent = '1';
                 firstPageBtn.onclick = () => changePage(1);
                 pagination.appendChild(firstPageBtn);
@@ -593,29 +606,20 @@
             }
 
             // 添加页码按钮
-            for (let i = startPage; i <= endPage; i++) {
-                const pageBtn = document.createElement('button');
-                pageBtn.textContent = i;
-                if (i === currentPage) {
-                    pageBtn.classList.add('active');
-                }
-                pageBtn.onclick = () => changePage(i);
-                pagination.appendChild(pageBtn);
+            let html = '';
+
+            // 上一页按钮
+            html += `<button class="pagination-btn" onclick="changePage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>上一页</button>`;
+
+            // 页码按钮
+            for (let i = 1; i <= totalPages; i++) {
+                html += `<button class="pagination-btn ${currentPage === i ? 'active' : ''}" onclick="changePage(${i})">${i}</button>`;
             }
 
-            // 添加最后一页按钮
-            if (endPage < totalPages) {
-                if (endPage < totalPages - 1) {
-                    const ellipsis = document.createElement('span');
-                    ellipsis.textContent = '...';
-                    pagination.appendChild(ellipsis);
-                }
+            // 下一页按钮
+            html += `<button class="pagination-btn" onclick="changePage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>下一页</button>`;
 
-                const lastPageBtn = document.createElement('button');
-                lastPageBtn.textContent = totalPages;
-                lastPageBtn.onclick = () => changePage(totalPages);
-                pagination.appendChild(lastPageBtn);
-            }
+            pagination.innerHTML = html;
         }
 
         function changePage(page) {
@@ -629,4 +633,4 @@
         });
     </script>
 </body>
-</html> 
+</html>

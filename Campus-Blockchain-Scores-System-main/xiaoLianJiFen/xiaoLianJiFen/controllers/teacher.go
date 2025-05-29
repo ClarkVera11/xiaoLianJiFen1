@@ -641,12 +641,14 @@ func (c *TeacherController) GetActivityRecords() {
 	search := c.GetString("search")
 
 	// 构建查询条件
-	query := orm.NewOrm().QueryTable("activity_records")
+	query := orm.NewOrm().QueryTable("points_record")
+	query = query.Filter("points__lt", 0) // 只查询扣分记录
+
 	if search != "" {
-		var activityIds orm.ParamsList
-		orm.NewOrm().QueryTable("activities").Filter("name__icontains", search).ValuesFlat(&activityIds, "id")
-		if len(activityIds) > 0 {
-			query = query.Filter("activity_id__in", activityIds)
+		var userIds orm.ParamsList
+		orm.NewOrm().QueryTable("users").Filter("username__icontains", search).ValuesFlat(&userIds, "id")
+		if len(userIds) > 0 {
+			query = query.Filter("user_id__in", userIds)
 		}
 	}
 
@@ -654,28 +656,30 @@ func (c *TeacherController) GetActivityRecords() {
 	total, _ := query.Count()
 
 	// 获取分页数据
-	var records []*Models.ActivityRecords
+	var records []*Models.PointsRecord
 	query = query.OrderBy("-created_at").
 		Limit(pageSize, (page-1)*pageSize)
 	query.All(&records)
 
-	// 获取活动名称和创建者名称
+	// 获取用户名称和活动名称
 	var result []map[string]interface{}
 	for _, record := range records {
+		// 获取用户信息
+		var user Models.Users
+		orm.NewOrm().QueryTable("users").Filter("id", record.UserId).One(&user)
+
 		// 获取活动信息
 		var activity Models.Activities
-		orm.NewOrm().QueryTable("activities").Filter("id", record.ActivityId).One(&activity)
-
-		// 获取创建者信息
-		var user Models.Users
-		orm.NewOrm().QueryTable("users").Filter("id", record.CreatedBy).One(&user)
+		if record.ActivityId > 0 {
+			orm.NewOrm().QueryTable("activities").Filter("id", record.ActivityId).One(&activity)
+		}
 
 		result = append(result, map[string]interface{}{
-			"id":               record.Id,
-			"activity_name":    activity.Name,
-			"attendance_count": record.AttendanceCount,
-			"created_by_name":  user.Username,
-			"created_at":       record.CreatedAt.Format("2006-01-02 15:04:05"),
+			"username":      user.Username,
+			"activity_name": activity.Name,
+			"points":        record.Points,
+			"description":   record.Description,
+			"created_at":    record.CreatedAt.Format("2006-01-02 15:04:05"),
 		})
 	}
 
